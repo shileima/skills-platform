@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the `skill-dev` tooling are documented here.
+All notable changes to the `skills-platform` tooling are documented here.
 Per-skill changes live in each `skills/<name>/CHANGELOG.md`.
 
 ## [0.1.0] - 2026-07-31

@@ -10,7 +10,7 @@
 | 作者 | mashilei |
 | 依赖 | [cua-router-basic](https://github.com/shileima/cua-router-basic) |
 
-> 本技能由 [`skill-dev`](../../README.md) 仓库统一管理与发布。**元数据权威来源是 `skill.json`**；各生态的产物（如 automan 的 `.meta.json`、分发 zip）都由 `skilldev` 自动生成，请勿手写。
+> 本技能由 [`skills-platform`](../../README.md) 仓库统一管理与发布。**元数据权威来源是 `skill.json`**；各生态的产物（如 automan 的 `.meta.json`、分发 zip）都由 `skilldev` 自动生成，请勿手写。
 
 ## 适用场景
 
@@ -52,7 +52,7 @@ automan 注册名与目录名不同（`rpa-workflow-instruction-test` vs `rpa-wo
 
 ## 安装
 
-在 `skill-dev` 仓库根执行（生态目录默认 `~/.<eco>/skills/<name>/`）：
+在 `skills-platform` 仓库根执行（生态目录默认 `~/.<eco>/skills/<name>/`）：
 
 ```bash
 # 先干跑确认目标路径，不写盘

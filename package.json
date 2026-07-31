@@ -1,5 +1,5 @@
 {
-  "name": "skill-dev",
+  "name": "skills-platform",
   "version": "0.1.0",
   "description": "Develop, version, test, and publish agent skills across the .claude / .codex / .automan / .cursor ecosystems",
   "type": "module",

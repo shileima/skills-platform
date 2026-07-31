@@ -1,4 +1,4 @@
-# skill-dev
+# skills-platform
 
 在一个仓库里**开发多个 agent 技能**，做**版本控制**与**测试**，并**一键安装/发布到 `.claude`、`.codex`、`.automan`、`.cursor` 等生态**。
 
@@ -7,7 +7,7 @@
 ## 快速开始
 
 ```bash
-cd skill-dev
+cd skills-platform
 npm install                      # 安装 js-yaml（唯一运行时依赖）
 
 node bin/skilldev.mjs list       # 列出所有技能
