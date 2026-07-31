@@ -4,11 +4,13 @@
 
 | 项 | 值 |
 |---|---|
-| 技能 ID | `rpa-workflow-command-test` |
-| 展示名称 | 见 `.meta.json` → `name` |
-| 当前版本 | 见 `.meta.json` → `version` |
+| 技能 ID（目录名） | `rpa-workflow-command-test` |
+| automan 注册名 | `rpa-workflow-instruction-test`（见 `skill.json` → `automan.metaName`） |
+| 当前版本 | 见 `skill.json` → `version` |
 | 作者 | mashilei |
 | 依赖 | [cua-router-basic](https://github.com/shileima/cua-router-basic) |
+
+> 本技能由 [`skill-dev`](../../README.md) 仓库统一管理与发布。**元数据权威来源是 `skill.json`**；各生态的产物（如 automan 的 `.meta.json`、分发 zip）都由 `skilldev` 自动生成，请勿手写。
 
 ## 适用场景
 
@@ -22,91 +24,75 @@
 ```
 rpa-workflow-command-test/
 ├── SKILL.md                 # Agent 主入口（frontmatter + 流程索引）
-├── .meta.json               # 技能元数据（名称、版本、依赖）— 权威来源
+├── skill.json               # 技能元数据（名称、版本、targets、依赖、打包白名单）— 权威来源
 ├── CHANGELOG.md             # 版本变更说明
-├── package.json             # 仅 dev scripts（install / pack，不打进 zip）
 ├── reference/               # 分模块文档（按需 Read，勿全量加载）
 │   ├── test-workflow.md     # 标准测试流程
 │   ├── platform-ops.md      # 平台操作与保存前校验
 │   ├── debug.md             # 调试与修复
 │   ├── commands/            # 96 条 UI 指令参数
 │   └── scenarios/           # 百度 / B站 场景
-├── scripts/
-│   ├── install.js           # 安装 .meta.json 声明的依赖（dev，不打进 zip）
-│   ├── pack.js              # 打包 zip（dev，不打进 zip）
-│   ├── scrape-commands.py   # 从官方文档同步指令 reference
-│   └── update-locators.sh   # 更新元素 XPath 缓存
-└── dist/                    # 打包输出（git 可不提交）
+└── scripts/
+    ├── scrape-commands.py   # 从官方文档同步指令 reference
+    ├── update-locators.sh   # 更新元素 XPath 缓存
+    └── collect-locators.py  # 采集页面元素
 ```
 
-### 分发包内容（`pnpm run pack` 白名单）
-
-zip 内**仅含**技能运行所需文件：
-
-| 路径 | 说明 |
-|------|------|
-| `.meta.json` | 平台元数据、依赖声明 |
-| `SKILL.md` | Agent 主入口 |
-| `README.md` / `CHANGELOG.md` | 说明与版本记录 |
-| `reference/` | 全部 reference 文档 |
-| `scripts/scrape-commands.py` | 同步官方指令文档 |
-| `scripts/update-locators.sh` | 更新 XPath 缓存 |
-| `scripts/collect-locators.py` | 采集页面元素 |
-
-**不包含**（仅开发/发版用）：`package.json`、`pnpm-lock.yaml`、`scripts/install.js`、`scripts/pack.js`、`dist/`、`.git/`
+> `.meta.json` 与 `dist/` 不在源目录中：前者在打包/安装 automan 时由 `skilldev` 从 `skill.json` 生成，后者是 `skilldev` 的构建输出（仓库根 `dist/`，已 gitignore）。
 
 ## 元数据约定
 
-| 文件 | 用途 |
+| 位置 | 用途 |
 |------|------|
-| **`.meta.json`** | 平台 UI、版本号、依赖声明、打包文件名 |
-| **`SKILL.md` frontmatter** | Agent 触发与执行说明 |
-| **`package.json`** | 仅 `pnpm run install` / `pnpm run pack`，**不**重复写技能元数据，**不打进 zip**
+| **`skill.json`** | 权威元数据：`name` / `version` / `targets` / `dependencies` / `pack.include` / `automan.metaName` |
+| **`SKILL.md` frontmatter** | 仅 `name` / `description`（Agent 触发与执行说明），`name` 必须与目录名一致 |
+| **`.meta.json`（生成物）** | automan 平台 UI / 版本 / 依赖；由 `skilldev` 从 `skill.json` 派生，勿手改 |
 
-发版或改版本时：**只改 `.meta.json` 的 `version`**，并在 `CHANGELOG.md` 追加对应条目。
+automan 注册名与目录名不同（`rpa-workflow-instruction-test` vs `rpa-workflow-command-test`），通过 `skill.json` 的 `automan.metaName` 保留，避免破坏既有 automan 注册。
 
 ## 安装
 
-### 1. 放置技能目录
+在 `skill-dev` 仓库根执行（生态目录默认 `~/.<eco>/skills/<name>/`）：
 
 ```bash
-# 全局（推荐）
-~/.automan/skills/rpa-workflow-command-test/
+# 先干跑确认目标路径，不写盘
+skilldev install rpa-workflow-command-test --target automan --dry-run
 
-# 或 Cursor
-~/.cursor/skills/rpa-workflow-command-test/
+# 正式安装到某个生态（claude | codex | cursor | automan | all）
+skilldev install rpa-workflow-command-test --target automan
+
+# 安装并一并装依赖（cua-router-basic，会执行其 install 脚本）
+skilldev install rpa-workflow-command-test --target automan --install-deps
 ```
 
-### 2. 安装依赖
+依赖来自 `skill.json` → `dependencies`。默认**不**自动执行依赖安装脚本（`curl | bash` 属外部动作）；需要时显式加 `--install-deps`，或手动执行下方命令并校验 `sky.*` 就绪：
 
 ```bash
-cd ~/.automan/skills/rpa-workflow-command-test
-pnpm run install
+curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash
 ```
 
-会读取 `.meta.json` → `dependencies`，安装 `cua-router-basic` 并校验 `sky.*` 就绪。
-
-## 打包分发
+## 打包分发（automan zip）
 
 ```bash
-pnpm run pack
+skilldev pack rpa-workflow-command-test
 ```
 
-根据 `.meta.json` 的 `name` 与 `version` 生成（**仅含技能运行文件**，见上文「分发包内容」）：
+按 `skill.json` → `pack.include` 白名单（`.meta.json`、`SKILL.md`、`README.md`、`CHANGELOG.md`、`reference`、`scripts`）打包，产物用 **automan 注册名 + 版本** 命名：
 
 ```
-dist/{name}_{version}.zip
+dist/rpa-workflow-instruction-test_0.0.1.zip
 ```
 
-示例：`dist/RPA工作流指令测试_0.0.1.zip`（以 `.meta.json` 实际字段为准）
+`.meta.json` 会在打包时自动生成并置于包内根层。
 
 ## 版本发布流程
 
 1. 完成代码 / 文档改动
-2. 更新 `.meta.json` → `version`（语义化版本 `x.y.z`）
-3. 在 `CHANGELOG.md` 的 `[Unreleased]` 下写变更，发布时移到新版本标题下
-4. 执行 `pnpm run pack` 生成 zip
-5. 提交 git 并打 tag（可选）：`v0.0.2`
+2. 升版本：`skilldev version rpa-workflow-command-test patch`（或 `minor` / `major` / 指定 `x.y.z`）——会更新 `skill.json` 并向 `CHANGELOG.md` 追加条目骨架
+3. 在 `CHANGELOG.md` 填写本次变更
+4. 校验：`skilldev validate rpa-workflow-command-test`
+5. 打包：`skilldev pack rpa-workflow-command-test`
+6. 提交 git 并打 tag（可选）：`v0.0.2`
 
 ## 快速链接
 
