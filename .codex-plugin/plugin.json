@@ -1,0 +1,20 @@
+{
+  "name": "skill-dev",
+  "version": "0.1.0",
+  "description": "Develop, version, test, and publish agent skills across the .claude / .codex / .automan / .cursor ecosystems",
+  "author": {
+    "name": "mashilei"
+  },
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "agent",
+    "claude",
+    "codex",
+    "cursor",
+    "automan",
+    "developer-tools"
+  ],
+  "skills": "./skills/",
+  "hooks": {}
+}

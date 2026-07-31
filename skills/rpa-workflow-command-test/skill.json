@@ -1,0 +1,22 @@
+{
+  "name": "rpa-workflow-command-test",
+  "version": "0.0.1",
+  "description": "RPA工作流指令测试, 在 bots.sankuai.com 编排模式工作流中添加、配置和调试 web 自动化指令（打开网页、输入文本、点击），含元素捕获与调试循环",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": ["rpa", "bots", "workflow", "web-automation", "cua"],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+    }
+  ],
+  "pack": {
+    "include": [".meta.json", "SKILL.md", "README.md", "CHANGELOG.md", "reference", "scripts"]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "rpa-workflow-instruction-test"
+  }
+}

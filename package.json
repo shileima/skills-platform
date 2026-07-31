@@ -1,0 +1,31 @@
+{
+  "name": "skill-dev",
+  "version": "0.1.0",
+  "description": "Develop, version, test, and publish agent skills across the .claude / .codex / .automan / .cursor ecosystems",
+  "type": "module",
+  "bin": {
+    "skilldev": "bin/skilldev.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "skilldev": "node bin/skilldev.mjs",
+    "validate": "node bin/skilldev.mjs validate",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "ci": "bash scripts/ci.sh"
+  },
+  "keywords": [
+    "skills",
+    "agent",
+    "claude",
+    "codex",
+    "cursor",
+    "automan",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

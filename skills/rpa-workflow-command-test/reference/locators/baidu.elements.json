@@ -1,0 +1,936 @@
+{
+  "site": "baidu",
+  "page": "home",
+  "cacheSlug": "baidu",
+  "collectorVersion": "1.1.0",
+  "url": "https://www.baidu.com/",
+  "title": "百度一下，你就知道",
+  "collectedAt": "2026-07-29T13:29:46.149Z",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+  "elementCount": 39,
+  "elements": [
+    {
+      "tag": "DIV",
+      "id": "wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "wrapper_new",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "新闻 hao123 地图 直播 视频 贴吧 学术 更多 登录   总书记的一周 5微信新功能上线 可一键删除单向好",
+      "xpath": "//div[@id=\"wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"wrapper\"]",
+        "//div[contains(@class,\"wrapper_new\")]",
+        "//div[normalize-space(.)=\"新闻 hao123 地图 直播 视频 贴吧 学术 更多 登录\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "head",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "新闻 hao123 地图 直播 视频 贴吧 学术 更多 登录   总书记的一周 5微信新功能上线 可一键删除单向好",
+      "xpath": "//div[@id=\"head\"]",
+      "xpathAlt": [
+        "//*[@id=\"head\"]",
+        "//div[normalize-space(.)=\"新闻 hao123 地图 直播 视频 贴吧 学术 更多 登录\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "s-top-left",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-top-left s-isindex-wrap",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "新闻 hao123 地图 直播 视频 贴吧 学术 更多",
+      "xpath": "//div[@id=\"s-top-left\"]",
+      "xpathAlt": [
+        "//*[@id=\"s-top-left\"]",
+        "//div[contains(@class,\"s-top-left\")]",
+        "//div[normalize-space(.)=\"新闻 hao123 地图 直播 视频 贴吧 学术 更多\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 525,
+        "height": 60
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "head_wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "head_wrapper s-isindex-wrap s-ps-islite",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "  总书记的一周 5微信新功能上线 可一键删除单向好友 热 1习近平出席民营企业座谈会并讲话 6这下遇到真石矶娘娘",
+      "xpath": "//div[@id=\"head_wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"head_wrapper\"]",
+        "//div[contains(@class,\"head_wrapper\")]",
+        "//div[normalize-space(.)=\"  总书记的一周 5微信新功能上线 可一键删除单向好友\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 684
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "u1",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-top-right s-isindex-wrap",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "登录",
+      "xpath": "//div[@id=\"u1\"]",
+      "xpathAlt": [
+        "//*[@id=\"u1\"]",
+        "//div[contains(@class,\"s-top-right\")]",
+        "//div[normalize-space(.)=\"登录\"]"
+      ],
+      "rect": {
+        "x": 1336,
+        "y": 0,
+        "width": 104,
+        "height": 60
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "tj_login",
+      "type": "",
+      "role": "",
+      "class": "s-top-login-btn c-btn c-btn-primary c-btn-mini lb",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//www.baidu.com/bdorz/login.gif?login&tpl=mn&u=http%3A%2F%2Fwww.baidu.com%2f%3fbdorz_come%3d1",
+      "label": "登录",
+      "xpath": "//a[name=\"tj_login\"]",
+      "xpathAlt": [
+        "//a[@name=\"tj_login\"]",
+        "//a[contains(@class,\"s-top-login-btn\")]",
+        "//a[normalize-space(.)=\"登录\"]"
+      ],
+      "rect": {
+        "x": 1368,
+        "y": 18,
+        "width": 48,
+        "height": 24
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//news.baidu.com/",
+      "label": "新闻",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"新闻\"]"
+      ],
+      "rect": {
+        "x": 24,
+        "y": 19,
+        "width": 26,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//www.hao123.com/",
+      "label": "hao123",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[2]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"hao123\"]"
+      ],
+      "rect": {
+        "x": 85,
+        "y": 19,
+        "width": 43,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//map.baidu.com/",
+      "label": "地图",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[3]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"地图\"]"
+      ],
+      "rect": {
+        "x": 163,
+        "y": 19,
+        "width": 26,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//live.baidu.com/",
+      "label": "直播",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[4]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"直播\"]"
+      ],
+      "rect": {
+        "x": 224,
+        "y": 19,
+        "width": 26,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//haokan.baidu.com/?sfrom=baidu-top",
+      "label": "视频",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[5]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"视频\"]"
+      ],
+      "rect": {
+        "x": 285,
+        "y": 19,
+        "width": 26,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//tieba.baidu.com/",
+      "label": "贴吧",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[6]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"贴吧\"]"
+      ],
+      "rect": {
+        "x": 346,
+        "y": 19,
+        "width": 26,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "mnav c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//xueshu.baidu.com/",
+      "label": "学术",
+      "xpath": "/body[1]/div[1]/div[1]/div[1]/a[7]",
+      "xpathAlt": [
+        "//a[contains(@class,\"mnav\")]",
+        "//a[normalize-space(.)=\"学术\"]"
+      ],
+      "rect": {
+        "x": 407,
+        "y": 19,
+        "width": 26,
+        "height": 23
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "tj_briicon",
+      "type": "",
+      "role": "",
+      "class": "s-bri c-font-normal c-color-t",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//www.baidu.com/more/",
+      "label": "更多",
+      "xpath": "//a[name=\"tj_briicon\"]",
+      "xpathAlt": [
+        "//a[@name=\"tj_briicon\"]",
+        "//a[contains(@class,\"s-bri\")]",
+        "//a[normalize-space(.)=\"更多\"]"
+      ],
+      "rect": {
+        "x": 468,
+        "y": 23,
+        "width": 26,
+        "height": 15
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "lg",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-p-top",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#lg",
+      "xpath": "//div[@id=\"lg\"]",
+      "xpathAlt": [
+        "//*[@id=\"lg\"]",
+        "//div[contains(@class,\"s-p-top\")]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 89,
+        "width": 654,
+        "height": 185
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "s_lg_img",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "index-logo-src",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#s_lg_img",
+      "xpath": "//img[@id=\"s_lg_img\"]",
+      "xpathAlt": [
+        "//*[@id=\"s_lg_img\"]",
+        "//img[contains(@class,\"index-logo-src\")]"
+      ],
+      "rect": {
+        "x": 585,
+        "y": 122,
+        "width": 270,
+        "height": 129
+      }
+    },
+    {
+      "tag": "FORM",
+      "id": "form",
+      "name": "f",
+      "type": "",
+      "role": "",
+      "class": "fm",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#form",
+      "xpath": "//form[@id=\"form\"]",
+      "xpathAlt": [
+        "//*[@id=\"form\"]",
+        "//form[@name=\"f\"]",
+        "//form[contains(@class,\"fm\")]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 270,
+        "width": 654,
+        "height": 44
+      }
+    },
+    {
+      "tag": "INPUT",
+      "id": "kw",
+      "name": "wd",
+      "type": "text",
+      "role": "",
+      "class": "s_ipt",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#kw",
+      "xpath": "//input[@id=\"kw\"]",
+      "xpathAlt": [
+        "//*[@id=\"kw\"]",
+        "//input[@name=\"wd\"]",
+        "//input[contains(@class,\"s_ipt\")]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 270,
+        "width": 548,
+        "height": 44
+      }
+    },
+    {
+      "tag": "INPUT",
+      "id": "su",
+      "name": "",
+      "type": "submit",
+      "role": "",
+      "class": "bg s_btn",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#su",
+      "xpath": "//input[@id=\"su\"]",
+      "xpathAlt": [
+        "//*[@id=\"su\"]",
+        "//input[contains(@class,\"bg\")]"
+      ],
+      "rect": {
+        "x": 939,
+        "y": 270,
+        "width": 108,
+        "height": 44
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "s-hotsearch-wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-hotsearch-wrapper",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "  总书记的一周 5微信新功能上线 可一键删除单向好友 热 1习近平出席民营企业座谈会并讲话 6这下遇到真石矶娘娘",
+      "xpath": "//div[@id=\"s-hotsearch-wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"s-hotsearch-wrapper\"]",
+        "//div[contains(@class,\"s-hotsearch-wrapper\")]",
+        "//div[normalize-space(.)=\"  总书记的一周 5微信新功能上线 可一键删除单向好友\"]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 359,
+        "width": 654,
+        "height": 24
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E6%80%BB%E4%B9%A6%E8%AE%B0%E7%9A%84%E4%B8%80%E5%91%A8&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "总书记的一周",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"总书记的一周\"]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 383,
+        "width": 122,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E5%BE%AE%E4%BF%A1%E6%96%B0%E5%8A%9F%E8%83%BD%E4%B8%8A%E7%BA%BF+%E5%8F%AF%E4%B8%80%E9%94%AE%E5%88%A0%E9%99%A4%E5%8D%95%E5%90%91%E5%A5%BD%E5%8F%8B&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "5微信新功能上线 可一键删除单向好友",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[2]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"5微信新功能上线 可一键删除单向好友\"]"
+      ],
+      "rect": {
+        "x": 739,
+        "y": 383,
+        "width": 282,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E4%B9%A0%E8%BF%91%E5%B9%B3%E5%87%BA%E5%B8%AD%E6%B0%91%E8%90%A5%E4%BC%81%E4%B8%9A%E5%BA%A7%E8%B0%88%E4%BC%9A%E5%B9%B6%E8%AE%B2%E8%AF%9D&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "1习近平出席民营企业座谈会并讲话",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[3]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"1习近平出席民营企业座谈会并讲话\"]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 419,
+        "width": 266,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E8%BF%99%E4%B8%8B%E9%81%87%E5%88%B0%E7%9C%9F%E7%9F%B3%E7%9F%B6%E5%A8%98%E5%A8%98%E4%BA%86&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "6这下遇到真石矶娘娘了",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[4]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"6这下遇到真石矶娘娘了\"]"
+      ],
+      "rect": {
+        "x": 739,
+        "y": 419,
+        "width": 186,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E3%80%8A%E5%93%AA%E5%90%922%E3%80%8B%E8%B6%85%E3%80%8A%E7%8B%AE%E5%AD%90%E7%8E%8B%E3%80%8B%E8%BF%9B%E5%85%A8%E7%90%83%E7%A5%A8%E6%88%BF%E5%89%8D10&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "2《哪吒2》超《狮子王》进全球票房前10",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[5]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"2《哪吒2》超《狮子王》进全球票房前10\"]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 455,
+        "width": 282,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E4%BA%8E%E6%AD%A3%E5%8F%91%E9%95%BF%E6%96%87%E8%87%B4%E6%AD%89&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "7于正发长文致歉",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[6]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"7于正发长文致歉\"]"
+      ],
+      "rect": {
+        "x": 739,
+        "y": 455,
+        "width": 138,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E2%80%9C%E6%9D%91%E8%B6%85%E2%80%9D%E6%8C%81%E7%BB%AD%E5%8A%A9%E6%8E%A8%E4%B9%A1%E6%9D%91%E6%8C%AF%E5%85%B4&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "3“村超”持续助推乡村振兴",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[7]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"3“村超”持续助推乡村振兴\"]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 491,
+        "width": 203,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E5%B0%BC%E6%A0%BC%E4%B9%B0%E6%8F%90%EF%BC%9A%E5%88%AB%E6%89%BE%E4%BA%86%E7%BB%93%E7%95%8C%E5%85%BD%E5%9C%A8%E7%A6%BE%E6%9C%A8&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "8尼格买提：别找了结界兽在禾木",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[8]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"8尼格买提：别找了结界兽在禾木\"]"
+      ],
+      "rect": {
+        "x": 739,
+        "y": 491,
+        "width": 250,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E3%80%8A%E5%93%AA%E5%90%922%E3%80%8B%E6%80%BB%E7%A5%A8%E6%88%BF%E7%AA%81%E7%A0%B4120%E4%BA%BF&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "4《哪吒2》总票房突破120亿",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[9]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"4《哪吒2》总票房突破120亿\"]"
+      ],
+      "rect": {
+        "x": 393,
+        "y": 527,
+        "width": 221,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "title-content tag-width",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?wd=%E5%A4%A7%E5%AD%A6%E7%94%9F60%E7%B1%B3%E6%A0%8F%E8%B7%91%E5%87%BA7.53%E9%85%B7%E4%BC%BC%E5%88%98%E7%BF%94&sa=ipc_home_hotword_jt&rsv_dl=ipc_home_hotword_jt&from=super&cl=3&tn=baidutop10&fr=top1000&rsv_idx=2&hisfilter=1",
+      "label": "9大学生60米栏跑出7.53酷似刘翔",
+      "xpath": "/body[1]/div[1]/div[1]/div[3]/div[1]/div[2]/ul[1]/li[10]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"title-content\")]",
+        "//a[normalize-space(.)=\"9大学生60米栏跑出7.53酷似刘翔\"]"
+      ],
+      "rect": {
+        "x": 739,
+        "y": 527,
+        "width": 253,
+        "height": 36
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "bottom_layer",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-bottom-layer s-isindex-wrap",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "关于百度 About Baidu 使用百度前必读 帮助中心 京公网安备11000002000001号 京ICP证0301",
+      "xpath": "//div[@id=\"bottom_layer\"]",
+      "xpathAlt": [
+        "//*[@id=\"bottom_layer\"]",
+        "//div[contains(@class,\"s-bottom-layer\")]",
+        "//div[normalize-space(.)=\"关于百度 About Baidu 使用百度前必读 帮助中心 \"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 860,
+        "width": 1440,
+        "height": 40
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//home.baidu.com/",
+      "label": "关于百度",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"关于百度\"]"
+      ],
+      "rect": {
+        "x": 85,
+        "y": 872,
+        "width": 48,
+        "height": 17
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//ir.baidu.com/",
+      "label": "About Baidu",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[2]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"About Baidu\"]"
+      ],
+      "rect": {
+        "x": 157,
+        "y": 872,
+        "width": 69,
+        "height": 17
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//www.baidu.com/duty",
+      "label": "使用百度前必读",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[3]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"使用百度前必读\"]"
+      ],
+      "rect": {
+        "x": 250,
+        "y": 872,
+        "width": 84,
+        "height": 17
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//help.baidu.com/",
+      "label": "帮助中心",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[4]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"帮助中心\"]"
+      ],
+      "rect": {
+        "x": 358,
+        "y": 872,
+        "width": 48,
+        "height": 17
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//www.beian.gov.cn/portal/registerSystemInfo?recordcode=11000002000001",
+      "label": "京公网安备11000002000001号",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[5]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"京公网安备11000002000001号\"]"
+      ],
+      "rect": {
+        "x": 430,
+        "y": 872,
+        "width": 166,
+        "height": 17
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//beian.miit.gov.cn/",
+      "label": "京ICP证030173号",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[6]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"京ICP证030173号\"]"
+      ],
+      "rect": {
+        "x": 620,
+        "y": 872,
+        "width": 95,
+        "height": 17
+      }
+    },
+    {
+      "tag": "SPAN",
+      "id": "year",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "©2026 Baidu",
+      "xpath": "//span[@id=\"year\"]",
+      "xpathAlt": [
+        "//*[@id=\"year\"]",
+        "//span[contains(@class,\"text-color\")]",
+        "//span[normalize-space(.)=\"©2026 Baidu\"]"
+      ],
+      "rect": {
+        "x": 739,
+        "y": 872,
+        "width": 78,
+        "height": 17
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "text-color",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "//www.baidu.com/licence/",
+      "label": "信息网络传播视听节目许可证 0110516",
+      "xpath": "/body[1]/div[1]/div[1]/div[4]/div[1]/p[9]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"text-color\")]",
+        "//a[normalize-space(.)=\"信息网络传播视听节目许可证 0110516\"]"
+      ],
+      "rect": {
+        "x": 1151,
+        "y": 872,
+        "width": 203,
+        "height": 17
+      }
+    }
+  ],
+  "searchVariant": {
+    "variant": "kw",
+    "inputId": "kw",
+    "buttonId": "su",
+    "inputTag": "INPUT",
+    "inputXPath": "//*[@id=\"kw\"]",
+    "buttonXPath": "//*[@id=\"su\"]",
+    "url": "https://www.baidu.com/",
+    "title": "百度一下，你就知道",
+    "wrapperClass": "wrapper_new"
+  }
+}

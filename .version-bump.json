@@ -1,0 +1,10 @@
+{
+  "note": "Repo-level version tracked here; per-skill versions live in each skills/<name>/skill.json.",
+  "files": [
+    { "path": "package.json", "field": "version" },
+    { "path": ".claude-plugin/plugin.json", "field": "version" },
+    { "path": ".claude-plugin/marketplace.json", "field": "plugins.0.version" },
+    { "path": ".codex-plugin/plugin.json", "field": "version" },
+    { "path": ".cursor-plugin/plugin.json", "field": "version" }
+  ]
+}

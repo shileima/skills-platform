@@ -1,0 +1,2230 @@
+{
+  "site": "baidu",
+  "page": "search",
+  "cacheSlug": "baidu-search",
+  "collectorVersion": "1.0.0",
+  "url": "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&rsv_idx=1&ch=&tn=baidu&bar=&wd=%E4%BD%A0%E5%A5%BD&rn=&fenlei=256&oq=&rsv_pq=b9ff093e0000e419&rsv_t=3635FYbdbC8tlWmudZmYaUnaucNe%2BRzTzNEGqg%2FJuniQU10WL5mtMQehIrU&rqlang=cn&rsv_enter=1&rsv_dl=ib",
+  "title": "你好_百度搜索",
+  "collectedAt": "2026-07-29T13:21:58.623Z",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+  "elementCount": 98,
+  "elements": [
+    {
+      "tag": "DIV",
+      "id": "wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "wrapper_l wrapper_new smart_input_wrapper   hide_tab_icon",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "百度一下 百度首页设置登录 网页 图片 资讯 视频 笔记 地图 贴吧 文库 更多 搜索工具 相关搜索 你好之后怎么聊天 ",
+      "xpath": "//div[@id=\"wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"wrapper\"]",
+        "//div[contains(@class,\"wrapper_l\")]",
+        "//div[normalize-space(.)=\"百度一下 百度首页设置登录 网页 图片 资讯 视频 笔记 地\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 3080
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "head",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "百度一下 百度首页设置登录",
+      "xpath": "//div[@id=\"head\"]",
+      "xpathAlt": [
+        "//*[@id=\"head\"]",
+        "//div[normalize-space(.)=\"百度一下 百度首页设置登录\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 70
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "s_tab",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s_tab s_tab_1z9nv ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "网页 图片 资讯 视频 笔记 地图 贴吧 文库 更多 搜索工具",
+      "xpath": "//div[@id=\"s_tab\"]",
+      "xpathAlt": [
+        "//*[@id=\"s_tab\"]",
+        "//div[contains(@class,\"s_tab\")]",
+        "//div[normalize-space(.)=\"网页 图片 资讯 视频 笔记 地图 贴吧 文库 更多 搜索工\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 98
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "u",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "百度首页设置登录",
+      "xpath": "//div[@id=\"u\"]",
+      "xpathAlt": [
+        "//*[@id=\"u\"]",
+        "//div[normalize-space(.)=\"百度首页设置登录\"]"
+      ],
+      "rect": {
+        "x": 1236,
+        "y": 4,
+        "width": 204,
+        "height": 60
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "chat-input-main",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "\n            one-line-input\n            \n            \n        ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "百度一下",
+      "xpath": "//div[@id=\"chat-input-main\"]",
+      "xpathAlt": [
+        "//*[@id=\"chat-input-main\"]",
+        "//div[contains(@class,\"one-line-input\")]",
+        "//div[normalize-space(.)=\"百度一下\"]"
+      ],
+      "rect": {
+        "x": 134,
+        "y": 15,
+        "width": 748,
+        "height": 46
+      }
+    },
+    {
+      "tag": "A",
+      "id": "result_logo",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/",
+      "label": "#result_logo",
+      "xpath": "//a[@id=\"result_logo\"]",
+      "xpathAlt": [
+        "//*[@id=\"result_logo\"]"
+      ],
+      "rect": {
+        "x": 15,
+        "y": 17,
+        "width": 101,
+        "height": 36
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "index-logo-src",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "到百度首页",
+      "xpath": "/body[1]/div[2]/div[1]/div[1]/div[1]/div[1]/a[1]/img[1]",
+      "xpathAlt": [
+        "//img[contains(@class,\"index-logo-src\")]"
+      ],
+      "rect": {
+        "x": 15,
+        "y": 17,
+        "width": 101,
+        "height": 33
+      }
+    },
+    {
+      "tag": "BUTTON",
+      "id": "chat-submit-button",
+      "name": "",
+      "type": "submit",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "百度一下",
+      "xpath": "//button[@id=\"chat-submit-button\"]",
+      "xpathAlt": [
+        "//*[@id=\"chat-submit-button\"]",
+        "//button[normalize-space(.)=\"百度一下\"]"
+      ],
+      "rect": {
+        "x": 774,
+        "y": 19,
+        "width": 104,
+        "height": 38
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "tj_login",
+      "type": "",
+      "role": "",
+      "class": "lb ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://passport.baidu.com/v2/?login&tpl=mn&u=http%3A%2F%2Fwww.baidu.com%2F",
+      "label": "登录",
+      "xpath": "/body[1]/div[2]/div[1]/div[1]/div[2]/a[3]",
+      "xpathAlt": [
+        "//a[@name=\"tj_login\"]",
+        "//a[contains(@class,\"lb\")]",
+        "//a[normalize-space(.)=\"登录\"]"
+      ],
+      "rect": {
+        "x": 1368,
+        "y": 22,
+        "width": 48,
+        "height": 24
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "toindex",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/",
+      "label": "百度首页",
+      "xpath": "/body[1]/div[2]/div[1]/div[1]/div[2]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"toindex\")]",
+        "//a[normalize-space(.)=\"百度首页\"]"
+      ],
+      "rect": {
+        "x": 1254,
+        "y": 24,
+        "width": 52,
+        "height": 24
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "tj_settingicon",
+      "type": "",
+      "role": "",
+      "class": "pf",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "javascript:;",
+      "label": "设置",
+      "xpath": "/body[1]/div[2]/div[1]/div[1]/div[2]/a[2]",
+      "xpathAlt": [
+        "//a[@name=\"tj_settingicon\"]",
+        "//a[contains(@class,\"pf\")]",
+        "//a[normalize-space(.)=\"设置\"]"
+      ],
+      "rect": {
+        "x": 1324,
+        "y": 24,
+        "width": 26,
+        "height": 24
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "chat-input-area",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "你好",
+      "xpath": "//div[@id=\"chat-input-area\"]",
+      "xpathAlt": [
+        "//*[@id=\"chat-input-area\"]",
+        "//div[normalize-space(.)=\"你好\"]"
+      ],
+      "rect": {
+        "x": 151,
+        "y": 26,
+        "width": 721,
+        "height": 26
+      }
+    },
+    {
+      "tag": "TEXTAREA",
+      "id": "chat-textarea",
+      "name": "",
+      "type": "textarea",
+      "role": "",
+      "class": "chat-input-textarea chat-input-scroll-style",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "你好",
+      "xpath": "//textarea[@id=\"chat-textarea\"]",
+      "xpathAlt": [
+        "//*[@id=\"chat-textarea\"]",
+        "//textarea[contains(@class,\"chat-input-textarea\")]",
+        "//textarea[normalize-space(.)=\"你好\"]"
+      ],
+      "rect": {
+        "x": 151,
+        "y": 26,
+        "width": 715,
+        "height": 26
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "right-tool",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#right-tool",
+      "xpath": "//div[@id=\"right-tool\"]",
+      "xpathAlt": [
+        "//*[@id=\"right-tool\"]"
+      ],
+      "rect": {
+        "x": 633,
+        "y": 28,
+        "width": 123,
+        "height": 20
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "voice-input-wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#voice-input-wrapper",
+      "xpath": "//div[@id=\"voice-input-wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"voice-input-wrapper\"]"
+      ],
+      "rect": {
+        "x": 666,
+        "y": 28,
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "s_tab_inner",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s_tab_inner s_tab_inner_81iSw s-old-tag s-old-tag_37j6L\n        \n        ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "网页 图片 资讯 视频 笔记 地图 贴吧 文库 更多 搜索工具",
+      "xpath": "//div[@id=\"s_tab_inner\"]",
+      "xpathAlt": [
+        "//*[@id=\"s_tab_inner\"]",
+        "//div[contains(@class,\"s_tab_inner\")]",
+        "//div[normalize-space(.)=\"网页 图片 资讯 视频 笔记 地图 贴吧 文库 更多 搜索工\"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 65,
+        "width": 908,
+        "height": 36
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-item-img_2Giz- s-tab-csaitab\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://chat.baidu.com/search?word=%E4%BD%A0%E5%A5%BD&dyTabStr=MTIsMCwzLDEsMiwxMyw3LDYsNSw5&pd=csaitab&setype=csaitab&extParamsJson=%7B%22enter_type%22%3A%22search_a_tab%22%2C%22sa%22%3A%22vs_tab%22%2C%22apagelid%22%3A%2217875221026263180604%22%2C%22ori_lid%22%3A%2217875221026263180604%22%7D",
+      "label": "a",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-pic_p4Uej s-tab-pic\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://image.baidu.com/i?tn=baiduimage&ps=1&ct=201326592&lm=-1&cl=2&nc=1&ie=utf-8&lid=f8118ad10002a53c&dyTabStr=MTIsMCwzLDEsMiwxMyw3LDYsNSw5&word=%E4%BD%A0%E5%A5%BD",
+      "label": "图片",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[2]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"图片\"]"
+      ],
+      "rect": {
+        "x": 260,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-news_3_f7Y s-tab-news\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?rtt=1&bsst=1&cl=2&tn=news&ie=utf-8&word=%E4%BD%A0%E5%A5%BD",
+      "label": "资讯",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[3]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"资讯\"]"
+      ],
+      "rect": {
+        "x": 316,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-video_1Sf_u s-tab-video\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/sf/vsearch?pd=video&tn=vsearch&lid=f8118ad10002a53c&ie=utf-8&wd=%E4%BD%A0%E5%A5%BD&rsv_spt=7&rsv_bp=1&f=8&oq=%E4%BD%A0%E5%A5%BD&rsv_pq=f8118ad10002a53c&rsv_t=d532oXG7igwTt22B9VJ7E3u5f2vsG%2B1YJAKLeiBpZx%2F1Uj6fnLOgRiwYlno",
+      "label": "视频",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[4]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"视频\"]"
+      ],
+      "rect": {
+        "x": 371,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-note_2zG_i s-tab-note\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://www.baidu.com/s?pd=note&rpf=pc&dyTabStr=MTIsMCwzLDEsMiwxMyw3LDYsNSw5&word=%E4%BD%A0%E5%A5%BD",
+      "label": "笔记",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[5]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"笔记\"]"
+      ],
+      "rect": {
+        "x": 426,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-map_39nFy s-tab-map\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://map.baidu.com/?newmap=1&ie=utf-8&from=pstab&s=s%26wd%3D%E4%BD%A0%E5%A5%BD",
+      "label": "地图",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[6]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"地图\"]"
+      ],
+      "rect": {
+        "x": 481,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-tieba_3gnzZ s-tab-tieba\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://tieba.baidu.com/f?fr=wwwt&ie=utf-8&dyTabStr=MTIsMCwzLDEsMiwxMyw3LDYsNSw5&kw=%E4%BD%A0%E5%A5%BD",
+      "label": "贴吧",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[7]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"贴吧\"]"
+      ],
+      "rect": {
+        "x": 536,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH- s-tab-wenku_GwhrW s-tab-wenku\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://wenku.baidu.com/search?lm=0&od=0&ie=utf-8&dyTabStr=MTIsMCwzLDEsMiwxMyw3LDYsNSw5&word=%E4%BD%A0%E5%A5%BD",
+      "label": "文库",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[8]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"文库\"]"
+      ],
+      "rect": {
+        "x": 592,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "s-tab-item s-tab-item_1CwH-  s-tab-more\n                \n                ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/more/",
+      "label": "更多",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[9]",
+      "xpathAlt": [
+        "//a[contains(@class,\"s-tab-item\")]",
+        "//a[normalize-space(.)=\"更多\"]"
+      ],
+      "rect": {
+        "x": 647,
+        "y": 69,
+        "width": 28,
+        "height": 32
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/body[1]/div[2]/div[3]/div[1]/div[1]/a[1]/img[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 150,
+        "y": 76,
+        "width": 28,
+        "height": 14
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "wrapper_wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 檀健次的个人资料简介介绍 来了来了要来了 哈喽  换一",
+      "xpath": "//div[@id=\"wrapper_wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"wrapper_wrapper\"]",
+        "//div[normalize-space(.)=\"相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 \"]"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 98,
+        "width": 1440,
+        "height": 2982
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "container",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "sam_newgrid container_l",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 檀健次的个人资料简介介绍 来了来了要来了 哈喽  换一",
+      "xpath": "//div[@id=\"container\"]",
+      "xpathAlt": [
+        "//*[@id=\"container\"]",
+        "//div[contains(@class,\"sam_newgrid\")]",
+        "//div[normalize-space(.)=\"相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 \"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 98,
+        "width": 1076,
+        "height": 2864
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "content_left",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "你好 - 百度百科 你好是汉语常用问候语，拼音为nǐ hǎo，注音为ㄋㄧˇ ㄏㄠˇ，主要用于非熟人交流场景的礼貌性打招呼",
+      "xpath": "//div[@id=\"content_left\"]",
+      "xpathAlt": [
+        "//*[@id=\"content_left\"]",
+        "//div[normalize-space(.)=\"你好 - 百度百科 你好是汉语常用问候语，拼音为nǐ hǎo\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 98,
+        "width": 608,
+        "height": 2612
+      }
+    },
+    {
+      "tag": "H3",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "t _sc-title_10ku5_63 kg-title_a60kU tts-b-hl ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "你好 - 百度百科",
+      "xpath": "/body[1]/div[2]/div[4]/div[1]/div[3]/div[1]/div[1]/h3[1]",
+      "xpathAlt": [
+        "//h3[contains(@class,\"t\")]",
+        "//h3[normalize-space(.)=\"你好 - 百度百科\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 119,
+        "width": 608,
+        "height": 28
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "content_right",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cr-offset  ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 檀健次的个人资料简介介绍 来了来了要来了 哈喽  换一",
+      "xpath": "//div[@id=\"content_right\"]",
+      "xpathAlt": [
+        "//*[@id=\"content_right\"]",
+        "//div[contains(@class,\"cr-offset\")]",
+        "//div[normalize-space(.)=\"相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 \"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 119,
+        "width": 348,
+        "height": 841
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "con-ar",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 檀健次的个人资料简介介绍 来了来了要来了 哈喽  换一",
+      "xpath": "//div[@id=\"con-ar\"]",
+      "xpathAlt": [
+        "//*[@id=\"con-ar\"]",
+        "//div[normalize-space(.)=\"相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 \"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 119,
+        "width": 348,
+        "height": 801
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "1",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "result-op cr-content xpath-log new-pmd",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 檀健次的个人资料简介介绍 来了来了要来了 哈喽",
+      "xpath": "//div[@id=\"1\"]",
+      "xpathAlt": [
+        "//*[@id=\"1\"]",
+        "//div[contains(@class,\"result-op\")]",
+        "//div[normalize-space(.)=\"相关搜索 你好之后怎么聊天 您好 你好 你好邻居正式版下载 \"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 119,
+        "width": 348,
+        "height": 203
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "sc-link _link_1iyz5_2 -v-color-primary block",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=NBZuJZN5ciIGWcVhpyRx5bxWHmwPRmE_yUCU6_oU93YnY8eU5GQRYoSnElrfDkiRHKf2O4grE2Jxb3h03rdC-_",
+      "label": "你好 - 百度百科",
+      "xpath": "/body[1]/div[2]/div[4]/div[1]/div[3]/div[1]/div[1]/h3[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"sc-link\")]",
+        "//a[normalize-space(.)=\"你好 - 百度百科\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 122,
+        "width": 124,
+        "height": 19
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-no-underline c-invoke-class\n                        result-item_2RqwZ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BD%A0%E5%A5%BD%E4%B9%8B%E5%90%8E%E6%80%8E%E4%B9%88%E8%81%8A%E5%A4%A9&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=5256nXdaqyWAEapJpus9y3Q7tRCrxXQQJEcN3jteTj5%2FZfnIB8G4DwAi%2FMU&rfqid=f8118ad10002a53c&rsv_dl=0_prs_28616_1&rq=%E4%BD%A0%E5%A5%BD&rsf=101631101",
+      "label": "你好之后怎么聊天",
+      "xpath": "/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-no-underline\")]",
+        "//a[normalize-space(.)=\"你好之后怎么聊天\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 148,
+        "width": 348,
+        "height": 14
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-image-body",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/img[1]",
+      "xpathAlt": [
+        "//img[contains(@class,\"cos-image-body\")]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 169,
+        "width": 140,
+        "height": 140
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-no-underline c-invoke-class\n                        result-item_2RqwZ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E6%82%A8%E5%A5%BD%20%E4%BD%A0%E5%A5%BD&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rfqid=f8118ad10002a53c&rsv_dl=0_prs_28616_2&rq=%E4%BD%A0%E5%A5%BD&rsf=101637201",
+      "label": "您好 你好",
+      "xpath": "/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[2]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-no-underline\")]",
+        "//a[normalize-space(.)=\"您好 你好\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 180,
+        "width": 348,
+        "height": 14
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-no-underline c-invoke-class\n                        result-item_2RqwZ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BD%A0%E5%A5%BD%E9%82%BB%E5%B1%85%E6%AD%A3%E5%BC%8F%E7%89%88%E4%B8%8B%E8%BD%BD&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rfqid=f8118ad10002a53c&rsv_dl=0_prs_28616_3&rq=%E4%BD%A0%E5%A5%BD&rsf=101631151",
+      "label": "你好邻居正式版下载",
+      "xpath": "/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[3]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-no-underline\")]",
+        "//a[normalize-space(.)=\"你好邻居正式版下载\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 212,
+        "width": 348,
+        "height": 14
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=NBZuJZN5ciIGWcVhpyRx5bxWHmwPRmE_yUCU6_oU93YnY8eU5GQRYoSnElrfDkiRHKf2O4grE2Jxb3h03rdC-_",
+      "label": "详情",
+      "xpath": "/div[1]/div[2]/div[1]/div[1]/div[1]/p[1]/span[3]/span[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"详情\"]"
+      ],
+      "rect": {
+        "x": 535,
+        "y": 237,
+        "width": 26,
+        "height": 19
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=NBZuJZN5ciIGWcVhpyRx5bxWHmwPRmE_yUCU6_oU93YnY8eU5GQRYoSnElrfDkiRHKf2O4grE2Jxb3h03rdC-_",
+      "label": "",
+      "xpath": "/div[1]/div[2]/div[1]/div[1]/div[1]/p[1]/span[3]/span[1]/a[2]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"\"]"
+      ],
+      "rect": {
+        "x": 561,
+        "y": 237,
+        "width": 13,
+        "height": 19
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-no-underline c-invoke-class\n                        result-item_2RqwZ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E6%AA%80%E5%81%A5%E6%AC%A1%E7%9A%84%E4%B8%AA%E4%BA%BA%E8%B5%84%E6%96%99%E7%AE%80%E4%BB%8B%E4%BB%8B%E7%BB%8D&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rfqid=f8118ad10002a53c&rsv_dl=0_prs_28616_4&rq=%E4%BD%A0%E5%A5%BD&rsf=101631161",
+      "label": "檀健次的个人资料简介介绍",
+      "xpath": "/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[4]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-no-underline\")]",
+        "//a[normalize-space(.)=\"檀健次的个人资料简介介绍\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 244,
+        "width": 348,
+        "height": 14
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-link-button cos-flex cos-justify-center",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=fuje_Pft1X-FYtA1OL6CRUpkU-ZLDOGooHzFvkzgSauHwgFLE3d2BdpoacX3SpA0-IyskQElHpIasme_y_wcSvl2BiZET6HkxqUh7mpM7ye",
+      "label": "影响",
+      "xpath": "/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-link-button\")]",
+        "//a[normalize-space(.)=\"影响\"]"
+      ],
+      "rect": {
+        "x": 306,
+        "y": 268,
+        "width": 107,
+        "height": 29
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-link-button cos-flex cos-justify-center",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=fuje_Pft1X-FYtA1OL6CRUpkU-ZLDOGooHzFvkzgSauHwgFLE3d2BdpoacX3SpA0-IyskQElHpIasme_y_wcS7AFmQdBb8oJvKQzQW4Ei8K",
+      "label": "你好释义",
+      "xpath": "/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[2]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-link-button\")]",
+        "//a[normalize-space(.)=\"你好释义\"]"
+      ],
+      "rect": {
+        "x": 421,
+        "y": 268,
+        "width": 107,
+        "height": 29
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-link-button cos-flex cos-justify-center",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=fuje_Pft1X-FYtA1OL6CRUpkU-ZLDOGooHzFvkzgSauHwgFLE3d2BdpoacX3SpA0-IyskQElHpIasme_y_wcStRPNHb53FE1FpinVG1IzNq",
+      "label": "类似问候语",
+      "xpath": "/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[3]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-link-button\")]",
+        "//a[normalize-space(.)=\"类似问候语\"]"
+      ],
+      "rect": {
+        "x": 536,
+        "y": 268,
+        "width": 107,
+        "height": 29
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-link-button cos-flex cos-justify-center",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=fuje_Pft1X-FYtA1OL6CRUpkU-ZLDOGooHzFvkzgSauHwgFLE3d2BdpoacX3SpA0-IyskQElHpIasme_y_wcSwFGtu9AhFQJfoaYRfF3-_C",
+      "label": "例句与英文",
+      "xpath": "/div[1]/div[2]/div[1]/div[2]/div[2]/div[1]/div[1]/div[4]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-link-button\")]",
+        "//a[normalize-space(.)=\"例句与英文\"]"
+      ],
+      "rect": {
+        "x": 651,
+        "y": 268,
+        "width": 107,
+        "height": 29
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-no-underline c-invoke-class\n                        result-item_2RqwZ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E6%9D%A5%E4%BA%86%E6%9D%A5%E4%BA%86%E8%A6%81%E6%9D%A5%E4%BA%86&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rfqid=f8118ad10002a53c&rsv_dl=0_prs_28616_5&rq=%E4%BD%A0%E5%A5%BD&rsf=101633601",
+      "label": "来了来了要来了",
+      "xpath": "/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[5]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-no-underline\")]",
+        "//a[normalize-space(.)=\"来了来了要来了\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 276,
+        "width": 348,
+        "height": 14
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cos-no-underline c-invoke-class\n                        result-item_2RqwZ",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E5%93%88%E5%96%BD&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rfqid=f8118ad10002a53c&rsv_dl=0_prs_28616_6&rq=%E4%BD%A0%E5%A5%BD&rsf=101631101",
+      "label": "哈喽",
+      "xpath": "/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[6]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cos-no-underline\")]",
+        "//a[normalize-space(.)=\"哈喽\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 308,
+        "width": 348,
+        "height": 14
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cosc-source-a cosc-source-link",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=NBZuJZN5ciIGWcVhpyRx5bxWHmwPRmE_yUCU6_oU93YnY8eU5GQRYoSnElrfDkiRHKf2O4grE2Jxb3h03rdC-_",
+      "label": "百度百科",
+      "xpath": "/div[4]/div[1]/div[3]/div[1]/div[1]/div[2]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"cosc-source-a\")]",
+        "//a[normalize-space(.)=\"百度百科\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 332,
+        "width": 55,
+        "height": 22
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "feedback_13698195641876618136_1",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "cosc-feedback",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "#feedback_13698195641876618136_1",
+      "xpath": "//div[@id=\"feedback_13698195641876618136_1\"]",
+      "xpathAlt": [
+        "//*[@id=\"feedback_13698195641876618136_1\"]",
+        "//div[contains(@class,\"cosc-feedback\")]"
+      ],
+      "rect": {
+        "x": 205,
+        "y": 332,
+        "width": 13,
+        "height": 22
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "con-ceiling-wrapper",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": " 换一换 热搜榜北京榜民生榜财经榜  促进团结奋斗 汇聚磅礴力量 1 银行大面积调整营业时间热 2 斯洛伐克总统",
+      "xpath": "//div[@id=\"con-ceiling-wrapper\"]",
+      "xpathAlt": [
+        "//*[@id=\"con-ceiling-wrapper\"]",
+        "//div[normalize-space(.)=\" 换一换 热搜榜北京榜民生榜财经榜  促进团结奋斗 \"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 342,
+        "width": 348,
+        "height": 578
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "2",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "result-op xpath-log new-pmd",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": " 换一换 热搜榜北京榜民生榜财经榜  促进团结奋斗 汇聚磅礴力量 1 银行大面积调整营业时间热 2 斯洛伐克总统",
+      "xpath": "//div[@id=\"2\"]",
+      "xpathAlt": [
+        "//*[@id=\"2\"]",
+        "//div[contains(@class,\"result-op\")]",
+        "//div[normalize-space(.)=\" 换一换 热搜榜北京榜民生榜财经榜  促进团结奋斗 \"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 342,
+        "width": 348,
+        "height": 578
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "OP_LOG_BTN toplist-refresh-btn_2ky31 c-font-normal",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "javascript:void(0);",
+      "label": "换一换",
+      "xpath": "/td[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"OP_LOG_BTN\")]",
+        "//a[normalize-space(.)=\"换一换\"]"
+      ],
+      "rect": {
+        "x": 1167,
+        "y": 344,
+        "width": 59,
+        "height": 16
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-color-t opr-toplist1-title_2gF7E",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "https://top.baidu.com/board?platform=pc&sa=pcindex_a_right",
+      "label": "",
+      "xpath": "/tr[1]/td[1]/div[1]/div[2]/div[1]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-color-t\")]",
+        "//a[normalize-space(.)=\"\"]"
+      ],
+      "rect": {
+        "x": 878,
+        "y": 345,
+        "width": 74,
+        "height": 16
+      }
+    },
+    {
+      "tag": "H3",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-title t title-text_M2oCi",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "你好,星期六 2025-综艺高清视频在线观看",
+      "xpath": "/body[1]/div[2]/div[4]/div[1]/div[3]/div[2]/div[1]/h3[1]",
+      "xpathAlt": [
+        "//h3[contains(@class,\"c-title\")]",
+        "//h3[normalize-space(.)=\"你好,星期六 2025-综艺高清视频在线观看\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 374,
+        "width": 608,
+        "height": 30
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "\n                ",
+      "placeholder": "",
+      "ariaLabel": "剧名你好,星期六 2025",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNCieme1TwCj97NjcwnrmOq2QkEQJuC6ZnZF499XocFaOS",
+      "label": "你好,星期六 2025-综艺高清视频在线观看",
+      "xpath": "/body[1]/div[2]/div[4]/div[1]/div[3]/div[2]/div[1]/h3[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"你好,星期六 2025-综艺高清视频在线观看\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 374,
+        "width": 608,
+        "height": 24
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-gap-right",
+      "placeholder": "",
+      "ariaLabel": "真人秀",
+      "href": "/s?rsv_idx=1&wd=%E7%9C%9F%E4%BA%BA%E7%A7%80%E7%BB%BC%E8%89%BA&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=42f11EsXljRzIUaa3MAto1cbAuEyXyiQHdXpp5wpNYxw7WSo6rF6JnqbAdc",
+      "label": "真人秀",
+      "xpath": "/div[4]/div[1]/div[3]/div[2]/div[1]/div[1]/div[2]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-gap-right\")]",
+        "//a[normalize-space(.)=\"真人秀\"]"
+      ],
+      "rect": {
+        "x": 345,
+        "y": 407,
+        "width": 39,
+        "height": 21
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNCieme1TwCj97NjcwnrmOq2QkEQJuC6ZnZF499XocFaOS",
+      "label": "a",
+      "xpath": "/div[2]/div[4]/div[1]/div[3]/div[2]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 150,
+        "y": 409,
+        "width": 140,
+        "height": 187
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[3]/div[2]/div[1]/div[1]/div[1]/a[1]/div[1]/div[1]/img[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 150,
+        "y": 409,
+        "width": 140,
+        "height": 196
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BF%83%E8%BF%9B%E5%9B%A2%E7%BB%93%E5%A5%8B%E6%96%97%20%E6%B1%87%E8%81%9A%E7%A3%85%E7%A4%B4%E5%8A%9B%E9%87%8F&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_1&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "促进团结奋斗 汇聚磅礴力量",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"促进团结奋斗 汇聚磅礴力量\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 411,
+        "width": 172,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-gap-right",
+      "placeholder": "",
+      "ariaLabel": "内地",
+      "href": "/s?rsv_idx=1&wd=%E5%86%85%E5%9C%B0%E7%BB%BC%E8%89%BA&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=7ebdGj8hcfGe2nYNM4hOg7XWlrkU4PIaRGj4hEVQavi6OJvOy3WVvMU6XgA",
+      "label": "内地",
+      "xpath": "/div[4]/div[1]/div[3]/div[2]/div[1]/div[1]/div[2]/div[2]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-gap-right\")]",
+        "//a[normalize-space(.)=\"内地\"]"
+      ],
+      "rect": {
+        "x": 345,
+        "y": 428,
+        "width": 26,
+        "height": 21
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-gap-right",
+      "placeholder": "",
+      "ariaLabel": "大陆",
+      "href": "/s?rsv_idx=1&wd=%E5%A4%A7%E9%99%86%E7%BB%BC%E8%89%BA&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=7ebdGj8hcfGe2nYNM4hOg7XWlrkU4PIaRGj4hEVQavi6OJvOy3WVvMU6XgA",
+      "label": "大陆",
+      "xpath": "/div[4]/div[1]/div[3]/div[2]/div[1]/div[1]/div[2]/div[2]/a[2]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-gap-right\")]",
+        "//a[normalize-space(.)=\"大陆\"]"
+      ],
+      "rect": {
+        "x": 383,
+        "y": 428,
+        "width": 26,
+        "height": 21
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E9%93%B6%E8%A1%8C%E5%A4%A7%E9%9D%A2%E7%A7%AF%E8%B0%83%E6%95%B4%E8%90%A5%E4%B8%9A%E6%97%B6%E9%97%B4&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_2&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "银行大面积调整营业时间",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[2]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"银行大面积调整营业时间\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 443,
+        "width": 154,
+        "height": 22
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[1]/div[1]/a[1]/div[2]/img[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 196,
+        "y": 475,
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E6%96%AF%E6%B4%9B%E4%BC%90%E5%85%8B%E6%80%BB%E7%BB%9F%E6%80%80%E7%96%91%E4%B8%AD%E5%9B%BD%E6%9C%BA%E5%99%A8%E4%BA%BA%E8%97%8F%E7%9C%9F%E4%BA%BA&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_3&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "斯洛伐克总统怀疑中国机器人藏真人",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[3]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"斯洛伐克总统怀疑中国机器人藏真人\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 475,
+        "width": 224,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BB%8E%E5%9B%9B%E6%AC%BE%E5%87%BA%E5%8F%A3%E2%80%9C%E7%88%86%E5%93%81%E2%80%9D%E7%9C%8B%E2%80%9C%E4%B8%AD%E5%9B%BD%E6%99%BA%E9%80%A0%E2%80%9D&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_4&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "从四款出口“爆品”看“中国智造”",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[4]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"从四款出口“爆品”看“中国智造”\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 508,
+        "width": 187,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E7%94%B5%E5%BD%B1%E3%80%8A%E5%85%AB%E4%BB%99%EF%BC%81%E3%80%8B%E7%83%AD%E6%98%A0%E5%B8%A6%E7%81%AB%E5%8F%96%E6%99%AF%E5%9C%B0%E6%82%AC%E7%A9%BA%E5%AF%BA&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_5&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "电影《八仙！》热映带火取景地悬空寺",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[5]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"电影《八仙！》热映带火取景地悬空寺\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 540,
+        "width": 238,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E5%B0%8F%E5%8C%BA%E7%94%B5%E6%A2%AF%E7%AA%81%E7%84%B6%E5%A4%B1%E6%8E%A7%E4%BB%8E31%E6%A5%BC%E4%B8%8B%E5%9D%A0%E5%88%B0%E8%B4%9F2%E6%A5%BC&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_6&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "小区电梯突然失控从31楼下坠到负2楼",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[6]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"小区电梯突然失控从31楼下坠到负2楼\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 572,
+        "width": 233,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E6%BC%94%E5%91%98%E4%BF%AE%E6%9D%B0%E6%A5%B7%E5%BD%93%E5%BA%AD%E8%AE%A4%E7%BD%AA&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_7&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "演员修杰楷当庭认罪",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[7]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"演员修杰楷当庭认罪\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 604,
+        "width": 126,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E8%B5%B5%E5%BF%83%E7%AB%A5vs%E4%B8%81%E4%BF%8A%E6%99%96&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_8&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "赵心童vs丁俊晖",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[8]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"赵心童vs丁俊晖\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 636,
+        "width": 98,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNCieme1TwCj97NjcwnrmOq2QkEQJuC6ZnZF499XocFaOS",
+      "label": "最新 2025-12-28",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[3]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"最新 2025-12-28\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 644,
+        "width": 140,
+        "height": 93
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "is-cover_2MND3",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[1]/div[1]/div[1]/a[1]/div[1]/div[3]/img[1]",
+      "xpathAlt": [
+        "//img[contains(@class,\"is-cover_2MND3\")]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 644,
+        "width": 140,
+        "height": 93
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNC179TwHrJvBZGg8Q2sZZ_XQ6vUg_0FwHE_8IXSMwnZqy",
+      "label": "2025-12-27",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[3]/div[1]/div[2]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"2025-12-27\"]"
+      ],
+      "rect": {
+        "x": 306,
+        "y": 644,
+        "width": 140,
+        "height": 93
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "is-cover_2MND3",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[1]/div[2]/div[1]/a[1]/div[1]/div[2]/img[1]",
+      "xpathAlt": [
+        "//img[contains(@class,\"is-cover_2MND3\")]"
+      ],
+      "rect": {
+        "x": 306,
+        "y": 644,
+        "width": 140,
+        "height": 93
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNClWmRP2tSI_TUsSCqNKUYdSKRwq9FESNKoszCKDJuY9G",
+      "label": "2025-12-26",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[3]/div[1]/div[3]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"2025-12-26\"]"
+      ],
+      "rect": {
+        "x": 462,
+        "y": 644,
+        "width": 140,
+        "height": 93
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "is-cover_2MND3",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[1]/div[3]/div[1]/a[1]/div[1]/div[2]/img[1]",
+      "xpathAlt": [
+        "//img[contains(@class,\"is-cover_2MND3\")]"
+      ],
+      "rect": {
+        "x": 462,
+        "y": 644,
+        "width": 140,
+        "height": 93
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E6%83%B3%E5%8E%BB%E4%B8%9C%E5%8C%97%E9%81%BF%E6%9A%91%20%E7%BB%93%E6%9E%9C%E4%B8%9C%E5%8C%97%E4%BA%BA%E4%B9%9F%E5%8E%BB%E9%81%BF%E6%9A%91%E4%BA%86&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_9&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "想去东北避暑 结果东北人也去避暑了",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[9]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"想去东北避暑 结果东北人也去避暑了\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 668,
+        "width": 228,
+        "height": 22
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[3]/div[1]/div[1]/div[2]/img[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 196,
+        "y": 672,
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[3]/div[1]/div[2]/div[2]/img[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 352,
+        "y": 672,
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[1]/div[3]/div[2]/div[1]/div[3]/div[1]/div[3]/div[2]/img[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 508,
+        "y": 672,
+        "width": 48,
+        "height": 48
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E7%B2%89%E7%AC%94%E6%8A%95%E8%B5%84%E4%BA%8F%E6%8D%9F%E8%B6%855600%E4%B8%87%E5%85%83&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_10&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "粉笔投资亏损超5600万元",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[10]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"粉笔投资亏损超5600万元\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 700,
+        "width": 157,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E3%80%8A%E5%BA%86%E4%BD%99%E5%B9%B4%E3%80%8B%E6%BC%94%E5%91%98%E5%85%A5%E8%81%8C%E6%99%AF%E5%8C%BA%E5%BD%93NPC&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=e272vBu%2BwkXUrbyIlbwDeE5yxxL%2Bf9RAl0rk95sVjruuMRZO7T2HJXdXmgc&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_11&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "《庆余年》演员入职景区当NPC",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[11]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"《庆余年》演员入职景区当NPC\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 732,
+        "width": 198,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNCieme1TwCj97NjcwnrmOq2QkEQJuC6ZnZF499XocFaOS",
+      "label": "宋威龙赵今麦答题名场面默契来袭 杨迪爆梗帅气秘诀竟是挡脸大法",
+      "xpath": "/div[2]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"宋威龙赵今麦答题名场面默契来袭 杨迪爆梗帅气秘诀竟是挡脸大法\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 741,
+        "width": 140,
+        "height": 44
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNC179TwHrJvBZGg8Q2sZZ_XQ6vUg_0FwHE_8IXSMwnZqy",
+      "label": "宋威龙赵今麦复刻高甜拥抱 丁程鑫杨迪刻进DNA的默契答题",
+      "xpath": "/div[2]/div[1]/div[3]/div[1]/div[2]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"宋威龙赵今麦复刻高甜拥抱 丁程鑫杨迪刻进DNA的默契答题\"]"
+      ],
+      "rect": {
+        "x": 306,
+        "y": 741,
+        "width": 140,
+        "height": 44
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://www.baidu.com/link?url=99mj3x2DRguhR9Es3F91OmxBp-40sNzXQsCPn_mUCqNts3kxPUs0ZdqGldWQ6DNClWmRP2tSI_TUsSCqNKUYdSKRwq9FESNKoszCKDJuY9G",
+      "label": "你好,星期六2025 超前探班第34期:宋威龙赵今麦好六街合照甜度爆表 丁程鑫巧设抓娃娃抓力伏笔吴泽林一秒“拆穿”",
+      "xpath": "/div[2]/div[1]/div[3]/div[1]/div[3]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"你好,星期六2025 超前探班第34期:宋威龙赵今麦好六街合\"]"
+      ],
+      "rect": {
+        "x": 462,
+        "y": 741,
+        "width": 140,
+        "height": 44
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E2%80%9C%E5%96%80%E4%BB%80%E7%BB%8F%E5%BC%80%E5%8C%BA%E9%9B%B6%E5%9C%B0%E4%BB%B7%E4%BE%9B%E5%9C%B0%E2%80%9D%E7%B3%BB%E8%B0%A3%E8%A8%80&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=d228HJfpu6JBP%2BNto7y4cphNjU9vowq%2FCW%2B5uh7gjtdfNr6cxDSTsKN0UTg&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_12&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "“喀什经开区零地价供地”系谣言",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[12]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"“喀什经开区零地价供地”系谣言\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 765,
+        "width": 191,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "查看更多",
+      "href": "http://www.baidu.com/link?url=_KyjVKQy4zRSCNsV4ECi-QxD0A3uxD-mFef5mFexdPiihixE0LmDYcdUPEdXMKRCI5ARPceBhxXEOWdeGlUCGq",
+      "label": "查看更多",
+      "xpath": "/div[2]/div[4]/div[1]/div[3]/div[2]/div[1]/div[3]/div[2]/a[1]",
+      "xpathAlt": [
+        "//a[normalize-space(.)=\"查看更多\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 786,
+        "width": 608,
+        "height": 22
+      }
+    },
+    {
+      "tag": "IMG",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "arrow-right_1mxet",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "img",
+      "xpath": "/div[4]/div[1]/div[3]/div[2]/div[1]/div[3]/div[2]/a[1]/img[1]",
+      "xpathAlt": [
+        "//img[contains(@class,\"arrow-right_1mxet\")]"
+      ],
+      "rect": {
+        "x": 209,
+        "y": 790,
+        "width": 14,
+        "height": 14
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E8%BF%998%E4%B8%AA%E9%A5%AE%E9%A3%9F%E4%B9%A0%E6%83%AF%E6%82%84%E6%82%84%E2%80%9C%E5%90%83%E6%8E%89%E2%80%9D%E5%85%8D%E7%96%AB%E5%8A%9B&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=d228HJfpu6JBP%2BNto7y4cphNjU9vowq%2FCW%2B5uh7gjtdfNr6cxDSTsKN0UTg&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_13&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "这8个饮食习惯悄悄“吃掉”免疫力",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[13]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"这8个饮食习惯悄悄“吃掉”免疫力\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 797,
+        "width": 199,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "openIcon_19C1c c-gap-left-small",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "http://open.baidu.com/",
+      "label": "a",
+      "xpath": "/body[1]/div[2]/div[4]/div[1]/div[3]/div[2]/div[1]/div[4]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"openIcon_19C1c\")]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 812,
+        "width": 16,
+        "height": 12
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%B8%8B%E7%8F%AD%E4%BA%86%20%E5%B9%B4%E8%BD%BB%E4%BA%BA%E8%B5%B6%E7%9D%80%E5%8E%BB%E5%81%9A%E5%89%AF%E4%B8%9A&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=d228HJfpu6JBP%2BNto7y4cphNjU9vowq%2FCW%2B5uh7gjtdfNr6cxDSTsKN0UTg&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_14&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "下班了 年轻人赶着去做副业",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[14]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"下班了 年轻人赶着去做副业\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 829,
+        "width": 172,
+        "height": 22
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "3",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "result-op c-container new-pmd",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "系列作品 你好,星期六 2026 第五季 你好,星期六 2023 第二季 你好，星期六 第一季 你好,星期六 2024 ",
+      "xpath": "//div[@id=\"3\"]",
+      "xpathAlt": [
+        "//*[@id=\"3\"]",
+        "//div[contains(@class,\"result-op\")]",
+        "//div[normalize-space(.)=\"系列作品 你好,星期六 2026 第五季 你好,星期六 20\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 850,
+        "width": 608,
+        "height": 256
+      }
+    },
+    {
+      "tag": "H3",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "t _sc-title_10ku5_63 cos-line-clamp-1 title_69Cck",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "",
+      "label": "系列作品",
+      "xpath": "/div[2]/div[4]/div[1]/div[3]/div[3]/div[1]/div[1]/div[1]/h3[1]",
+      "xpathAlt": [
+        "//h3[contains(@class,\"t\")]",
+        "//h3[normalize-space(.)=\"系列作品\"]"
+      ],
+      "rect": {
+        "x": 150,
+        "y": 850,
+        "width": 608,
+        "height": 25
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BF%9D%E5%A7%86%E5%9B%A0%E6%97%A0%E6%B3%95%E7%94%9F%E8%82%B2%20%E6%8B%90%E8%B5%B0%E9%9B%87%E4%B8%BB%E5%AE%B6%E7%94%B7%E5%A9%B435%E5%B9%B4&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=d228HJfpu6JBP%2BNto7y4cphNjU9vowq%2FCW%2B5uh7gjtdfNr6cxDSTsKN0UTg&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_1_15_15&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "保姆因无法生育 拐走雇主家男婴35年",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[15]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"保姆因无法生育 拐走雇主家男婴35年\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 861,
+        "width": 229,
+        "height": 22
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BD%A0%E5%A5%BD%2C%E6%98%9F%E6%9C%9F%E5%85%AD%202026&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=6412UW4UxQY504hmTkPll%2BgOJs48BGa%2BmwwqrjzQHwTfOtssZYs%2Fn7UvXI4&kg_sid=9730103695948024425&sa=re_movie_hs",
+      "label": "a",
+      "xpath": "/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/a[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 150,
+        "y": 879,
+        "width": 128,
+        "height": 171
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BD%A0%E5%A5%BD%2C%E6%98%9F%E6%9C%9F%E5%85%AD%202023&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=6412UW4UxQY504hmTkPll%2BgOJs48BGa%2BmwwqrjzQHwTfOtssZYs%2Fn7UvXI4&kg_sid=1827455271980930147&sa=re_movie_hs",
+      "label": "a",
+      "xpath": "/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 294,
+        "y": 879,
+        "width": 128,
+        "height": 171
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BD%A0%E5%A5%BD%EF%BC%8C%E6%98%9F%E6%9C%9F%E5%85%AD%202022&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=331344Iya1Mcto60mxINh%2F7rpvP%2FeE7lbhg%2BZATur4Kv81ZPxMdd0RsrRxY&kg_sid=7258301388083603331&sa=re_movie_hs",
+      "label": "a",
+      "xpath": "/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/a[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 438,
+        "y": 879,
+        "width": 128,
+        "height": 171
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E4%BD%A0%E5%A5%BD%2C%E6%98%9F%E6%9C%9F%E5%85%AD%202024&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=79eck9S6p8gqVUke4n28qgkdSvIoTO5HjihtV1YqFPIeX%2BD4INHUsSeAXGk&kg_sid=10551236498230612645&sa=re_movie_hs",
+      "label": "a",
+      "xpath": "/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[4]/a[1]",
+      "xpathAlt": [],
+      "rect": {
+        "x": 582,
+        "y": 879,
+        "width": 128,
+        "height": 171
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "name": "",
+      "type": "",
+      "role": "",
+      "class": "c-font-medium c-color-t opr-toplist1-subtitle_1uZgw",
+      "placeholder": "",
+      "ariaLabel": "",
+      "href": "/s?rsv_idx=1&wd=%E2%80%9CABB%E2%80%9D%E5%BA%97%E5%90%8D%E6%80%8E%E4%B9%88%E8%B6%8A%E6%9D%A5%E8%B6%8A%E5%A4%9A%E4%BA%86&fenlei=256&usm=4&ie=utf-8&rsv_pq=f8118ad10002a53c&oq=%E4%BD%A0%E5%A5%BD&rsv_t=d228HJfpu6JBP%2BNto7y4cphNjU9vowq%2FCW%2B5uh7gjtdfNr6cxDSTsKN0UTg&rqid=f8118ad10002a53c&rsf=1efc2068fc16a15d4839e4af78ac9f7c_16_30_16&rsv_dl=0_right_fyb_pchot_20811&sa=0_right_fyb_pchot_20811",
+      "label": "“ABB”店名怎么越来越多了",
+      "xpath": "/div[2]/div[1]/div[1]/div[1]/div[3]/div[1]/div[16]/div[1]/a[1]",
+      "xpathAlt": [
+        "//a[contains(@class,\"c-font-medium\")]",
+        "//a[normalize-space(.)=\"“ABB”店名怎么越来越多了\"]"
+      ],
+      "rect": {
+        "x": 900,
+        "y": 893,
+        "width": 163,
+        "height": 22
+      }
+    }
+  ],
+  "searchQuery": "你好"
+}
