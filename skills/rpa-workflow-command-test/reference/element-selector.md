@@ -270,6 +270,8 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 | 保存报「该字段是必填字段」 | Enter 步骤被跳过 | 补做 Enter 后再保存 |
 | Enter 后弹框意外关闭 | 焦点错误落在「保存」按钮上 | 检查组合框 idx；使用 focus 后再 Cmd+V |
 | XPath 含中文或非 ASCII | pbcopy 传输正常但 AntD Select 拒收 | 换纯 ASCII XPath；或使用**方式 B（平台捕获）** |
+| **保存关闭后 canvas 节点显示 `selectorId 元素的...`** | XPath 未真正落库 React state（Cmd+V 后没紧接 Enter，或粘贴时 Chrome 焦点不在弹框上） | 双击该节点重开弹框 → 方式 C 重填并**紧接** Enter → 校验 AX 中出现 `\d+ text //*[@id="..."]` 独立行 → 保存 |
+| **修改已有 tag 时 Backspace 无法删除** | AntD Select 已提交的 tag 不接受键盘删除（不像纯文本 input） | click 组合框 → `Cmd+A` 全选 → `Cmd+V` 粘贴新 XPath → **Enter**（新 tag 替换旧 tag） |
 
 ### 与方式 B 的取舍
 

@@ -209,7 +209,64 @@
 
 完整脚本见 `test-workflow.md` §第 5 步「sky 自动化：执行后四处扫描」（`step: "post-debug-four-way-check"`）。
 
-## 错误修复循环
+## 常见环境级异常（sky 侧）
+
+### Chrome 报 `cgWindowNotFound` / 长时间 timeout
+
+**现象**：`sky.get_app_state` 或 `sky.click` 返回 `Computer Use server error -10005: cgWindowNotFound`；或 `/exec` 长时间 timeout。表现为 Chrome 窗口"看得见但拿不到"。
+
+**原因**：Chrome 不是最前台进程（哪怕 Cmd+Tab 显示它可见，`System Events` 的 `frontmost` 属性可能仍是别的 App，例如 IDE、Automan Desktop）。
+
+**修复**：
+
+```bash
+osascript -e 'tell application "Google Chrome" to activate'
+osascript -e 'tell application "System Events" to set frontmost of application process "Google Chrome" to true'
+sleep 2
+```
+
+之后再重试 sky 调用即可。**不要**因为 timeout 就 `daemon.sh restart`——重启 daemon 会丢掉 sky bootstrap 状态（首次 `/exec` 后会自动重 bootstrap，但期间脚本会 timeout）。只有 `nodeRepl.write("ok")` 也返回失败时才考虑 restart。
+
+### canvas 节点显示 `selectorId 元素的...`（XPath 未落库判定）
+
+**现象**：某"验证元素…"节点保存关闭后，canvas 上该节点第二行不是 `//*[@id="..."]` 完整 XPath，而是 `selectorId` 之类的变量名占位。
+
+**原因**：Cmd+V 粘贴 XPath 到 AntD Select 组合框时未紧接 Enter，或粘贴时 Chrome 焦点被系统抢走（见上一节 `cgWindowNotFound`），React state 没接受粘贴文本作为 tag。
+
+**判定脚本**：
+
+```js
+{
+  const st = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const nodeTails = st.text.split("\n").filter(l => /^\s*\d+\s+text\s.*保存至\s+本节点/.test(l));
+  const anyBadPlaceholder = st.text.split("\n").some(l =>
+    /^\s*\d+\s+text\s+验证.*\bselectorId\b/.test(l) ||
+    // 兜底：节点末尾行含 selectorId 而非 XPath
+    /^\s*\d+\s+text\s.*selectorId.*属性值/.test(l)
+  );
+  nodeRepl.write(JSON.stringify({ anyBadPlaceholder, tails: nodeTails.slice(-3) }));
+}
+```
+
+**修复**：Escape → 双击该 canvas 节点重开弹框 → 走 `element-selector.md` §方式 C 重填（Cmd+V + Enter）→ 校验 AX 中出现独立行 `\d+ text //*[@id="..."]` → 保存 → 再校验 canvas 节点第二行是 XPath。
+
+### 「文本输入区（Monaco 类）」中文粘贴 filled=false
+
+**现象**：`验证文本存在/不存在`、`打印日志`、`FillText` 等含"文本输入区（settable, string）"的字段，用 `set_value` 或 `Cmd+V` 粘贴**中文**后 AX Tree 仍是空的。
+
+**原因**：底层是 Monaco/CodeMirror 类富文本编辑器 —— `set_value` 只写 AXValue 不触发编辑器 model 更新；`Cmd+V` 中文时和系统 IME 存在冲突，Chrome 不在最前台就会丢字。
+
+**决策**：
+
+| 场景 | 推荐 |
+|------|------|
+| 内容是 ASCII（英文、数字、常见符号） | `type_text` 直接输入（最稳） |
+| 内容必须是中文 | `pbcopy` → `osascript` 强制 Chrome 前台 + `sleep 2` → `sky.click(fieldIdx)` → `press_key("Cmd+V")` |
+| 中文粘贴反复失败 | 改用等价 ASCII 替代（如百度首页版权栏含 `Baidu`，可替代中文断言） |
+
+**验证脚本**：粘贴/输入后重新抓 AX，`region.some(l => l.includes(text))` 为 true 才算成功；否则不要点保存，先修复。
+
+
 
 | 错误类型 | 原因 | 修复方式 |
 |---------|------|---------|
@@ -222,7 +279,7 @@
 | 保存时报「该字段是必填字段」 | 必填项未填 / 元素选择器粘贴后未按 Enter | 元素选择器：Cmd+V 粘贴 XPath **紧接着按 Enter** 让 AntD Select 接受为定位器（`element-selector.md` §方式 C）；其它必填按 `commands/<slug>.md` 补全 |
 | **「节点配置不完整」**（检查面板 / 编排区右侧 ⓘ） | 条件必填未满足（如 SetCookie Domain 为空、域名误填 Path） | 双击节点 → Read `commands/<slug>.md` 补全 → 保存 → 点「检查」确认无异常 |
 | 配置改了但不生效 | 节点状态脏 / 保存未落盘 | **删指令 → 原位重插 → 重配表单**（见下） |
-| **指令顺序错误**（如「输入文本」在「打开网页」前） | 添加时锚点行错 / 光标未落在最后一条指令下方 | **首选**：选中错位节点 → 右击 **剪切** → 选中锚点行 → 按 **End** → **Return** 创建空行 → **粘贴**（`platform-ops.md` §2.3a，保留已填配置）；剪切失败再删后重插 |
+| **指令顺序错误**（如「输入文本」在「打开网页」前） | 添加时未先单击最后一条已保存指令行按 Enter 空行，导致光标落在错误位置（如已有指令上方/之间）就插入了新指令 | **首选**：选中错位节点 → 右击 **剪切** → 选中锚点行（最后一条正确指令）→ 按 **Enter** 创建空行 → **粘贴**（`insert-command.md` §右键菜单调整指令顺序，保留已填配置）；剪切失败再删后重插 |
 
 修复流程：`修复 → 保存 → 点「检查」→ 断开(如需) → 调试 → 运行 → 再查四处报错`
 

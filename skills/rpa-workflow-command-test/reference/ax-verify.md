@@ -61,10 +61,12 @@ function axAnalyze(lines, checks) {
 |-----------|-----------------|------------------|
 | 导航 URL | 地址栏含目标 URL；页面出现预期标题/导航 | 仍停留在旧 URL；404/空白 |
 | 点「工作流」 | URL 含 `/rpa/workflow`；列表或「新建工作流」可见 | 仍在 chat 页 |
-| 光标定位到 canvas | 焦点在 canvas 编辑器；`focused UI element` 指向 canvas 内元素 | 焦点仍在别处（提示行/搜索框） |
+| 光标定位到 canvas（首条指令） | 焦点在 canvas 编辑器；`focused UI element` 指向 canvas 内元素 | 焦点仍在别处（提示行/搜索框） |
+| **单击最后一条已保存指令行**（非首条指令，⚠️ 高危步骤） | 该行高亮/获焦 | 点空了或点到其他节点 → 重新按 §插入位置约束 定位 |
+| **按 Enter 空出新行**（非首条指令，**紧接上一步**） | 锚点行**正下方**出现新空行；canvas 节点行数增加 | 无新行；仍是原节点数 → 重新单击锚点行再按 Enter，**禁止**跳过直接搜索 |
 | 搜索框 set_value 指令中文名 | 右侧「指令」面板出现 `xxx (web)` 结果行；含「网页自动化」分组 | 无结果；仍在旧搜索词 |
 | 双击「网页自动化」分组下 `xxx (web)` | canvas 出现新节点编号；同时弹出配置弹框 | canvas 未变；无弹框 |
-| **插入后顺序校验** | 新节点在**最后一条已有指令之后**、结束节点之前；依赖顺序满足（如「打开网页」在「输入文本」前） | 「输入文本」排在「打开网页」前；新节点插在开始节点下方而非末尾 |
+| **插入后顺序校验**（最后一道保险，不可跳过） | 新节点在**锚点指令之后**、结束节点之前；依赖顺序满足（如「打开网页」在「输入文本」前，「验证元素存在」在「打开网页」后） | 新指令排在锚点指令**前面**（如「验证元素存在」排在「打开网页」前）；新节点插在开始节点下方而非末尾 → **立即停止配表单**，走 `insert-command.md` §右键菜单调整指令顺序 剪切→粘贴 修正 |
 | 双击开配置弹框 | **结构性多信号**：有「捕获」按钮 `/\d+ 按钮\s+捕\s*获/` **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 | 无弹框；三个信号均无 |
 | 粘贴 XPath（Cmd+V） | 组合框 Value 含 `//`；「该字段是必填字段」可能仍显示（需下一步 Enter） | 输入框仍空 |
 | 按 Enter（**方式 C 核心**） | 组合框旁出现 `\d+ text //...` 独立行 + 「该字段是必填字段」消失 | 红字仍在 → 重新聚焦 Cmd+V 再 Enter；重试仍失败 → 转方式 B（捕获） |
@@ -77,15 +79,19 @@ function axAnalyze(lines, checks) {
 
 ## 插入后顺序校验（加指令后必做）
 
-每次从浮层选中指令插入 canvas 后，**必须**全量抓 AX Tree 校验编排区顺序，再打开配置弹框。
+> 🚫 **插入前铁律**（详见 `insert-command.md` §插入位置约束）：非首条指令，必须**先单击 canvas 中最后一条已保存指令行 → 按 Enter 空出新行**，再搜索+双击插入新指令。**绝不能**把光标停在已有指令上方或两条指令之间再插入——那样新指令会排到已有指令**前面**（如图中「验证元素存在」误排在「打开网页」前）。
+
+每次搜索+双击插入指令到 canvas 后，**必须**全量抓 AX Tree 校验编排区顺序，再打开配置弹框填参数。
 
 ### 校验规则
 
-1. **追加位置**：新节点编号 = 当前业务指令最大编号 + 1，且位于「结束节点」之前
+1. **追加位置**：新节点必须排在**锚点指令（插入前最后一条已保存指令）之后**、「结束节点」之前
 2. **依赖顺序**（Web 场景）：
    - 插入「输入文本」前，canvas 中已有「打开网页」且在其**上方**（编号更小）
    - 插入「点击」前，canvas 中已有「打开网页」
-3. **非法示例**：`开始 → 输入文本 → 打开网页 → 结束` → 选中「输入文本」→ 右击 **剪切** → 选中「打开网页」→ **Enter** 创建空行 → **粘贴**（§2.3a，**不必先删除**）
+   - 插入「验证元素存在/可见」等断言类指令前，canvas 中已有「打开网页」（通常还需已有目标元素所在页面的前置指令）
+3. **非法示例**：`开始 → 验证元素存在 → 打开网页 → 结束`（新指令误插到锚点指令前面）→ 选中「验证元素存在」→ 右击 **剪切** → 选中「打开网页」→ **Enter** 创建空行 → **粘贴**（`insert-command.md` §右键菜单调整指令顺序，**不必先删除**）
+4. **发现顺序错误 → 立即停止**：**禁止**在错误顺序下继续为新节点配置表单参数，先修正顺序再配置
 
 ### sky 自动化
 
@@ -93,22 +99,34 @@ function axAnalyze(lines, checks) {
 {
   const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const canvasStart = lines.findIndex(l => l.includes("编辑器容器"));
-  const canvasText = lines.slice(canvasStart, canvasStart + 120).join("\n");
+  const canvasText = lines.slice(canvasStart, canvasStart + 150).join("\n");
 
+  const idxOf = (k) => canvasText.indexOf(k);
   const hasOpenUrl = canvasText.includes("打开网页");
   const hasFillText = canvasText.includes("输入文本");
   const hasClick = canvasText.includes("点击");
+  const hasVerifyExist = canvasText.includes("验证元素存在");
+  const hasVerifyVisible = canvasText.includes("验证元素可见");
+
+  // 「打开网页」必须是最先出现的业务指令（若存在）；其余指令一律排在其后
+  const openUrlFirst = !hasOpenUrl || [hasFillText, hasClick, hasVerifyExist, hasVerifyVisible]
+    .every((present, i) => {
+      const k = ["输入文本", "点击", "验证元素存在", "验证元素可见"][i];
+      return !present || idxOf("打开网页") < idxOf(k);
+    });
 
   const orderOk =
-    (!hasFillText || (hasOpenUrl && canvasText.indexOf("打开网页") < canvasText.indexOf("输入文本"))) &&
+    openUrlFirst &&
+    (!hasFillText || (hasOpenUrl && idxOf("打开网页") < idxOf("输入文本"))) &&
     (!hasClick || hasOpenUrl);
 
   nodeRepl.write(JSON.stringify({
     step: "order-verify",
     orderOk,
-    hasOpenUrl, hasFillText, hasClick,
-    action: orderOk ? "continue-config" : "cut-node-and-paste-at-correct-position"
+    hasOpenUrl, hasFillText, hasClick, hasVerifyExist, hasVerifyVisible,
+    action: orderOk ? "continue-config" : "STOP-cut-node-and-paste-at-correct-position-via-2.3a"
   }));
+  // orderOk === false → 立即停止配表单，走 insert-command.md §右键菜单调整指令顺序 剪切→粘贴 修正后再校验
 }
 ```
 
@@ -142,7 +160,7 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 2. **浮层/弹框状态不对** → `Escape` → 全量抓取确认关闭 → 从该步重来
 3. **canvas 处于编辑态**（双击失败）→ 点调试区失焦 + `Escape` → 再双击
 4. **同一动作连续 2 次验证仍失败** → 停止连点，报告当前 AX 关键行，换策略
-5. **插入后顺序校验失败** → 选中错位节点 → 右击 **剪切** → 选中锚点行 → **Enter** 创建空行 → **粘贴**（`platform-ops.md` §2.3a）→ 再校验；剪切失败时再删后重插
+5. **插入后顺序校验失败** → 选中错位节点 → 右击 **剪切** → 选中锚点行 → **Enter** 创建空行 → **粘贴**（`insert-command.md` §右键菜单调整指令顺序）→ 再校验；剪切失败时再删后重插
 
 ## 示例：配置「输入文本(web)」逐步验证
 

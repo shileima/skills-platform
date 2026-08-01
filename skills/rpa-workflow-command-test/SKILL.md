@@ -7,8 +7,9 @@ description: >
   「RPA 工作流测试」「rpa.sankuai.com 工作流」「bots.sankuai.com 工作流」「bots 指令配置」「bots 元素选择器」
   「bots 捕获元素」「bots 云浏览器采集」「bots 调试运行」「编排模式指令测试」
   「百度场景测试」「bilibili 场景测试」「B站工作流测试」
+  「网页断言测试」「验证元素存在/可见/属性/不存在」「验证文本存在/不存在」「断言指令批量回归」
   「workflow command test」「bots workflow debug」「add instruction to bots workflow」。
-  内置测试场景：百度搜索、Bilibili 搜索。指令参数以官方文档为准：
+  内置测试场景：百度搜索、Bilibili 搜索、百度首页 9 条网页断言批量测试。指令参数以官方文档为准：
   https://document.waimai.st.sankuai.com/
   底层工具：cua-router-basic skill（sky.* API 操作 Chrome）。执行前必须先确认 cua-router-basic 已安装就绪。
   详细步骤在 reference/ 目录，按模块按需 Read，不要一次性加载全部 reference。
@@ -30,7 +31,7 @@ description: >
 完整流程见 **[reference/test-workflow.md](reference/test-workflow.md)**：
 
 1. 打开 **rpa.sankuai.com 首页** → 左侧点击「**工作流**」→ 新建**空**编排模式工作流
-2. 在编排区**追加式按顺序**添加待测指令：单击最后一条指令的文本行 → **End** → **Return** 空出一行（首条指令则点 canvas「拖拽添加指令」提示行让光标进入编辑区）→ 右侧「指令」Tab 搜索框输入**中文指令名**（打开网页 → 输入文本 → 点击 / 验证元素存在 / 验证元素可见）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 项；每条新指令必然追加在**已有指令末尾**（结束节点前），禁止其他方式（`/` 唤起浮层、拖拽、复制现有节点），插入后校验顺序（见 `platform-ops.md` §2.3）
+2. 在编排区**追加式按顺序**添加待测指令：🚫 **非首条指令强制铁律** —— 单击 canvas 中**最后一条已保存指令**的文本行 → 按 **Enter** 键，在其**正下方**空出一个新行（首条指令则点 canvas「拖拽添加指令」提示行让光标进入编辑区，无需 Enter）→ 右侧「指令」Tab 搜索框输入**中文指令名**（打开网页 → 输入文本 → 点击 / 验证元素存在 / 验证元素可见）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 项；每条新指令必然追加在**已有指令末尾**（结束节点前），**绝不能**点在已有指令上方或两条指令之间插入（否则新指令会排到前面，顺序即刻非法），禁止其他方式（`/` 唤起浮层、拖拽、复制现有节点），插入后**必须**校验新节点确实排在锚点指令**之后**（见 `insert-command.md` §插入位置约束、§插入后强制核对）
 3. 逐条**完善表单并保存**（保存前必验：弹框 label 前红色 `*` 为必填；**条件必填**须对照 `commands/<slug>.md`「设置方式 → 对应必填字段」，见 `test-workflow.md` §3、`platform-ops.md` §2.4），保存报错当场修复
 4. **每条保存后**：点顶部「**检查**」→ 下拉无「配置异常节点 / 节点配置不完整」、按钮无红色数字 badge（见 `test-workflow.md` §保存后配置校验）
 5. **调试前**：场景顺序终检 + 编排区每条指令**右侧**无配置警示 icon（见 `test-workflow.md` §调试前配置终检、`debug.md` §调试前置）
@@ -88,23 +89,25 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | 前置依赖 | [reference/prerequisites.md](reference/prerequisites.md) | **每次执行最先** |
 | **AX 步骤验证** | [reference/ax-verify.md](reference/ax-verify.md) | **每次 sky 操作必遵** |
 | **测试标准流程** | [reference/test-workflow.md](reference/test-workflow.md) | **每次测试必读** |
-| 平台操作 | [reference/platform-ops.md](reference/platform-ops.md) | 新建工作流、canvas 双击、添加指令、保存前校验 |
-| 指令目录（96 条 UI 指令） | [reference/commands/index.md](reference/commands/index.md) | 查找/确认任意 UI 指令参数 |
+| 平台操作 | [reference/platform-ops.md](reference/platform-ops.md) | 新建工作流、canvas 双击、保存前校验 |
+| 指令目录（98 条 UI 指令） | [reference/commands/index.md](reference/commands/index.md) | 查找/确认任意 UI 指令参数 |
 | 单条指令 | `reference/commands/<slug>.md` | 配置具体指令节点时按需 Read |
 | **捕获元素** | [reference/capture-element.md](reference/capture-element.md) | **需通过平台「捕获」按钮采集元素时**：6 步捕获流程、多信号判据 |
 | 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **需 XPath 时**：§批量采集（新建 Tab）一次性采齐；方式 B 调用 `capture-element.md`；无法捕获时用方式 C（粘贴 XPath + Enter） |
 | **URL 输入规范** | [reference/url-input.md](reference/url-input.md) | 填「网址」等 URL 字段时**必读**（禁止 type_text） |
+| **插入指令** | [reference/insert-command.md](reference/insert-command.md) | **需在编排区 canvas 中追加指令时**：插入位置约束、光标定位、搜索+双击、右键菜单调序、插入后强制核对 |
 | 调试修复 | [reference/debug.md](reference/debug.md) | 保存后调试、报错修复 |
 | 场景索引 | [reference/scenarios/index.md](reference/scenarios/index.md) | 选择测试场景 |
 | 元素定位器缓存 | [reference/locators/README.md](reference/locators/README.md) | 了解缓存机制 |
 | 百度首页 XPath | [reference/locators/baidu.elements.json](reference/locators/baidu.elements.json) | 百度首页元素 |
 | 百度搜索结果 XPath | [reference/locators/baidu-search.elements.json](reference/locators/baidu-search.elements.json) | 百度搜索结果页（wd=你好） |
 | 百度场景 | [reference/scenarios/baidu.md](reference/scenarios/baidu.md) | 用户说「百度」 |
+| **百度断言批量场景**（9 条网页断言） | [reference/scenarios/baidu-assertions.md](reference/scenarios/baidu-assertions.md) | 用户说「网页断言测试」「验证元素/文本 xxx」「断言批量回归」 |
 | B站场景 | [reference/scenarios/bilibili.md](reference/scenarios/bilibili.md) | 用户说「bilibili/B站」 |
 
 ### 扩展 / 更新 reference
 
-**UI 指令**（96 条）：官方文档变更后运行 `python3 scripts/scrape-commands.py`
+**UI 指令**（98 条）：官方文档变更后运行 `python3 scripts/scrape-commands.py`
 
 **页面元素 XPath 缓存**（实时更新）：
 
@@ -127,6 +130,7 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - 用户要在 RPA/bots 编排模式工作流中新建指令或调试
 - 关键词：rpa.sankuai.com、bots.sankuai.com、编排模式、工作流指令、调试运行、聊天区报错
 - 「百度场景」→ Read `reference/scenarios/baidu.md`
+- **「网页断言测试 / 验证元素 xx / 断言批量」→ Read `reference/scenarios/baidu-assertions.md`**
 - 「bilibili / B站场景」→ Read `reference/scenarios/bilibili.md`
 - **不适用于**：bots 对话流/知识库、普通网页操作、代码编写
 
@@ -139,3 +143,8 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - **每次 sky 动作后必须全量抓 AX Tree 验证**，禁止连点不验证（见 `ax-verify.md`）
 - 指令语义以官方文档为准；与平台 UI 不一致时以文档为准
 - **AntD Select 元素选择器模拟键盘 Cmd+V 不触发 React onChange**（原因：受控组件的 `_valueTracker` 判定值未变）→ 粘贴后**立即按 Enter**，AntD Select 内部的 confirm-input 逻辑会把粘贴文本作为 tag 提交给 React state，红字消失；见 `element-selector.md` §方式 C
+- **AntD Select 已有 tag 无法用 Backspace 删除**：改用 click 组合框 → `Cmd+A` → `Cmd+V` 新 XPath → Enter（新 tag 替换旧 tag）；见 `element-selector.md` §失败排查
+- **保存关闭后 canvas 节点显示 `selectorId 元素的...`**：XPath 未真正落库，需双击重开弹框方式 C 重填；判定与修复见 `debug.md` §常见环境级异常
+- **Chrome `cgWindowNotFound` 或 sky 长 timeout**：Chrome 不是最前台，用 `osascript -e 'tell application "System Events" to set frontmost of application process "Google Chrome" to true'` + `sleep 2` 恢复；见 `debug.md` §常见环境级异常
+- **"网页断言"分组中"验证文本存在/不存在"平台指令名不含 `(web)` 后缀**：AX 匹配格式是 `文本 验证文本存在` 而非 `text 验证文本存在 (web)`；见 `commands/index.md` §"网页断言"分组、`scenarios/baidu-assertions.md`
+- **"文本输入区（Monaco 类）"字段中文粘贴常失败**：优先 `type_text` + ASCII；必须中文时先 pbcopy → Chrome 强制前台 → Cmd+V；见 `debug.md` §「文本输入区（Monaco 类）」中文粘贴

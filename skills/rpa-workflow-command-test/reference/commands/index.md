@@ -1,12 +1,12 @@
 # Web UI 自动化指令目录
 
-共 **96** 条 UI 指令，从 [官方文档](https://document.waimai.st.sankuai.com/) 提取。
+共 **98** 条 UI 指令，从 [官方文档](https://document.waimai.st.sankuai.com/) 提取（含 2 条"验证文本存在/不存在"，平台指令名不含 `(web)` 后缀，归属"网页自动化 → 网页断言"分组）。
 
 每条 reference 含：**指令标识**、**输入/输出参数**、**必填项**、**XML 示例**（如有）、**注意事项**（如有）。
 
 配置 bots 指令时，Read 对应 `reference/commands/<slug>.md`，不要全量加载。
 
-**插入指令**：在右侧「指令」Tab 搜索框「请输入」set_value **中文平台指令名**（如下表第一列）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 结果。详见 `reference/platform-ops.md` §2.3。
+**插入指令**：在右侧「指令」Tab 搜索框「请输入」set_value **中文平台指令名**（如下表第一列）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 结果。详见 `reference/insert-command.md`。
 
 ## 网页指令
 
@@ -55,6 +55,8 @@
 | 验证元素存在 | `VerifyElementPresent` | 元素选择器 | [verifyelementpresent.md](verifyelementpresent.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/verifyelementpresent/ |
 | 验证元素属性值 | `VerifyElementAttributeValue` | 元素选择器, 属性名称, 属性值 | [verifyelementattributevalue.md](verifyelementattributevalue.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/verifyelementattributevalue/ |
 | 验证元素没有属性 | `VerifyElementNotHasAttribute` | 元素选择器, 属性名称 | [verifyelementnothasattribute.md](verifyelementnothasattribute.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/verifyelementnothasattribute/ |
+| **验证文本存在** ⚠️无 `(web)` 后缀 | `VerifyTextPresent` | 待验证文本 | [verifytextpresent.md](verifytextpresent.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/verifytextpresent/ |
+| **验证文本不存在** ⚠️无 `(web)` 后缀 | `VerifyTextNotPresent` | 待验证文本 | [verifytextnotpresent.md](verifytextnotpresent.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/verifytextnotpresent/ |
 | 验证当前页面所有可访问链接 | `VerifyPageAllLinksAccess` | - | [verifypagealllinksaccess.md](verifypagealllinksaccess.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/verifypagealllinksaccess/ |
 | 鼠标悬停 | `MouseOver` | 元素选择器 | [mouseover.md](mouseover.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/mouseover/ |
 | 鼠标悬停偏移 | `MouseOverOffset` | 元素选择器, 偏移X, 偏移Y | [mouseoveroffset.md](mouseoveroffset.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/mouseoveroffset/ |
@@ -128,3 +130,21 @@
 | `打开网页` | 打开网页 | [openurl.md](openurl.md) |
 | `输入文本` | 输入文本 | [filltext.md](filltext.md) |
 | `点击` / `点击元素` | 点击元素（推荐） | [clickelementmixed.md](clickelementmixed.md) |
+
+## "网页断言"分组（9 条 · 平台"网页自动化 → 网页断言"分组）
+
+需要覆盖网页断言全量指令时（如断言场景批量测试），Read [scenarios/baidu-assertions.md](../scenarios/baidu-assertions.md)。
+
+| # | 平台指令名 | 指令标识 | 匹配正则（AX Tree） |
+|---|-----------|---------|-------------------|
+| 1 | 验证元素存在(web) | `VerifyElementPresent` | `^\s*\d+\s+text\s+验证元素存在\s*\(web\)` |
+| 2 | 验证元素可见(web) | `VerifyElementVisible` | `^\s*\d+\s+text\s+验证元素可见\s*\(web\)` |
+| 3 | 验证元素具有属性(web) | `VerifyElementHasAttribute` | `^\s*\d+\s+text\s+验证元素具有属性\s*\(web\)` |
+| 4 | 验证元素属性值(web) | `VerifyElementAttributeValue` | `^\s*\d+\s+text\s+验证元素属性值\s*\(web\)` |
+| 5 | 验证元素不存在(web) | `VerifyElementNotPresent` | `^\s*\d+\s+text\s+验证元素不存在\s*\(web\)` |
+| 6 | 验证元素没有属性(web) | `VerifyElementNotHasAttribute` | `^\s*\d+\s+text\s+验证元素没有属性\s*\(web\)` |
+| 7 | 验证元素不可见(web) | `VerifyElementNotVisible` | `^\s*\d+\s+text\s+验证元素不可见\s*\(web\)` |
+| 8 | **验证文本存在** | `VerifyTextPresent` | `^\s*\d+\s+文本\s+验证文本存在$` |
+| 9 | **验证文本不存在** | `VerifyTextNotPresent` | `^\s*\d+\s+文本\s+验证文本不存在$` |
+
+> ⚠️ 前 7 条搜索匹配格式是 `text xxx (web)`；后 2 条（文本类）**格式不同**，是 `文本 验证文本存在/不存在`（无 `(web)` 后缀）。Agent 在编写通用匹配脚本时要兼容两种格式。
