@@ -112,18 +112,22 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 
 > ⚠️ **测试顺序不可打乱**。按场景定义顺序逐条添加；**每加一条立即配置保存**，不要批量添加后再配。
 
-> ⚠️ **定位插入点**：若目标位置是「某行后面」，而**该行后面没有空行**，须 **选中该行 → 按 `Enter` 空出一行 → 再粘贴或输入 `/`**。不要直接在无空行的行末粘贴或搜指令。
+> ⚠️ **唯一添加方式**：右侧「指令」Tab 的**搜索框输入中文指令名 → 双击匹配的搜索结果**（网页自动化分组下的 `xxx (web)` 项）。禁止其他添加方式（含 `/` 唤起浮层、拖拽、复制粘贴现有节点作为新指令等）。
 
 ### 插入位置约束（追加式 · 禁止插队）
 
 **核心规则**：新指令必须**追加在已有指令链末尾**（最后一条指令之后、结束节点之前），**禁止**在开始节点后、已有指令之前、或两条已有指令之间插入。
 
+**光标定位规则**：
+- **首条指令**（canvas 只有开始+结束节点）：单击 canvas 里「通过输入或者从指令列表拖拽添加指令」提示行让光标进入编辑区
+- **后续指令**：单击最后一条已保存指令的**文本行**（如「打开网页 https://...」）→ 按 `End` → 按 `Return` 空出新一行
+
 | 错误做法 ❌ | 正确做法 ✅ |
 |-----------|-----------|
-| 已有「打开网页」后，在开始节点下方空行插入「输入文本」 | 在「打开网页」**下方**、结束节点**上方**的空行插入「输入文本」 |
+| 已有「打开网页」后，在开始节点下方空行插入「输入文本」 | 在「打开网页」**下方**、结束节点**上方**空出的新行插入 |
 | 批量连续插入多条后再统一配置 | 每插入一条 → 立即配置保存 → 再插下一条 |
-| 光标停在第 2 步位置就插入第 3 步 | 选中**最后一条已保存指令** → Enter 空出一行 → 再粘贴或 `/` |
-| 某行后面没有空行就直接粘贴或 `/` | 选中该行 → **Enter** 空出一行 → 再粘贴或 `/` |
+| 光标停在第 2 步位置就插入第 3 步 | 选中**最后一条已保存指令** → End → Return 空出一行 |
+| 拖拽指令项到 canvas / 输入 `/` 唤起浮层 | 只用右侧「指令」Tab 搜索框 + 双击结果 |
 
 **场景顺序依赖**（Web 自动化通用，不可违反）：
 
@@ -169,20 +173,35 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 
 > ⚠️ 移动后仍需校验顺序依赖（§2.3 场景顺序依赖表）。**禁止**在错误顺序下继续配置或调试。
 
-### 定位正确插入点（粘贴 / `/` 插入前必做）
+### 常用指令中文搜索名
 
-**通用规则**：插入位置 = **某行后面**。若该行后面**已有空行**，光标移入空行即可；若**没有空行**，须 **选中该行 → Enter 空出一行 → 再粘贴或输入 `/`**。
+在右侧「指令」Tab 搜索框输入以下中文名 → 匹配「网页自动化」分组下 `(web)` 结果 → 双击插入：
+
+| 平台指令名 | 搜索框输入（中文） | 分组 | reference |
+|---------|----------------|------|---------|
+| 打开网页 | `打开网页` | 网页自动化 | `commands/openurl.md` |
+| 输入文本 | `输入文本` | 网页自动化 | `commands/filltext.md` |
+| 点击元素（推荐） | `点击` 或 `点击元素` | 网页自动化 | `commands/clickelementmixed.md` |
+| 验证元素存在 | `验证元素存在` | 网页自动化 | `commands/verifyelementpresent.md` |
+| 验证元素可见 | `验证元素可见` | 网页自动化 | `commands/verifyelementvisible.md` |
+
+完整指令列表见 `reference/commands/index.md`。
+
+> ⚠️ 搜索结果常有同名多条：`(web)` vs `（mobile）`（Web 场景选 `(web)`），以及「我的收藏」分组 vs「网页自动化」分组（**只选后者**，前者行为不稳定）。
+
+### 定位正确插入点（搜索+双击前必做）
+
+**通用规则**：插入位置永远是「已有指令链末尾」。搜索+双击结果时，平台会**自动**把新节点追加到 canvas 最后一条已有指令与结束节点之间——只要**双击前光标已经在 canvas 编辑区内**，无需在 canvas 里手动创建空行。
 
 ```
 1. 全量抓 AX Tree，在 canvas 区域读取当前节点顺序（开始 → … → 结束）
-2. 确定锚点行：要插入到哪一行后面（通常为最后一条已保存指令；调序时为正确位置的上一条）
-3. 检查锚点行下方是否已有空行：
-   - 有 → 光标移入该空行
-   - 无 → 选中锚点行 → 按 Enter → 在其下方空出一行
-4. 光标位于空行后：
-   - 粘贴剪切/复制的指令（Ctrl+V / Cmd+V），或
-   - 输入 `/` 弹出浮层搜索新指令
-5. 禁止在「开始节点」与第一条指令之间的空行插入第 2、3 条指令（该位置仅用于第一条业务指令）
+2. 光标定位（保证光标处于 canvas 编辑区，是双击追加成功的前提）：
+   - 首条业务指令：单击 canvas「通过输入或者从指令列表拖拽添加指令」提示行
+   - 非首条：单击最后一条已保存指令的文本行（如「打开网页 https://...」）→ 按 End → 按 Return 空出一行
+3. 单击右侧「指令」Tab 搜索框（placeholder 为「请输入」）→ set_value 中文指令名
+4. 等 ~1.2s 让搜索结果刷新
+5. 在结果中双击「网页自动化」分组下匹配的 `xxx (web)` 项
+6. 平台在 canvas 末尾插入新节点，并自动弹出配置弹框
 ```
 
 **sky 自动化：读取 canvas 节点顺序 → 确认追加插入点**
@@ -195,12 +214,6 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
   const canvasArea = lines.slice(canvasStart, canvasStart + 120);
 
   // 提取 canvas 内带编号的指令行（编号 + 文本 + 指令摘要）
-  const nodeLines = canvasArea.filter(l =>
-    /^\s+\d+\s+文本\s+\d+\s*$/.test(l) ||
-    (l.includes("文本") && /打开网页|输入文本|点击|开始节点|结束节点/.test(l))
-  );
-
-  // 从相邻行拼出节点摘要（平台 AX 结构：编号行下方常有指令描述）
   const summaries = [];
   for (let i = 0; i < canvasArea.length; i++) {
     const m = canvasArea[i].match(/^\s+(\d+)\s+文本\s+\d+\s*$/);
@@ -221,110 +234,96 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
     nodes: summaries,
     orderOk,
     hint: orderOk
-      ? "选中最后一条指令→Enter 空出一行（若无空行）→ 粘贴或 /"
-      : "顺序错误：选中错位节点→剪切→选中锚点行→Enter 空出一行→粘贴（§2.3a）"
+      ? "光标定位后：右侧搜索框 set_value 指令名 → 双击「网页自动化」分组下的 (web) 项"
+      : "顺序错误：选中错位节点→剪切→选中锚点行→End→Return 空出一行→粘贴（§2.3a）"
   }));
 }
 ```
 
-### 插入指令规范（五步）
+### sky 自动化模板：搜索框 + 双击结果（唯一添加方式）
 
-输入 `/` 后会弹出指令选择浮层（含「指令 / 工具 / 工作流」Tab 和搜索框 **「请输入」**）。**不要**在 canvas 里继续打字搜指令，必须：
-
-```
-0. 选中锚点行（最后一条指令或目标上一条）→ Enter 创建空行（见上节）
-1. 光标位于该空行，输入 `/`         → 弹出下拉浮层
-2. 点击浮层内搜索框（placeholder「请输入」）
-3. 在搜索框输入中文指令名称       → 如「打开网页」「输入文本」「点击」
-4. 点击列表中与名称最匹配的一条   → 指令插入编排区
-5. 插入后立即校验 canvas 顺序（见 ax-verify.md §插入后顺序校验）
-```
-
-> ⚠️ 确认浮层 Tab 在「**指令**」（默认），不要在「工具」或「工作流」Tab 下搜。
-
-### 常用指令中文搜索名
-
-| 平台指令名 | 搜索框输入（中文） | reference |
-|---------|----------------|---------|
-| 打开网页 | `打开网页` | `commands/openurl.md` |
-| 输入文本 | `输入文本` | `commands/filltext.md` |
-| 点击元素（推荐） | `点击` 或 `点击元素` | `commands/clickelementmixed.md` |
-
-完整指令列表见 `reference/commands/index.md`。
-
-### sky 自动化示例：插入「打开网页」（逐步验证）
-
-> 完整「输入文本(web)」配置示例见 `ax-verify.md` §示例。
-
-**第 1 步**：在插入点按 `/` → 验证浮层
+**第 1 步**：光标定位到 canvas 编辑区
 
 ```js
 {
-  const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  // ... 从 s0 找插入点 idx ...
-  await sky.click({ app: "com.google.Chrome", element_index: <插入点> });
-  await sky.press_key({ app: "com.google.Chrome", key: "Return" });
-  await sky.press_key({ app: "com.google.Chrome", key: "/" });
-  await new Promise(r => setTimeout(r, 800));
-
-  const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const panelOpen = s1.text.includes("请输入");
-  nodeRepl.write(JSON.stringify({ step: "insert-1", panelOpen }));
+  // 首条业务指令：单击「通过输入或者从指令列表拖拽添加指令」提示行
+  const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const hintLine = s.text.split("\n").find(l => /文本\s+通过输入或者从指令列表拖拽添加指令/.test(l));
+  const hintIdx = hintLine ? parseInt(hintLine.match(/^\s*(\d+)/)[1]) : null;
+  await sky.click({ app: "com.google.Chrome", element_index: hintIdx });
+  await new Promise(r => setTimeout(r, 400));
+  // 非首条：改为 click 最后一条指令文本行 → End → Return
+  // await sky.click({ app: "com.google.Chrome", element_index: lastNodeIdx });
+  // await sky.press_key({ app: "com.google.Chrome", key: "End" });
+  // await sky.press_key({ app: "com.google.Chrome", key: "Return" });
 }
 ```
 
-**第 2 步**：搜「打开网页」→ 验证列表
+**第 2 步**：搜索框 set_value 中文指令名
 
 ```js
 {
-  const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const searchIdx = parseInt(s0.text.split("\n").find(l =>
-    l.includes("请输入") && /settable|textfield/i.test(l)
-  )?.match(/^\s*(\d+)/)?.[1]);
-  await sky.click({ app: "com.google.Chrome", element_index: searchIdx });
-  // echo -n "打开网页" | pbcopy
-  await sky.press_key({ app: "com.google.Chrome", key: "cmd+v" });
-  await new Promise(r => setTimeout(r, 800));
-
+  const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const searchLine = s.text.split("\n").find(l =>
+    /settable, string/.test(l) && /Placeholder: 请输入/.test(l)
+  );
+  const searchIdx = searchLine ? parseInt(searchLine.match(/^\s*(\d+)/)[1]) : null;
+  await sky.set_value({ app: "com.google.Chrome", element_index: searchIdx, value: "打开网页" });
+  await new Promise(r => setTimeout(r, 1200));
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const hasResult = s1.text.includes("打开网页");
-  nodeRepl.write(JSON.stringify({ step: "insert-2", hasResult }));
+  const hasResult = /打开网页\s*\(web\)/.test(s1.text);
+  nodeRepl.write(JSON.stringify({ step: "search", searchIdx, hasResult }));
 }
 ```
 
-**第 3 步**：点匹配项 → 验证节点插入 **且顺序正确**
+**第 3 步**：双击「网页自动化」分组下的 `xxx (web)` 项 → 验证 canvas 追加
 
 ```js
 {
-  const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const itemIdx = parseInt(s0.text.split("\n").find(l =>
-    l.includes("打开网页") && !l.includes("请输入") && /按钮|链接/i.test(l)
-  )?.match(/^\s*(\d+)/)?.[1]);
-  await sky.click({ app: "com.google.Chrome", element_index: itemIdx });
+  const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const lines = s.text.split("\n");
+  let resultIdx = null;
+  for (let i = 0; i < lines.length; i++) {
+    if (/text\s+打开网页\s*\(web\)/.test(lines[i])) {
+      const above = lines.slice(Math.max(0, i - 5), i).join("\n");
+      if (/网页自动化/.test(above) && !/我的收藏/.test(above)) {
+        resultIdx = parseInt(lines[i].match(/^\s*(\d+)/)[1]);
+        break;
+      }
+    }
+  }
+  await sky.click({ app: "com.google.Chrome", element_index: resultIdx, click_count: 2 });
+  await new Promise(r => setTimeout(r, 1500));
 
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const lines = s1.text.split("\n");
-  const canvasStart = lines.findIndex(l => l.includes("编辑器容器"));
-  const canvasText = lines.slice(canvasStart, canvasStart + 120).join("\n");
-
-  const inserted = canvasText.includes("打开网页") && !s1.text.includes("请输入");
-  // 「输入文本」不得出现在「打开网页」之前
-  const orderOk = !canvasText.includes("输入文本") ||
-    (canvasText.indexOf("打开网页") !== -1 &&
-     canvasText.indexOf("打开网页") < canvasText.indexOf("输入文本"));
-
-  nodeRepl.write(JSON.stringify({ step: "insert-3", inserted, orderOk }));
-  // orderOk === false → §2.3a 选中错位节点→剪切→在正确位置粘贴
+  // 双击后弹出配置弹框 —— canvas 已在其下，需从头部 header 判断
+  const dialogOpened = /打开网页\(web\).*复制.*帮助/.test(s1.text);
+  // 关闭弹框（若只追加不配置）：header 里「帮助」link 之后紧邻的空文本 `\d+ 文本 ` 单独一行
+  const headerIdx = s1.text.split("\n").findIndex(l => /container.*打开网页\(web\).*复制.*帮助/.test(l));
+  let closeIdx = null;
+  if (headerIdx >= 0) {
+    for (let i = headerIdx; i < headerIdx + 30 && i < s1.text.split("\n").length; i++) {
+      const line = s1.text.split("\n")[i];
+      if (/^\s*\d+\s+文本\s*$/.test(line) && i > headerIdx + 5) {
+        closeIdx = parseInt(line.match(/^\s*(\d+)/)[1]);
+        break;
+      }
+    }
+  }
+  nodeRepl.write(JSON.stringify({ step: "dblclick", resultIdx, dialogOpened, closeIdx }));
+  // 如需继续追加下一条：await sky.click({ app: "com.google.Chrome", element_index: closeIdx });
 }
 ```
 
-> 若列表有多条相似结果，优先点**名称完全匹配**的那条（如「打开网页」而非「打开网页(web)」的父级分类）。点错可 `Escape` 关闭浮层重来。
+> 若列表有多条相似结果，优先双击**名称完全匹配**且属于**网页自动化**分组的那条。双击错项 → 关弹框 → 单击错项 → `Delete` 删除 → 重新走搜索+双击流程。
 
-> ⚠️ **插入后顺序校验失败**：优先 **§2.3a 剪切→粘贴** 调整位置；若移动后节点异常，则选中错位节点 → `Delete` 删除 → 定位到**最后一条正确指令下方**空行 → 重新 `/` 插入。**禁止**在错误位置继续配置或调试。
+> ⚠️ **插入后顺序校验失败**：优先 **§2.3a 剪切→粘贴** 调整位置；若移动后节点异常，则选中错位节点 → `Delete` 删除 → 定位到**最后一条正确指令下方**空行 → 重新走搜索+双击流程。**禁止**在错误位置继续配置或调试。
 
 配置指令参数时，**读取对应 `reference/commands/<指令>.md`**。
 
 > ⚠️ 配置「打开网页」的「网址」时，**禁止** `type_text`（会丢冒号）。须 `pbcopy+paste` 或 `set_value`，见 **`url-input.md`**。
+>
+> ⚠️ 配置「元素选择器」字段时，只允许**方式 B（平台捕获）**或**方式 C（粘贴 XPath + Enter）**，禁止其他手工方式。详见 **`element-selector.md`**。
 
 ## 2.5 调试前场景顺序终检（必做）
 
@@ -397,7 +396,7 @@ sky 自动化与 `debug.md` §调试运行 相同：点顶部「调试」→ 验
 0. Read reference/commands/<指令>.md → 记下「必填输入参数」列表（与弹框 * 字段对照）
 1. 逐项填写「输入参数」区所有 label 前带红色 * 的字段
 2. 目视扫描弹框：任一必填输入框仍为空或带红色边框 → 停止，补全后再继续
-3. 元素选择器类字段：粘贴 XPath → 等 1s → 点「以 //xxx 为定位器」（见 `element-selector.md` C1）→ 若「未找到匹配结果」点 close icon
+3. 元素选择器类字段：粘贴 XPath → **按 Enter** 让 AntD Select 接受为定位器（见 `element-selector.md` §方式 C）
 4. 全量抓 AX Tree：确认无「该字段是必填字段」类报错文案
 5. 以上全部通过 → 再点弹框右下角「保存」
 ```

@@ -30,7 +30,7 @@ description: >
 完整流程见 **[reference/test-workflow.md](reference/test-workflow.md)**：
 
 1. 打开 **rpa.sankuai.com 首页** → 左侧点击「**工作流**」→ 新建**空**编排模式工作流
-2. 在编排区**追加式按顺序**添加待测指令：选中锚点行 → **Enter** 创建空行 → 粘贴或 `/` 插入；每条新指令加在**已有指令末尾**（结束节点前），禁止在开始节点后插队；浮层搜索框输入**中文指令名**（打开网页 → 输入文本 → 点击），插入后校验顺序（见 `platform-ops.md` §2.3）
+2. 在编排区**追加式按顺序**添加待测指令：单击最后一条指令的文本行 → **End** → **Return** 空出一行（首条指令则点 canvas「拖拽添加指令」提示行让光标进入编辑区）→ 右侧「指令」Tab 搜索框输入**中文指令名**（打开网页 → 输入文本 → 点击 / 验证元素存在 / 验证元素可见）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 项；每条新指令必然追加在**已有指令末尾**（结束节点前），禁止其他方式（`/` 唤起浮层、拖拽、复制现有节点），插入后校验顺序（见 `platform-ops.md` §2.3）
 3. 逐条**完善表单并保存**（保存前必验：弹框 label 前红色 `*` 为必填；**条件必填**须对照 `commands/<slug>.md`「设置方式 → 对应必填字段」，见 `test-workflow.md` §3、`platform-ops.md` §2.4），保存报错当场修复
 4. **每条保存后**：点顶部「**检查**」→ 下拉无「配置异常节点 / 节点配置不完整」、按钮无红色数字 badge（见 `test-workflow.md` §保存后配置校验）
 5. **调试前**：场景顺序终检 + 编排区每条指令**右侧**无配置警示 icon（见 `test-workflow.md` §调试前配置终检、`debug.md` §调试前置）
@@ -51,13 +51,15 @@ description: >
 
 sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前配置终检、`debug.md` §配置校验 sky 脚本。
 
-## 元素 XPath 批量采集（任务含 FillText / 点击时）
+## 元素 XPath 批量采集（含元素选择器的任意 UI 指令——强制前置）
 
-若本次任务需要元素 XPath，**在配表单之前**：
+> 🚫 **强制前置**：任务含元素选择器的**任意** UI 指令（含 FillText、点击、断言类、等待类等所有需「元素选择器」字段的指令），**必须**在配表单之前完成批量采集。
 
 1. Read `scenarios/<场景>.md` → 列出全部待采元素
-2. 按 **`element-selector.md` §批量采集（新建 Tab）**：**Cmd+T 新建 Tab** → 打开目标页 → DevTools **一次性采齐**本任务 XPath → 切回工作流 Tab
+2. 按 **`element-selector.md` §批量采集（新建 Tab · 强制前置）**：**Cmd+T 新建 Tab** → 打开目标页 → DevTools **一次性采齐**本任务 XPath → 切回工作流 Tab
 3. 再进入编排区逐条填表、保存
+
+**XPath 写入策略优先级**：**方式 B（平台捕获）** → **方式 C（粘贴 XPath + Enter）**。配置弹框出现「该字段是必填字段」时，务必在 Cmd+V 后立即按 Enter；两种方式**都不生效**时刷新页面重开配置弹框重试，禁止使用其他手工写入方式（如点击「以…为定位器」下拉、DevTools React setter、type_text、CSS 属性定义）。
 
 > ⚠️ **禁止**在工作流 Tab 地址栏导航探测；**禁止**配一条指令采一条——应预先批量采集。
 
@@ -89,7 +91,8 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | 平台操作 | [reference/platform-ops.md](reference/platform-ops.md) | 新建工作流、canvas 双击、添加指令、保存前校验 |
 | 指令目录（96 条 UI 指令） | [reference/commands/index.md](reference/commands/index.md) | 查找/确认任意 UI 指令参数 |
 | 单条指令 | `reference/commands/<slug>.md` | 配置具体指令节点时按需 Read |
-| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **需 XPath 时**：§批量采集（新建 Tab）一次性采齐；填表见 C1 |
+| **捕获元素** | [reference/capture-element.md](reference/capture-element.md) | **需通过平台「捕获」按钮采集元素时**：6 步捕获流程、多信号判据 |
+| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **需 XPath 时**：§批量采集（新建 Tab）一次性采齐；方式 B 调用 `capture-element.md`；无法捕获时用方式 C（粘贴 XPath + Enter） |
 | **URL 输入规范** | [reference/url-input.md](reference/url-input.md) | 填「网址」等 URL 字段时**必读**（禁止 type_text） |
 | 调试修复 | [reference/debug.md](reference/debug.md) | 保存后调试、报错修复 |
 | 场景索引 | [reference/scenarios/index.md](reference/scenarios/index.md) | 选择测试场景 |
@@ -135,3 +138,4 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - `type_text` 仅适合纯 ASCII 且无 Shift 修饰符的短文本；中文用 pbcopy+paste
 - **每次 sky 动作后必须全量抓 AX Tree 验证**，禁止连点不验证（见 `ax-verify.md`）
 - 指令语义以官方文档为准；与平台 UI 不一致时以文档为准
+- **AntD Select 元素选择器模拟键盘 Cmd+V 不触发 React onChange**（原因：受控组件的 `_valueTracker` 判定值未变）→ 粘贴后**立即按 Enter**，AntD Select 内部的 confirm-input 逻辑会把粘贴文本作为 tag 提交给 React state，红字消失；见 `element-selector.md` §方式 C

@@ -6,7 +6,7 @@
 
 配置 bots 指令时，Read 对应 `reference/commands/<slug>.md`，不要全量加载。
 
-**插入指令**：编排区输入 `/` → 在浮层搜索框「请输入」输入**中文平台指令名**（如下表第一列）→ 点击最匹配项。详见 `reference/platform-ops.md` §2.3。
+**插入指令**：在右侧「指令」Tab 搜索框「请输入」set_value **中文平台指令名**（如下表第一列）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 结果。详见 `reference/platform-ops.md` §2.3。
 
 ## 网页指令
 

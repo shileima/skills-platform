@@ -40,11 +40,14 @@ case "$TARGET" in
     echo "  baidu-search   百度搜索结果页（默认 wd=你好）"
     echo "  all-baidu      首页 + 搜索结果页"
     echo "  bilibili       B 站首页"
+    echo "  任意站点：bash scripts/update-locators.sh <slug> <url>"
     exit 1
     ;;
   *)
     if [ -z "$URL" ]; then
-      echo "Unknown target '$TARGET'. Provide URL as second argument."
+      echo "Usage: bash update-locators.sh <slug> <url>"
+      echo "错误：缺少 URL 参数。请提供目标页面 URL，例如："
+      echo "  bash scripts/update-locators.sh mysite https://example.com"
       exit 1
     fi
     python3 "$SKILL_ROOT/scripts/collect-locators.py" --site "$TARGET" --page home --url "$URL" --wait 3000

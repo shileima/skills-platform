@@ -172,6 +172,48 @@ def cache_slug(site: str, page: str = "home") -> str:
     return site if page in ("", "home") else f"{site}-{page}"
 
 
+def select_quick_elements(elements: list) -> dict:
+    """从全量元素中挑出「快捷 XPath」候选：input/textarea 前5条、button 前5条、
+    role=search/searchbox 全部、aria-label/placeholder 含"搜索"的全部。
+    返回 dict，key 为分类名称，value 为元素列表。"""
+    inputs = []
+    buttons = []
+    search_roles = []
+    search_hint = []
+
+    for el in elements:
+        tag = (el.get("tag") or "").upper()
+        role = (el.get("role") or "").lower()
+        aria = (el.get("ariaLabel") or "").lower()
+        placeholder = (el.get("placeholder") or "").lower()
+        el_type = (el.get("type") or "").lower()
+
+        # role=search / searchbox
+        if role in ("search", "searchbox"):
+            search_roles.append(el)
+            continue
+
+        # aria-label 或 placeholder 含"搜索"
+        if "搜索" in aria or "搜索" in placeholder or el_type == "search":
+            search_hint.append(el)
+            continue
+
+        # input / textarea（排除 hidden）
+        if tag in ("INPUT", "TEXTAREA") and el_type != "hidden":
+            inputs.append(el)
+
+        # button
+        if tag == "BUTTON" or role == "button":
+            buttons.append(el)
+
+    return {
+        "inputs": inputs[:5],
+        "buttons": buttons[:5],
+        "search_roles": search_roles,
+        "search_hint": search_hint,
+    }
+
+
 def render_markdown(cache: dict) -> str:
     slug = cache["cacheSlug"]
     page = cache.get("page", "home")
@@ -220,67 +262,106 @@ def render_markdown(cache: dict) -> str:
                     return alt
         return el["xpath"]
 
-    # 按页面类型选搜索框，避免跨页混用（首页 kw / 结果页 chat-textarea）
-    if page == "search":
-        search_input = (
-            pick(lambda e: e.get("id") == "chat-textarea")
-            or pick(lambda e: e.get("tag") == "TEXTAREA" and e.get("id"))
-        )
-        search_btn = (
-            pick(lambda e: e.get("id") == "chat-submit-button")
-            or pick(lambda e: e.get("tag") == "BUTTON" and "submit" in e.get("id", ""))
-        )
+    site = cache.get("site", "")
+
+    if site in ("baidu", "bilibili"):
+        # ---- 百度 / bilibili 特化逻辑 ----
+        # 按页面类型选搜索框，避免跨页混用（首页 kw / 结果页 chat-textarea）
+        if page == "search":
+            search_input = (
+                pick(lambda e: e.get("id") == "chat-textarea")
+                or pick(lambda e: e.get("tag") == "TEXTAREA" and e.get("id"))
+            )
+            search_btn = (
+                pick(lambda e: e.get("id") == "chat-submit-button")
+                or pick(lambda e: e.get("tag") == "BUTTON" and "submit" in e.get("id", ""))
+            )
+        else:
+            search_input = (
+                pick(lambda e: e.get("id") == "kw")
+                or pick(lambda e: e.get("type") == "text" and e.get("name") == "wd")
+            )
+            search_btn = pick(lambda e: e.get("id") == "su") or pick(lambda e: e.get("type") == "submit")
+
+        if search_input:
+            lines.append(f"- **搜索框**：`{best_xpath(search_input)}`")
+            if best_xpath(search_input) != search_input["xpath"]:
+                lines.append(f"  - 标签限定 XPath：`{search_input['xpath']}`")
+        if search_btn:
+            lines.append(f"- **搜索按钮**：`{best_xpath(search_btn)}`")
+            if best_xpath(search_btn) != search_btn["xpath"]:
+                lines.append(f"  - 标签限定 XPath：`{search_btn['xpath']}`")
+
+        sv = cache.get("searchVariant") or {}
+        if sv.get("variant") and sv["variant"] != "unknown":
+            lines += [
+                "",
+                f"> **本环境采集探测**：variant=`{sv['variant']}`，input=`{sv.get('inputId')}`，wrapper=`{sv.get('wrapperClass', '-')}`",
+            ]
+
+        # 页面适用说明（防止跨页误用 XPath）
+        if site == "baidu":
+            if page == "home":
+                lines += [
+                    "",
+                    "> **适用 URL**：`https://www.baidu.com/`（标题「百度一下，你就知道」）",
+                    "> ⚠️ **同一 URL 存在两种 UI**：",
+                    "> - 经典版：`input#kw` + `input#su`",
+                    "> - 智能输入版：`textarea#chat-textarea` + `button#chat-submit-button`",
+                    "> **云浏览器（bots 调试）与本地 Playwright 可能不同**。配置 FillText 前必须在**云浏览器 DevTools** 探测可见输入框，**禁止仅凭 URL 或缓存文件名断定**。",
+                    "> 探测命令见 `reference/element-selector.md` §百度搜索框探测。",
+                ]
+            elif page == "search":
+                lines += [
+                    "",
+                    "> **适用 URL**：`https://www.baidu.com/s?...`（搜索结果页）",
+                    "> 通常为 `textarea#chat-textarea`；若仍为 `kw` 则以云浏览器探测为准。",
+                ]
+
+        if page == "search":
+            first_result = pick(lambda e: e.get("tag") == "H3" and e.get("xpath"))
+            if not first_result:
+                first_result = pick(lambda e: "result" in e.get("class", "").lower() or "c-container" in e.get("class", ""))
+            if first_result:
+                lines.append(f"- **首条结果区域**：`{first_result['xpath']}`")
+            next_page = pick(lambda e: "下一页" in e.get("label", "") or e.get("class") == "n")
+            if next_page:
+                lines.append(f"- **下一页**：`{next_page['xpath']}`")
+
     else:
-        search_input = (
-            pick(lambda e: e.get("id") == "kw")
-            or pick(lambda e: e.get("type") == "text" and e.get("name") == "wd")
-        )
-        search_btn = pick(lambda e: e.get("id") == "su") or pick(lambda e: e.get("type") == "submit")
+        # ---- 通用站点：输出快捷 XPath 章节 ----
+        quick = select_quick_elements(cache.get("elements") or [])
 
-    if search_input:
-        lines.append(f"- **搜索框**：`{best_xpath(search_input)}`")
-        if best_xpath(search_input) != search_input["xpath"]:
-            lines.append(f"  - 标签限定 XPath：`{search_input['xpath']}`")
-    if search_btn:
-        lines.append(f"- **搜索按钮**：`{best_xpath(search_btn)}`")
-        if best_xpath(search_btn) != search_btn["xpath"]:
-            lines.append(f"  - 标签限定 XPath：`{search_btn['xpath']}`")
+        if quick["search_hint"]:
+            lines.append("**搜索框（aria/placeholder 含「搜索」）**\n")
+            for el in quick["search_hint"]:
+                label = (el.get("label") or el.get("placeholder") or el.get("ariaLabel") or el["tag"]).replace("|", "\\|")[:60]
+                lines.append(f"- `{best_xpath(el)}` — {label}")
+            lines.append("")
 
-    sv = cache.get("searchVariant") or {}
-    if sv.get("variant") and sv["variant"] != "unknown":
-        lines += [
-            "",
-            f"> **本环境采集探测**：variant=`{sv['variant']}`，input=`{sv.get('inputId')}`，wrapper=`{sv.get('wrapperClass', '-')}`",
-        ]
+        if quick["search_roles"]:
+            lines.append("**搜索容器（role=search/searchbox）**\n")
+            for el in quick["search_roles"]:
+                label = (el.get("label") or el["tag"]).replace("|", "\\|")[:60]
+                lines.append(f"- `{best_xpath(el)}` — {label}")
+            lines.append("")
 
-    # 页面适用说明（防止跨页误用 XPath）
-    if cache.get("site") == "baidu":
-        if page == "home":
-            lines += [
-                "",
-                "> **适用 URL**：`https://www.baidu.com/`（标题「百度一下，你就知道」）",
-                "> ⚠️ **同一 URL 存在两种 UI**：",
-                "> - 经典版：`input#kw` + `input#su`",
-                "> - 智能输入版：`textarea#chat-textarea` + `button#chat-submit-button`",
-                "> **云浏览器（bots 调试）与本地 Playwright 可能不同**。配置 FillText 前必须在**云浏览器 DevTools** 探测可见输入框，**禁止仅凭 URL 或缓存文件名断定**。",
-                "> 探测命令见 `reference/element-selector.md` §百度搜索框探测。",
-            ]
-        elif page == "search":
-            lines += [
-                "",
-                "> **适用 URL**：`https://www.baidu.com/s?...`（搜索结果页）",
-                "> 通常为 `textarea#chat-textarea`；若仍为 `kw` 则以云浏览器探测为准。",
-            ]
+        if quick["inputs"]:
+            lines.append("**输入框（input/textarea，前 5 条）**\n")
+            for el in quick["inputs"]:
+                label = (el.get("label") or el.get("placeholder") or el.get("ariaLabel") or el["tag"]).replace("|", "\\|")[:60]
+                lines.append(f"- `{best_xpath(el)}` — {label}")
+            lines.append("")
 
-    if page == "search":
-        first_result = pick(lambda e: e.get("tag") == "H3" and e.get("xpath"))
-        if not first_result:
-            first_result = pick(lambda e: "result" in e.get("class", "").lower() or "c-container" in e.get("class", ""))
-        if first_result:
-            lines.append(f"- **首条结果区域**：`{first_result['xpath']}`")
-        next_page = pick(lambda e: "下一页" in e.get("label", "") or e.get("class") == "n")
-        if next_page:
-            lines.append(f"- **下一页**：`{next_page['xpath']}`")
+        if quick["buttons"]:
+            lines.append("**按钮（button，前 5 条）**\n")
+            for el in quick["buttons"]:
+                label = (el.get("label") or el.get("ariaLabel") or el["tag"]).replace("|", "\\|")[:60]
+                lines.append(f"- `{best_xpath(el)}` — {label}")
+            lines.append("")
+
+        if not any(quick.values()):
+            lines.append("_（未检测到常见 input / button / search 元素）_\n")
 
     lines.append("")
 
@@ -323,36 +404,55 @@ def collect(
     headless: bool = True,
     wait_ms: int = 3000,
     via_search: str | None = None,
+    user_data_dir: str | None = None,
 ) -> dict:
     LOCATORS_DIR.mkdir(parents=True, exist_ok=True)
     slug = cache_slug(site, page)
     search_variant = None
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=headless, channel="chrome")
-        try:
+        if user_data_dir:
+            # 复用本地 Chrome 登录态（persistent context）
+            context = p.chromium.launch_persistent_context(
+                user_data_dir,
+                headless=headless,
+                channel="chrome",
+                viewport={"width": 1440, "height": 900},
+                locale="zh-CN",
+            )
+            browser = None
+            page_obj = context.new_page()
+        else:
+            browser = p.chromium.launch(headless=headless, channel="chrome")
             context = browser.new_context(viewport={"width": 1440, "height": 900}, locale="zh-CN")
             page_obj = context.new_page()
 
-            if via_search and site == "baidu":
-                page_obj.goto("https://www.baidu.com", wait_until="domcontentloaded", timeout=60000)
-                page_obj.wait_for_timeout(2000)
-                baidu_search_via(page_obj, via_search, wait_ms)
-            else:
-                page_obj.goto(url, wait_until="domcontentloaded", timeout=60000)
-                page_obj.wait_for_timeout(wait_ms)
+        try:
+            warning = None
+            try:
+                if via_search and site == "baidu":
+                    page_obj.goto("https://www.baidu.com", wait_until="domcontentloaded", timeout=60000)
+                    page_obj.wait_for_timeout(2000)
+                    baidu_search_via(page_obj, via_search, wait_ms)
+                else:
+                    page_obj.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    page_obj.wait_for_timeout(wait_ms)
+            except Exception as e:
+                warning = f"URL 加载失败或超时：{e}；采集结果可能为空或不完整"
 
             title = page_obj.title()
             body = page_obj.content()
-            warning = None
-            if any(k in title for k in ("安全验证", "百度验证")) or "网络不给力" in body:
+            if warning is None and (any(k in title for k in ("安全验证", "百度验证")) or "网络不给力" in body):
                 warning = "可能触发百度安全验证，缓存不完整；请用 --via-search 或已登录 Chrome 重新采集"
             raw = page_obj.evaluate(COLLECTOR_JS)
             search_variant = None
             if site == "baidu":
                 search_variant = page_obj.evaluate(DETECT_BAIDU_SEARCH_JS)
         finally:
-            browser.close()
+            if browser:
+                browser.close()
+            else:
+                context.close()
 
     cache = {
         "site": site,
@@ -388,6 +488,7 @@ def main() -> None:
     parser.add_argument("--via-search", default=None, help="从首页输入关键词搜索后采集（避免直接打开 /s? 触发验证）")
     parser.add_argument("--headed", action="store_true")
     parser.add_argument("--wait", type=int, default=3000)
+    parser.add_argument("--user-data-dir", default=None, help="（可选）复用本地 Chrome 登录态的 user data 目录路径，适合需登录的站点")
     args = parser.parse_args()
     headless = not args.headed and args.via_search is None
     collect(
@@ -397,6 +498,7 @@ def main() -> None:
         headless=headless,
         wait_ms=args.wait,
         via_search=args.via_search,
+        user_data_dir=args.user_data_dir,
     )
 
 

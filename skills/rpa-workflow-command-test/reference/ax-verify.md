@@ -61,15 +61,13 @@ function axAnalyze(lines, checks) {
 |-----------|-----------------|------------------|
 | 导航 URL | 地址栏含目标 URL；页面出现预期标题/导航 | 仍停留在旧 URL；404/空白 |
 | 点「工作流」 | URL 含 `/rpa/workflow`；列表或「新建工作流」可见 | 仍在 chat 页 |
-| 输入 `/` | 浮层可见「请输入」；Tab「指令」选中 | 无浮层；canvas 内多了 `/` 字符 |
-| 浮层搜指令 | 列表出现目标指令名（如「打开网页」） | 列表为空或 Tab 不对 |
-| 选中指令插入 | canvas 出现新节点编号；浮层关闭 | 浮层仍开；节点未增加 |
+| 光标定位到 canvas | 焦点在 canvas 编辑器；`focused UI element` 指向 canvas 内元素 | 焦点仍在别处（提示行/搜索框） |
+| 搜索框 set_value 指令中文名 | 右侧「指令」面板出现 `xxx (web)` 结果行；含「网页自动化」分组 | 无结果；仍在旧搜索词 |
+| 双击「网页自动化」分组下 `xxx (web)` | canvas 出现新节点编号；同时弹出配置弹框 | canvas 未变；无弹框 |
 | **插入后顺序校验** | 新节点在**最后一条已有指令之后**、结束节点之前；依赖顺序满足（如「打开网页」在「输入文本」前） | 「输入文本」排在「打开网页」前；新节点插在开始节点下方而非末尾 |
-| 双击开配置弹框 | 标题含指令名（如「输入文本(web)」）；「捕获」按钮可见 | 无弹框；仍在 canvas 编辑态 |
-| 粘贴 XPath | 输入框 value 含 `//` | 输入框仍空 |
-| 等 1s 后 | 下拉含「以 //xxx 为定位器」 | 仍无「为定位器」→ 再等或重粘贴 |
-| 出现「未找到匹配结果」 | 下拉含该文案 | — → 点 close icon |
-| 点「为定位器」 | 下拉关闭；选择器红框消失或 value 保留 | 仍红框；仍显示必填错误 |
+| 双击开配置弹框 | **结构性多信号**：有「捕获」按钮 `/\d+ 按钮\s+捕\s*获/` **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 | 无弹框；三个信号均无 |
+| 粘贴 XPath（Cmd+V） | 组合框 Value 含 `//`；「该字段是必填字段」可能仍显示（需下一步 Enter） | 输入框仍空 |
+| 按 Enter（**方式 C 核心**） | 组合框旁出现 `\d+ text //...` 独立行 + 「该字段是必填字段」消失 | 红字仍在 → 重新聚焦 Cmd+V 再 Enter；重试仍失败 → 转方式 B（捕获） |
 | 填「待填充文本」 | 输入框含目标文本 | 仍空、仍红框 |
 | 填「网址」/ URL 字段 | 输入框含 `https://`（非 `https//`） | 冒号丢失；仍空、仍红框 |
 | **保存前总检** | 所有 label 前带 `*` 的字段已填；无红框；无「该字段是必填字段」 | 任一必填为空；输入框红框 → **禁止点保存** |
@@ -154,75 +152,92 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 
 ### Step A：确认配置弹框已打开
 
+> ⚠️ **判据规范**：禁止用标题字符串精确匹配判断弹框状态。AX Tree 中的空格可能是 tab/nbsp（U+00A0）而非普通空格（U+0020），`includes` 对不可见字符零容忍，极易假阴性。必须用**结构性信号**做多信号 OR 判定。
+
 ```js
 {
   const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const opened = lines.some(l => l.includes("输入文本") && (l.includes("web") || l.includes("捕获")));
-  nodeRepl.write(JSON.stringify({ step: "A", panelOpen: opened }));
+
+  // ✅ 结构性多信号交叉验证（判据优先级从高到低）
+  const hasCaptureBtn = lines.some(l => /\d+\s+按钮\s+捕\s*获/.test(l));
+  const hasElementSelector = lines.some(l => l.includes("元素选择器") && /settable|textfield|文本栏/i.test(l));
+  const hasSaveBtn = lines.some(l => /\d+\s+按钮\s+保\s*存/.test(l));
+  const opened = hasCaptureBtn || hasElementSelector || hasSaveBtn;
+
+  nodeRepl.write(JSON.stringify({
+    step: "A",
+    panelOpen: opened,
+    signals: { hasCaptureBtn, hasElementSelector, hasSaveBtn }
+  }));
   // opened === false → 回到 platform-ops.md §2.2 重新双击
+  // 详细的捕获流程判据见 capture-element.md §判据设计原则
 }
 ```
 
-### Step B：粘贴元素选择器 XPath
+### AntD Select 阻断信号决策表
+
+> 适用时机：Step B 完成后（Cmd+V 粘贴 XPath），全量抓 AX Tree 发现以下情况时进入本决策表。
+
+| 粘贴后 AX 现象 | 下一步 |
+|---|---|
+| 组合框 Value 已含 `//` | **按 Enter**（Step D）——AntD Select confirm-input 逻辑会把粘贴文本作为 tag 提交给 React |
+| Enter 后组合框旁出现 `\d+ text //...` 行 + 无「该字段是必填字段」 | 通过——直接进入 Step F 保存 |
+| Enter 后仍有「该字段是必填字段」 | 重新 click 组合框 → Cmd+V → Enter（**三步紧凑，中间不要抓 AX 分心**） |
+| 重试仍失败 | 转 `element-selector.md` §方式 B（云浏览器捕获） |
+| Value 未粘贴进去（仍为空） | 重找 comboIdx 或检查剪贴板；或转方式 B |
+
+```js
+// axSelectStillRequired helper 示例：
+// 返回 true 表示 AntD Select 阻断信号仍存在
+const axSelectStillRequired = (lines) =>
+  lines.some(l => l.includes('该字段是必填字段'));
+
+// 用法：
+const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
+if (axSelectStillRequired(lines)) {
+  // 只要仍为必填错误 → 按 Enter 再验；连续失败 3 次转方式 B（捕获）
+  nodeRepl.write(JSON.stringify({ step: "antd-select-blocked", action: "press-Enter-again-or-fallback-to-capture" }));
+}
+```
+
+### Step B：粘贴元素选择器 XPath 到 AntD Select 组合框
 
 ```js
 {
   // echo -n '//input[@id="kw"]' | pbcopy
   const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const lines0 = s0.text.split("\n");
-  const selIdx = parseInt(lines0.find(l =>
-    l.includes("元素选择器") || (l.includes("settable") && l.includes("//"))
-  )?.match(/^\s*(\d+)/)?.[1] ?? lines0.find(l =>
-    l.includes("settable") && /文本栏|textfield/i.test(l)
-  )?.match(/^\s*(\d+)/)?.[1]);
+  // 定位「* 元素选择器」标签，然后在下方 20 行内找组合框
+  const labelIdx = lines0.findIndex(l => /text\s+\*\s+元素选择器/.test(l));
+  const comboLine = lines0.slice(labelIdx, labelIdx + 20)
+    .find(l => /组合框\s+\(settable, string\)/.test(l));
+  const comboIdx = comboLine ? parseInt(comboLine.match(/^\s*(\d+)/)[1]) : null;
 
-  await sky.click({ app: "com.google.Chrome", element_index: selIdx });
-  await sky.press_key({ app: "com.google.Chrome", key: "cmd+a" });
-  await sky.press_key({ app: "com.google.Chrome", key: "cmd+v" });
+  await sky.click({ app: "com.google.Chrome", element_index: comboIdx });
+  await new Promise(r => setTimeout(r, 400));
+  await sky.press_key({ app: "com.google.Chrome", key: "Command+v" });
+  await new Promise(r => setTimeout(r, 1200));
 
   const lines1 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const pasted = lines1.some(l => l.includes('//input[@id="kw"]') || l.includes("//input"));
-  nodeRepl.write(JSON.stringify({ step: "B", selIdx, pasted }));
-  // pasted === false → 重找 selIdx 或重粘贴
+  const pasted = lines1.some(l => /组合框.*settable.*\/\/input/.test(l));
+  nodeRepl.write(JSON.stringify({ step: "B", comboIdx, pasted }));
+  // pasted === false → 重找 comboIdx 或重粘贴
 }
 ```
 
-### Step C：处理「未找到匹配结果」
+### Step D：按 Enter → 让 AntD Select 接受为定位器
 
 ```js
 {
+  await sky.press_key({ app: "com.google.Chrome", key: "Return" });
+  await new Promise(r => setTimeout(r, 1500));
+
   const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const noMatch = lines.some(l => l.includes("未找到匹配结果"));
-  if (noMatch) {
-    const closeIdx = parseInt(lines.find(l =>
-      (/关闭|close|清除|×/i.test(l) || (l.includes("按钮") && l.includes("×"))) &&
-      !l.includes("未找到匹配结果")
-    )?.match(/^\s*(\d+)/)?.[1]);
-    if (closeIdx) await sky.click({ app: "com.google.Chrome", element_index: closeIdx });
-  }
-  const lines2 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const stillNoMatch = lines2.some(l => l.includes("未找到匹配结果"));
-  nodeRepl.write(JSON.stringify({ step: "C", noMatch, stillNoMatch }));
-  // stillNoMatch === true → 重找 close icon
-}
-```
-
-### Step D：等 1s → 点「为定位器」
-
-```js
-{
-  await new Promise(r => setTimeout(r, 1000));
-  const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const hintLine = lines.find(l => l.includes("为定位器"));
-  const hintIdx = parseInt(hintLine?.match(/^\s*(\d+)/)?.[1]);
-  nodeRepl.write(JSON.stringify({ step: "D", hasLocatorHint: !!hintLine, hintIdx }));
-  if (!hintIdx) { /* 再等 1s 或重粘贴 XPath */ }
-  else await sky.click({ app: "com.google.Chrome", element_index: hintIdx });
-
-  const lines2 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const locatorOk = lines2.some(l => l.includes('//input[@id="kw"]')) &&
-    !lines2.some(l => l.includes("该字段是必填字段"));
-  nodeRepl.write(JSON.stringify({ step: "D-verify", locatorOk }));
+  const hasErr = lines.some(l => l.includes("该字段是必填字段"));
+  const hasValue = lines.some(l => /text\s+\/\/input/.test(l) || /组合框.*settable.*\/\/input/.test(l));
+  const locatorOk = hasValue && !hasErr;
+  nodeRepl.write(JSON.stringify({ step: "D", hasErr, hasValue, locatorOk }));
+  // locatorOk === false → 重新 click 组合框 → Cmd+V → Return（三步紧凑）
 }
 ```
 
@@ -274,7 +289,12 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 ```js
 {
   const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const opened = lines.some(l => l.includes("打开网页") && (l.includes("web") || l.includes("网址")));
+
+  // ✅ 结构性多信号交叉验证
+  const hasSaveBtn = lines.some(l => /\d+\s+按钮\s+保\s*存/.test(l));
+  const hasUrlField = lines.some(l => l.includes("网址") && /settable|textfield|文本栏/i.test(l));
+  const opened = hasSaveBtn || hasUrlField;
+
   nodeRepl.write(JSON.stringify({ step: "openurl-A", panelOpen: opened }));
 }
 ```
@@ -323,6 +343,7 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 | 模块 | 衔接验证要点 |
 |------|-------------|
 | `platform-ops.md` | 导航、加指令、开弹框、保存 — 每步后验证 |
+| `capture-element.md` | 捕获元素 6 步流程 — 每步后用多信号交叉验证 |
 | `element-selector.md` C1 | 粘贴 → 验证 → close → 验证 → 等 1s → 验证 → 点定位器 → 验证 |
 | `url-input.md` | 填网址：pbcopy 粘贴或 set_value → 验证含 `https://` → 保存 |
 | `test-workflow.md` | 全流程遵循本模块循环 |

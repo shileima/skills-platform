@@ -40,3 +40,14 @@ B 站首页 DOM 会随版本变化，执行前 **必须** 按 `reference/element
 | 搜索词 | `baidu` | `bilibili` |
 | 选择器 | 已有实测 XPath，可直接用 | **必须先 DevTools 采集** |
 | 页面特点 | textarea 搜索框 | 导航栏 input，结构随版本变化 |
+
+## 元素选择器写入策略
+
+配置「输入文本」「点击元素」等含「元素选择器」字段的指令时，按以下优先级写入 XPath：
+
+| 优先级 | 方式 | 说明 | 何时用 |
+|--------|------|------|--------|
+| **1（默认）** | **[方式 B：平台捕获](../element-selector.md#方式-b平台捕获按钮默认策略)** | 云浏览器 VNC 录制，绕过 React 合成事件 | 弹框内有「捕获」按钮 + 云浏览器在线时优先 |
+| **2** | **[方式 C：粘贴 XPath + Enter](../element-selector.md#方式-c粘贴-xpath--enterantd-select-唯一有效的手工输入方式)** | pbcopy+cmd+v 粘贴 XPath → 按 Enter 让 AntD Select 接受为定位器 | 无捕获按钮 / 云浏览器断线 / 已批量采集 XPath 时 |
+
+> **Bilibili 场景提示**：B 站配置弹框的「元素选择器」是 AntD Select 组件；粘贴 XPath 后**必须紧接着按 Enter**，否则保存报「该字段是必填字段」。XPath 从批量采集结果取（`locators/bilibili.elements.json` 或上方「元素选择器」表）。

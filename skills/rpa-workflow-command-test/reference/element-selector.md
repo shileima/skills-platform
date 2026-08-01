@@ -1,18 +1,22 @@
 # 元素选择器配置
 
-> ⚠️ **绝对不要凭先验知识猜 XPath/CSS Selector。** 必须先通过下面流程从真实 DOM 获取准确值，再填入 filltext / clickelementmixed 的「元素选择器」字段。
+> ⚠️ **绝对不要凭先验知识猜 XPath/CSS Selector。** 必须先通过下面流程从真实 DOM 获取准确值，再填入 filltext / clickelementmixed / verifyelement* 等指令的「元素选择器」字段。
 
-> ⚠️ **步骤衔接**：粘贴、点 close、点「为定位器」等**每个动作后**全量抓 AX Tree 验证。完整逐步示例见 **`reference/ax-verify.md`** §示例 Step B–D。
+> ⚠️ **仅两种写入方式**：**方式 B（平台捕获）** 或 **方式 C（粘贴 XPath + Enter）**。其他方式（点击「以…为定位器」下拉、DevTools React setter、type_text 逐字符输入、切换 CSS selector 属性定义等）在本平台**不稳定**或**已废弃**，禁止使用。
 
-## 批量采集（新建 Tab · 推荐）
+> ⚠️ **步骤衔接**：粘贴、按 Enter、点保存等**每个动作后**全量抓 AX Tree 验证。完整逐步示例见 **`reference/ax-verify.md`** §示例 Step B–D。
 
-本次任务若需要元素 XPath 定位（FillText、ClickElement 等），**配置表单前**先在浏览器**新建 Tab** 打开目标页，**一次性采集完本任务所需的全部元素定位信息**，再切回工作流 Tab 逐条填表。
+## 批量采集（新建 Tab · **强制前置**）
+
+> 🚫 **强制前置**：含元素选择器的**任意**指令（含 FillText、ClickElementMixed、VerifyElementPresent、VerifyElementVisible、VerifyElementAttributeValue、VerifyElementHasAttribute、VerifyElementNotPresent、VerifyElementNotVisible、WaitForElement\*、GetText、GetElementAttribute、ScrollToElement、MouseOver 等断言/等待类）在**配置表单前**必须先完成本节采集。
+
+**配置表单前**先在浏览器**新建 Tab** 打开目标页，**一次性采集完本任务所需的全部元素定位信息**，再切回工作流 Tab 逐条填表。
 
 > ⚠️ **禁止**在工作流编排 Tab 的地址栏直接导航到目标站——会丢失 canvas 编辑状态。须 **Cmd+T 新建 Tab** 探测，采完切回。
 
 ### 何时触发
 
-- 场景涉及「输入文本」「点击元素」等需「元素选择器」的指令
+- 场景涉及含「元素选择器」字段的**任意**指令（不仅限于输入文本/点击，断言类、等待类同样适用）
 - `reference/locators/<site>.elements.json` 缓存缺失、过期（>7 天）、或与调试环境 DOM 不符
 - 调试报「元素不存在 / FillText 失败」需重采
 
@@ -87,7 +91,7 @@
 
 **第 5 步：用清单配置全部指令**
 
-切回工作流 Tab 后，按 `element-selector.md` **方式 C1** 将 XPath 填入各指令「元素选择器」，**本任务涉及的选择器在本轮内全部填完**，再进入调试。
+切回工作流 Tab 后，按优先级 **方式 B（平台捕获）→ 方式 C（粘贴 XPath + Enter）** 将 XPath 填入各指令「元素选择器」，**本任务涉及的选择器在本轮内全部填完**，再进入调试。
 
 ### 站点探测脚本
 
@@ -169,48 +173,110 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 
 5. **切回 bots 工作流 tab**，关闭 DevTools
 
-## 方式 B：平台录制捕获（VNC 云浏览器）
+## 方式 B：平台「捕获」按钮（**默认策略**）
 
-1. 设备区连接云浏览器 Chrome（「云浏览器」→ 双击「Chrome」）
-2. 双击指令节点 → 点「捕获」→ 状态变为「采集中」
-3. 在 VNC 中导航到目标页，悬停目标元素（有 hover 高亮）→ 点击 → 「完成」
-4. 验证采集到正确元素类型（如 `<textarea>` 而非外层 `<div>`）
+> **AntD Select/Combobox 环境下优先使用本方式**——「捕获」通过云浏览器 VNC 录制，绕过 React 合成事件，直接落库，是最稳健的写入路径。
+>
+> **完整流程已独立为模块**：Read **[reference/capture-element.md](capture-element.md)**，按其中 6 步流程执行。该模块是捕获元素的唯一事实来源，其他模块需要捕获时也调用它。
 
-> ⚠️ 若无 hover 高亮：关闭弹框，重新双击节点，再次点「捕获」
-
-## 方式 C：手动填写 XPath/CSS Selector
-
-### C1：元素选择器输入框直接输入 XPath（仅支持 XPath）
-
-手动输入 XPath 的完整流程：
+### 快速概览（详细步骤见 capture-element.md）
 
 ```
-1. 聚焦「元素选择器」输入框 → pbcopy + cmd+v 粘贴 XPath
-2. 若下拉出现「未找到匹配结果」→ 点击输入框右侧 close icon（×）关闭下拉
-3. 输入完成后等待 1s
-4. 出现蓝色「以 //xxx 为定位器」选项 → 点击该选项
-5. 确认输入框无红色边框 → 再点弹框右下角「保存」
+1. 验证配置弹框已打开（多信号交叉验证：有捕获按钮 / 有元素选择器 / 有保存按钮）
+2. 点击弹框内「捕获」按钮 → 等待采集中状态
+3. 在云浏览器中点击目标元素 → 验证 XPath 回填
+   - XPath 不正确时可：重选 / 大选区 / 缩小选取
+4. 点击保存 → 验证弹框关闭
+5. 回到编排区验证元素是否回显在指令上
+6. 未捕获成功 → 刷新页面 → 重新双击指令 → 重新捕获（循环，上限 3 次）
 ```
 
-| 步骤 | UI 现象 | 操作 |
-|------|---------|------|
-| 粘贴 XPath | 下拉可能显示「**未找到匹配结果**」 | 点输入框**右侧 close icon（×）** 关闭无效下拉 |
-| 等待 | 约 1s 后 | 下拉刷新，出现「**以 //xxx 为定位器**」 |
-| 确认 | 输入框红框消失 | 再保存 |
+### 判据原则（⚠️ 必读）
 
-> ⚠️ 「未找到匹配结果」是元素库搜索无命中，**不代表 XPath 无效**；关 dropdown 后等平台生成「为定位器」建议即可。
-> ⚠️ 跳过「为定位器」直接保存会报「该字段是必填字段」，输入框保持红色边框。
+**禁止**使用单一精确字符串匹配判断弹框/按钮状态。AX Tree 中的空格可能是 tab/nbsp 而非普通空格，`includes` 对不可见字符零容忍。
 
-**sky 自动化**：按 `ax-verify.md` Step B → C → D 逐步执行，**禁止**合并为单块无验证脚本。核心循环：
+| 判定目标 | ❌ 错误判据 | ✅ 正确判据 |
+|---------|-----------|-----------|
+| 弹框已打开 | 标题字符串精确匹配 | 有「捕获」按钮 **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 |
+| 捕获按钮 | `l.includes("捕获")` | `/\d+\s+按钮\s+捕\s*获/.test(l)` |
+
+详细判据规范和完整 sky 自动化脚本见 **`capture-element.md`**。
+
+## 方式 C：粘贴 XPath + Enter（AntD Select 唯一有效的手工输入方式）
+
+**适用场景**：方式 B（捕获）不可用（无捕获按钮 / 云浏览器断线 / 已在批量采集里拿到 XPath），需要直接把已知 XPath 填进「元素选择器」输入框。
+
+**原理**（一句话）：AntD Select 是受控组件，剪贴板 `Cmd+V` 只改 DOM value，不触发 React onChange，弹框「该字段是必填字段」红字持续显示；紧接着按 **Enter** 会触发 AntD 内部的「confirm current input as tag」逻辑——把粘贴文本作为选项值提交给 React state，红字消失，等效于用户手动点了下拉里那条「以 //xxx 为定位器」的确认项。
+
+### 五步流程（不可省略任何一步）
+
+```
+1. 找到「元素选择器」组合框（AX 中 `组合框 (settable, string)`，父容器紧跟「* 元素选择器」标签）
+2. click 该组合框 → 等 ~400ms
+3. Shell 侧 pbcopy XPath → sky press_key Cmd+V 粘贴 → 等 ~1200ms
+4. sky press_key Return（Enter）→ 等 ~1500ms
+5. 全量抓 AX Tree 校验：
+   - ✅ 「该字段是必填字段」文本已消失
+   - ✅ 组合框旁出现独立一行 `\d+ text //*[@id="..."]` 或类似 XPath 回显
+   - 均满足 → 点弹框「保存」；任一不满足 → 见「失败排查」
+```
+
+> 💡 **不必**再去查找、点击下拉里的「以 //xxx 为定位器」选项——Enter 已经等效完成了该点击动作。
+
+### AX 验证信号
+
+| 组合框行 / 附近 AX 文本 | 含义 | 下一步 |
+|-----------------------|------|--------|
+| 组合框 Value 为空 / 无 XPath 回显文本 | 粘贴未成功 | 重新 click 组合框 → 检查剪贴板 → 重试 Cmd+V |
+| 组合框有 XPath 但仍有「该字段是必填字段」 | Cmd+V 已生效但 React onChange 未触发 | **按 Enter**（本方式核心步骤） |
+| 组合框旁出现 `\d+ text //*[@id="..."]` 独立行 + 无必填错误 | ✅ Enter 生效，XPath 已被 React state 接受 | 点保存 |
+| 保存后仍有「该字段是必填字段」 | Enter 未触发或组合框失焦太早 | 重新聚焦组合框 → Cmd+V → **确保 Enter 在同一次聚焦内触发** |
+
+### sky 自动化模板
 
 ```js
-// 动作
-await sky.click({ app: "com.google.Chrome", element_index: idx });
-// 验证（必须）
-const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-nodeRepl.write(JSON.stringify({ ok: lines.some(/* 本步成功信号 */) }));
+{
+  // 前置：Shell 侧已执行 echo -n '//*[@id="xxx"]' | pbcopy
+  const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const lines = s.text.split("\n");
+  // 定位「* 元素选择器」标签
+  const labelIdx = lines.findIndex(l => /text\s+\*\s+元素选择器/.test(l));
+  // 在标签下方 20 行内找组合框
+  const comboLine = lines.slice(labelIdx, labelIdx + 20)
+    .find(l => /组合框\s+\(settable, string\)/.test(l));
+  const comboIdx = comboLine ? parseInt(comboLine.match(/^\s*(\d+)/)[1]) : null;
+
+  await sky.click({ app: "com.google.Chrome", element_index: comboIdx });
+  await new Promise(r => setTimeout(r, 500));
+  await sky.press_key({ app: "com.google.Chrome", key: "Command+v" });
+  await new Promise(r => setTimeout(r, 1200));
+  await sky.press_key({ app: "com.google.Chrome", key: "Return" });
+  await new Promise(r => setTimeout(r, 1500));
+
+  const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const hasErr = /该字段是必填字段/.test(s1.text);
+  const hasValue = /text\s+\/\/.*chat-textarea/.test(s1.text) ||
+    /text\s+\/\//.test(s1.text);  // 按实际 XPath 模式调整
+  nodeRepl.write(JSON.stringify({ comboIdx, hasErr, hasValue, ok: !hasErr && hasValue }));
+}
 ```
 
-### C2：「新建」→「属性定义」→ type 选 CSS
+### 失败排查
 
-需要 CSS selector 时使用；在 value 输入框填写精确 selector 后点「确认」。
+| 现象 | 原因 | 处理 |
+|------|------|------|
+| Enter 后组合框失去焦点但红字仍在 | Enter 触发时输入框已失焦 | 重新 click 组合框 → 立即 Cmd+V → 立即 Return（三步紧凑） |
+| 组合框始终无 value | 剪贴板被覆盖（如用户消息、其他 pbcopy） | 重新 `echo -n '<XPath>' \| pbcopy` → 再 Cmd+V |
+| 保存报「该字段是必填字段」 | Enter 步骤被跳过 | 补做 Enter 后再保存 |
+| Enter 后弹框意外关闭 | 焦点错误落在「保存」按钮上 | 检查组合框 idx；使用 focus 后再 Cmd+V |
+| XPath 含中文或非 ASCII | pbcopy 传输正常但 AntD Select 拒收 | 换纯 ASCII XPath；或使用**方式 B（平台捕获）** |
+
+### 与方式 B 的取舍
+
+| 情况 | 首选 |
+|------|------|
+| 平台配置弹框内**有**「捕获」按钮 + 云浏览器在线 | **方式 B** |
+| 无捕获按钮（如某些断言指令弹框）/ 云浏览器断线 / 已在批量采集拿到全套 XPath | **方式 C** |
+| 首次尝试方式 B 失败 3 次以上 | 切换到方式 C 兜底 |
+
+> ⚠️ **禁止**：混合调用；一次填表只用一种方式。方式 B 未成功时不要保留半吊子状态再切方式 C——先在弹框内清空选择器输入框（Cmd+A → Delete）再走方式 C。
