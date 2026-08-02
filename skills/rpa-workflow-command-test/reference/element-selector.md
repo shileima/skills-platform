@@ -2,7 +2,11 @@
 
 > ⚠️ **绝对不要凭先验知识猜 XPath/CSS Selector。** 必须先通过下面流程从真实 DOM 获取准确值，再填入 filltext / clickelementmixed / verifyelement* 等指令的「元素选择器」字段。
 
-> ⚠️ **仅两种写入方式**：**方式 B（平台捕获）** 或 **方式 C（粘贴 XPath + Enter）**。其他方式（点击「以…为定位器」下拉、DevTools React setter、type_text 逐字符输入、切换 CSS selector 属性定义等）在本平台**不稳定**或**已废弃**，禁止使用。
+> 🚫🚫🚫 **元素选择器写入铁律（仅两种方式，禁止第三种）**：
+>
+> 1. **首选（默认）**：Shell 侧 `echo -n '<XPath>' | pbcopy` → 点击「元素选择器」组合框 → **`Cmd+V` 粘贴** → **紧接 `Enter`** 让 AntD Select 落库（§方式 C）。
+> 2. **退而求其次**：方式 C 连续失败 3 次、或 XPath 含非 ASCII 无法粘贴时 → 点击弹框「**捕获**」按钮，在云浏览器中点选目标元素（§方式 B，Read `capture-element.md`）。
+> 3. **禁止**其他写入方式：点击「以…为定位器」下拉、`type_text` 逐字符输入、DevTools React setter、`set_value` 直写组合框、切换 CSS selector 属性定义、元素库下拉选取等——在本平台**不稳定**或**已废弃**。
 
 > ⚠️ **步骤衔接**：粘贴、按 Enter、点保存等**每个动作后**全量抓 AX Tree 验证。完整逐步示例见 **`reference/ax-verify.md`** §示例 Step B–D。
 
@@ -91,7 +95,7 @@
 
 **第 5 步：用清单配置全部指令**
 
-切回工作流 Tab 后，按优先级 **方式 B（平台捕获）→ 方式 C（粘贴 XPath + Enter）** 将 XPath 填入各指令「元素选择器」，**本任务涉及的选择器在本轮内全部填完**，再进入调试。
+切回工作流 Tab 后，按优先级 **方式 C（pbcopy + Cmd+V 粘贴 XPath + Enter）→ 方式 B（平台捕获）** 将 XPath 填入各指令「元素选择器」，**本任务涉及的选择器在本轮内全部填完**，再进入调试。
 
 ### 站点探测脚本
 
@@ -173,47 +177,19 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 
 5. **切回 bots 工作流 tab**，关闭 DevTools
 
-## 方式 B：平台「捕获」按钮（**默认策略**）
+## 方式 C：pbcopy + Cmd+V 粘贴 XPath + Enter（**默认策略**）
 
-> **AntD Select/Combobox 环境下优先使用本方式**——「捕获」通过云浏览器 VNC 录制，绕过 React 合成事件，直接落库，是最稳健的写入路径。
->
-> **完整流程已独立为模块**：Read **[reference/capture-element.md](capture-element.md)**，按其中 6 步流程执行。该模块是捕获元素的唯一事实来源，其他模块需要捕获时也调用它。
-
-### 快速概览（详细步骤见 capture-element.md）
-
-```
-1. 验证配置弹框已打开（多信号交叉验证：有捕获按钮 / 有元素选择器 / 有保存按钮）
-2. 点击弹框内「捕获」按钮 → 等待采集中状态
-3. 在云浏览器中点击目标元素 → 验证 XPath 回填
-   - XPath 不正确时可：重选 / 大选区 / 缩小选取
-4. 点击保存 → 验证弹框关闭
-5. 回到编排区验证元素是否回显在指令上
-6. 未捕获成功 → 刷新页面 → 重新双击指令 → 重新捕获（循环，上限 3 次）
-```
-
-### 判据原则（⚠️ 必读）
-
-**禁止**使用单一精确字符串匹配判断弹框/按钮状态。AX Tree 中的空格可能是 tab/nbsp 而非普通空格，`includes` 对不可见字符零容忍。
-
-| 判定目标 | ❌ 错误判据 | ✅ 正确判据 |
-|---------|-----------|-----------|
-| 弹框已打开 | 标题字符串精确匹配 | 有「捕获」按钮 **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 |
-| 捕获按钮 | `l.includes("捕获")` | `/\d+\s+按钮\s+捕\s*获/.test(l)` |
-
-详细判据规范和完整 sky 自动化脚本见 **`capture-element.md`**。
-
-## 方式 C：粘贴 XPath + Enter（AntD Select 唯一有效的手工输入方式）
-
-**适用场景**：方式 B（捕获）不可用（无捕获按钮 / 云浏览器断线 / 已在批量采集里拿到 XPath），需要直接把已知 XPath 填进「元素选择器」输入框。
+**适用场景**：已通过 §批量采集 或 locators 缓存拿到 XPath，需要填入「元素选择器」字段——**绝大多数情况走本方式**。
 
 **原理**（一句话）：AntD Select 是受控组件，剪贴板 `Cmd+V` 只改 DOM value，不触发 React onChange，弹框「该字段是必填字段」红字持续显示；紧接着按 **Enter** 会触发 AntD 内部的「confirm current input as tag」逻辑——把粘贴文本作为选项值提交给 React state，红字消失，等效于用户手动点了下拉里那条「以 //xxx 为定位器」的确认项。
 
 ### 五步流程（不可省略任何一步）
 
 ```
+0. Shell 侧：echo -n '//*[@id="xxx"]' | pbcopy
 1. 找到「元素选择器」组合框（AX 中 `组合框 (settable, string)`，父容器紧跟「* 元素选择器」标签）
 2. click 该组合框 → 等 ~400ms
-3. Shell 侧 pbcopy XPath → sky press_key Cmd+V 粘贴 → 等 ~1200ms
+3. sky press_key Command+v（Cmd+V 粘贴）→ 等 ~1200ms
 4. sky press_key Return（Enter）→ 等 ~1500ms
 5. 全量抓 AX Tree 校验：
    - ✅ 「该字段是必填字段」文本已消失
@@ -222,6 +198,7 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 ```
 
 > 💡 **不必**再去查找、点击下拉里的「以 //xxx 为定位器」选项——Enter 已经等效完成了该点击动作。
+> ⚠️ **禁止**用 `type_text` 逐字符输入 XPath；**禁止**跳过 pbcopy 直接手打。
 
 ### AX 验证信号
 
@@ -230,7 +207,7 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 | 组合框 Value 为空 / 无 XPath 回显文本 | 粘贴未成功 | 重新 click 组合框 → 检查剪贴板 → 重试 Cmd+V |
 | 组合框有 XPath 但仍有「该字段是必填字段」 | Cmd+V 已生效但 React onChange 未触发 | **按 Enter**（本方式核心步骤） |
 | 组合框旁出现 `\d+ text //*[@id="..."]` 独立行 + 无必填错误 | ✅ Enter 生效，XPath 已被 React state 接受 | 点保存 |
-| 保存后仍有「该字段是必填字段」 | Enter 未触发或组合框失焦太早 | 重新聚焦组合框 → Cmd+V → **确保 Enter 在同一次聚焦内触发** |
+| 保存后仍有「该字段是必填字段」 | Enter 未触发或组合框失焦太早 | 重新聚焦组合框 → pbcopy → Cmd+V → **确保 Enter 在同一次聚焦内触发** |
 
 ### sky 自动化模板
 
@@ -269,16 +246,48 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 | 组合框始终无 value | 剪贴板被覆盖（如用户消息、其他 pbcopy） | 重新 `echo -n '<XPath>' \| pbcopy` → 再 Cmd+V |
 | 保存报「该字段是必填字段」 | Enter 步骤被跳过 | 补做 Enter 后再保存 |
 | Enter 后弹框意外关闭 | 焦点错误落在「保存」按钮上 | 检查组合框 idx；使用 focus 后再 Cmd+V |
-| XPath 含中文或非 ASCII | pbcopy 传输正常但 AntD Select 拒收 | 换纯 ASCII XPath；或使用**方式 B（平台捕获）** |
+| XPath 含中文或非 ASCII | pbcopy 传输正常但 AntD Select 拒收 | 换纯 ASCII XPath；或转 **方式 B（平台捕获）** |
 | **保存关闭后 canvas 节点显示 `selectorId 元素的...`** | XPath 未真正落库 React state（Cmd+V 后没紧接 Enter，或粘贴时 Chrome 焦点不在弹框上） | 双击该节点重开弹框 → 方式 C 重填并**紧接** Enter → 校验 AX 中出现 `\d+ text //*[@id="..."]` 独立行 → 保存 |
-| **修改已有 tag 时 Backspace 无法删除** | AntD Select 已提交的 tag 不接受键盘删除（不像纯文本 input） | click 组合框 → `Cmd+A` 全选 → `Cmd+V` 粘贴新 XPath → **Enter**（新 tag 替换旧 tag） |
+| **修改已有 tag 时 Backspace 无法删除** | AntD Select 已提交的 tag 不接受键盘删除（不像纯文本 input） | click 组合框 → `Cmd+A` 全选 → pbcopy → `Cmd+V` 粘贴新 XPath → **Enter**（新 tag 替换旧 tag） |
+| **连续 3 次** Cmd+V + Enter 仍失败 | 组合框 idx 错误或 Chrome 焦点被抢 | 转 **方式 B（平台捕获）** |
 
-### 与方式 B 的取舍
+## 方式 B：平台「捕获」按钮（**退而求其次**）
+
+> **仅在方式 C 不可用或连续失败时使用**——「捕获」通过云浏览器 VNC 录制，绕过 React 合成事件，直接落库。
+>
+> **完整流程已独立为模块**：Read **[reference/capture-element.md](capture-element.md)**，按其中 6 步流程执行。该模块是捕获元素的唯一事实来源，其他模块需要捕获时也调用它。
+
+### 快速概览（详细步骤见 capture-element.md）
+
+```
+1. 验证配置弹框已打开（多信号交叉验证：有捕获按钮 / 有元素选择器 / 有保存按钮）
+2. 点击弹框内「捕获」按钮 → 等待采集中状态
+3. 在云浏览器中点击目标元素 → 验证 XPath 回填
+   - XPath 不正确时可：重选 / 大选区 / 缩小选取
+4. 点击保存 → 验证弹框关闭
+5. 回到编排区验证元素是否回显在指令上
+6. 未捕获成功 → 刷新页面 → 重新双击指令 → 重新捕获（循环，上限 3 次）
+```
+
+### 判据原则（⚠️ 必读）
+
+**禁止**使用单一精确字符串匹配判断弹框/按钮状态。AX Tree 中的空格可能是 tab/nbsp 而非普通空格，`includes` 对不可见字符零容忍。
+
+| 判定目标 | ❌ 错误判据 | ✅ 正确判据 |
+|---------|-----------|-----------|
+| 弹框已打开 | 标题字符串精确匹配 | 有「捕获」按钮 **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 |
+| 捕获按钮 | `l.includes("捕获")` | `/\d+\s+按钮\s+捕\s*获/.test(l)` |
+
+详细判据规范和完整 sky 自动化脚本见 **`capture-element.md`**。
+
+### 与方式 C 的取舍
 
 | 情况 | 首选 |
 |------|------|
-| 平台配置弹框内**有**「捕获」按钮 + 云浏览器在线 | **方式 B** |
-| 无捕获按钮（如某些断言指令弹框）/ 云浏览器断线 / 已在批量采集拿到全套 XPath | **方式 C** |
-| 首次尝试方式 B 失败 3 次以上 | 切换到方式 C 兜底 |
+| 已通过批量采集 / locators 拿到 XPath | **方式 C**（pbcopy + Cmd+V + Enter） |
+| 弹框内有「元素选择器」组合框 | **方式 C** |
+| 方式 C 连续失败 3 次 | **方式 B**（平台捕获） |
+| XPath 含非 ASCII、AntD Select 拒收粘贴 | **方式 B** |
+| 弹框内**无**「捕获」按钮 | 继续方式 C；无组合框则报告异常 |
 
-> ⚠️ **禁止**：混合调用；一次填表只用一种方式。方式 B 未成功时不要保留半吊子状态再切方式 C——先在弹框内清空选择器输入框（Cmd+A → Delete）再走方式 C。
+> ⚠️ **禁止**：混合调用；一次填表只用一种方式。方式 C 连续失败转方式 B 前，先在弹框内清空选择器输入框（Cmd+A → Delete），不要保留半吊子状态。

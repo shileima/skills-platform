@@ -126,7 +126,7 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 
 > ⚠️ 配置「打开网页」的「网址」时，**禁止** `type_text`（会丢冒号）。须 `pbcopy+paste` 或 `set_value`，见 **`url-input.md`**。
 >
-> ⚠️ 配置「元素选择器」字段时，只允许**方式 B（平台捕获）**或**方式 C（粘贴 XPath + Enter）**，禁止其他手工方式。详见 **`element-selector.md`**。
+> 🚫🚫🚫 **元素选择器写入铁律**：**首选** `pbcopy` + `Cmd+V` 粘贴 XPath → **紧接 Enter** 落库（`element-selector.md` §方式 C）；**退而求其次**点击弹框「捕获」按钮（§方式 B）。**禁止**其他写入方式。
 
 ## 2.4 指令弹框保存前校验（必做）
 
@@ -166,7 +166,7 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 0. Read reference/commands/<指令>.md → 记下「必填输入参数」列表（与弹框 * 字段对照）
 1. 逐项填写「输入参数」区所有 label 前带红色 * 的字段
 2. 目视扫描弹框：任一必填输入框仍为空或带红色边框 → 停止，补全后再继续
-3. 元素选择器类字段：粘贴 XPath → **按 Enter** 让 AntD Select 接受为定位器（见 `element-selector.md` §方式 C）
+3. 元素选择器类字段：**pbcopy → click 组合框 → Cmd+V 粘贴 → Enter**（见 `element-selector.md` §方式 C）；连续失败 3 次再转 §方式 B 捕获
 4. 全量抓 AX Tree：确认无「该字段是必填字段」类报错文案
 5. 以上全部通过 → 再点弹框右下角「保存」
 ```

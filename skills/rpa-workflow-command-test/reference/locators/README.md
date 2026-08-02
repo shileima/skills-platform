@@ -80,7 +80,7 @@ Read 场景 → 列出全部待采元素 → Cmd+T 新建 Tab → 打开目标 U
 1. Read `reference/locators/<site>.elements.json` 或 `<site>.md`
 2. 按 `label` / `id` / `tag` 找到目标元素
 3. 复制 `xpath` 填入 bots 指令的「元素选择器」
-4. 按 `element-selector.md` §方式 C：Cmd+V 粘贴 XPath → **按 Enter** 让 AntD Select 接受为定位器
+4. 按 `element-selector.md` §方式 C：`echo -n '<XPath>' | pbcopy` → click 组合框 → **Cmd+V 粘贴** → **按 Enter** 让 AntD Select 落库；连续失败 3 次转 §方式 B 捕获
 5. 有 `xpathAlt` 时可作备选
 
 ## 扩展新站点

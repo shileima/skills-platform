@@ -60,7 +60,7 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 2. 按 **`element-selector.md` §批量采集（新建 Tab · 强制前置）**：**Cmd+T 新建 Tab** → 打开目标页 → DevTools **一次性采齐**本任务 XPath → 切回工作流 Tab
 3. 再进入编排区逐条填表、保存
 
-**XPath 写入策略优先级**：**方式 B（平台捕获）** → **方式 C（粘贴 XPath + Enter）**。配置弹框出现「该字段是必填字段」时，务必在 Cmd+V 后立即按 Enter；两种方式**都不生效**时刷新页面重开配置弹框重试，禁止使用其他手工写入方式（如点击「以…为定位器」下拉、DevTools React setter、type_text、CSS 属性定义）。
+**XPath 写入策略优先级**：**方式 C（pbcopy + Cmd+V 粘贴 XPath + Enter，默认）** → **方式 B（平台捕获，退而求其次）**。配置弹框出现「该字段是必填字段」时，务必在 Cmd+V 后立即按 Enter；两种方式**都不生效**时刷新页面重开配置弹框重试，**禁止**其他手工写入方式（如点击「以…为定位器」下拉、DevTools React setter、type_text、set_value 直写、CSS 属性定义）。
 
 > ⚠️ **禁止**在工作流 Tab 地址栏导航探测；**禁止**配一条指令采一条——应预先批量采集。
 
@@ -93,7 +93,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | 指令目录（98 条 UI 指令） | [reference/commands/index.md](reference/commands/index.md) | 查找/确认任意 UI 指令参数 |
 | 单条指令 | `reference/commands/<slug>.md` | 配置具体指令节点时按需 Read |
 | **捕获元素** | [reference/capture-element.md](reference/capture-element.md) | **需通过平台「捕获」按钮采集元素时**：6 步捕获流程、多信号判据 |
-| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **需 XPath 时**：§批量采集（新建 Tab）一次性采齐；方式 B 调用 `capture-element.md`；无法捕获时用方式 C（粘贴 XPath + Enter） |
+| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **需 XPath 时**：§批量采集（新建 Tab）一次性采齐；**首选**方式 C（pbcopy + Cmd+V + Enter）；连续失败转方式 B（Read `capture-element.md`） |
 | **URL 输入规范** | [reference/url-input.md](reference/url-input.md) | 填「网址」等 URL 字段时**必读**（禁止 type_text） |
 | **插入指令** | [reference/insert-command.md](reference/insert-command.md) | **需在编排区 canvas 中追加指令时**：插入位置约束、光标定位、搜索+双击、右键菜单调序、插入后强制核对 |
 | 调试修复 | [reference/debug.md](reference/debug.md) | 保存后调试、报错修复 |

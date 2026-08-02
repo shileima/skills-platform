@@ -86,7 +86,7 @@ JSON.stringify(['kw','chat-textarea'].map(id=>{const el=document.getElementById(
 
 | 优先级 | 方式 | 说明 | 何时用 |
 |--------|------|------|--------|
-| **1（默认）** | **[方式 B：平台捕获](../element-selector.md#方式-b平台捕获按钮默认策略)** | 云浏览器 VNC 录制，绕过 React 合成事件 | 弹框内有「捕获」按钮 + 云浏览器在线时优先 |
-| **2** | **[方式 C：粘贴 XPath + Enter](../element-selector.md#方式-c粘贴-xpath--enterantd-select-唯一有效的手工输入方式)** | pbcopy+cmd+v 粘贴 XPath → 按 Enter 让 AntD Select 接受为定位器 | 无捕获按钮 / 云浏览器断线 / 已批量采集 XPath 时 |
+| **1（默认）** | **[方式 C：pbcopy + Cmd+V 粘贴 XPath + Enter](../element-selector.md#方式-cpbcopy--cmdv-粘贴-xpath--enter默认策略)** | Shell 侧 pbcopy → 组合框 Cmd+V → Enter 让 AntD Select 落库 | 已通过批量采集 / locators 拿到 XPath 时**始终首选** |
+| **2（退而求其次）** | **[方式 B：平台捕获](../element-selector.md#方式-b平台捕获按钮退而求其次)** | 云浏览器 VNC 点选目标元素 | 方式 C 连续失败 3 次 / XPath 含非 ASCII 时 |
 
 > **百度场景提示**：bots 云浏览器下百度搜索框可能是 AntD Select 风格；粘贴 XPath 后**必须紧接着按 Enter**，否则保存报「该字段是必填字段」。示例 XPath 取自 `locators/baidu.elements.json` 或上方「云浏览器默认 XPath」表。
