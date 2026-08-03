@@ -1,0 +1,22 @@
+{
+  "name": "rpa-workflow-create",
+  "version": "0.1.0",
+  "description": "在 rpa.sankuai.com 创建空的可视化编排工作流，并验证画布仅包含开始节点和结束节点",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": ["rpa", "bots", "workflow", "web-automation", "cua"],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+    }
+  ],
+  "pack": {
+    "include": ["SKILL.md", "skill.json", "scripts"]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "rpa-workflow-create"
+  }
+}
