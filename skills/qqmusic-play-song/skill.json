@@ -1,0 +1,22 @@
+{
+  "name": "qqmusic-play-song",
+  "version": "0.0.1",
+  "description": "QQ 音乐桌面客户端搜索并播放指定歌曲，或下载歌手热门歌曲前 5 首；支持 AX Tree、OCR、坐标扫描三级定位降级",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": ["qqmusic", "music", "desktop-automation", "cua"],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+    }
+  ],
+  "pack": {
+    "include": ["SKILL.md", "skill.json", "scripts"]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "qqmusic-play-song"
+  }
+}
