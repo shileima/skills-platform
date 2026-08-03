@@ -42,6 +42,26 @@ description: >
 8. 根据报错修复；同一指令多次失败 → **删除并在原位置重插、重配表单**
 9. 直到聊天区无报错、编排区无配置/执行警示、且「检查」无异常
 
+## 元素查找降级顺序（强制）
+
+所有 sky 点击/双击/验证目标元素时，必须遵循 `cua-router-basic` 的三级定位策略：
+
+1. **AX Tree 找元素**：全量 `get_app_state({ disableDiff:true })`，在完整 AX Tree 上用结构化信号、关键词、`findIdx` / `findAllIdx` 定位，命中后用 `element_index` 操作。
+2. **AX 找不到时 OCR 定位**：如果截图中目标可见但 AX Tree 没暴露元素，读取 `s.screenshot.url`，用 macOS Vision OCR / 视觉识别定位目标文案或图标中心坐标后点击。
+3. **OCR 失败再坐标扫描**：只在 OCR 也失败时，使用已校准的一组候选坐标按优先级尝试；禁止只用单个硬编码坐标。
+4. **每次点击后重新抓 AX Tree 验证**：成功后停止后续 attempts；失败才进入下一候选。
+
+每次自动化脚本输出必须包含定位策略字段，便于排查与沉淀：
+
+```json
+{
+  "successAttempt": "ax:<label> | ocr:<text>@<x>,<y> | coord-scan:<x>,<y>",
+  "successX": 344,
+  "successY": 393,
+  "strategy": "ax | ocr | coord-scan"
+}
+```
+
 ## 配置校验三条硬规则
 
 平台有两套独立警示，**不可只查左侧执行 icon**：
@@ -70,7 +90,7 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 
 ```
 1. reference/prerequisites.md       ← cua-router-basic 安装验证
-2. reference/ax-verify.md         ← 动作后全量 AX 验证（sky 操作必遵）
+2. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
 3. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
 4. reference/scenarios/<场景>.md    ← 测试场景与指令顺序
 5. reference/element-selector.md  ← 需 XPath 时：§批量采集（新建 Tab）采齐全部元素

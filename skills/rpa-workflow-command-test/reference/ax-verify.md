@@ -55,6 +55,39 @@ function axAnalyze(lines, checks) {
 
 > ⚠️ **按钮标签匹配**：调试弹框内按钮用 `axHasLabel(l, "运行")` / `axButtonIdx(lines, "运行")`，**禁止**仅用 `l.includes("运行")`——弹框内 Ant Design 按钮 AX 标签为「运 行」「重 置」，无空格写法会漏匹配。
 
+## AX → OCR → 坐标扫描三级定位
+
+当目标元素视觉可见但 AX Tree 找不到时，必须按以下顺序降级，禁止直接放弃或只点单个硬编码坐标：
+
+1. **AX Tree 找元素**
+   - 每次操作前重新 `sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })`。
+   - 在完整 `s.text` 上用结构性信号、`axHasLabel`、`axButtonIdx`、关键词全文搜索定位。
+   - 命中后使用 `element_index`，不要复用旧 idx。
+
+2. **截图 OCR 定位**
+   - AX 未命中但截图可见时，读取 `s.screenshot.url`。
+   - 用 macOS Vision OCR / 视觉识别目标文案、按钮文字或图标 bounding box。
+   - 点击识别框中心坐标，并立即重新抓 AX Tree 验证。
+
+3. **固定坐标扫描**
+   - OCR 也失败时，才使用已校准的 `coordCandidates`。
+   - 候选坐标必须是数组，按最可能热区到次要热区依次尝试。
+   - 每次 attempt 后都验证业务结果，成功即停止。
+
+所有执行结果必须输出定位字段：
+
+```json
+{
+  "attempts": ["ax:...", "ocr:...@x,y", "coord-scan:x,y"],
+  "successAttempt": "ocr:确定@512,360",
+  "successX": 512,
+  "successY": 360,
+  "strategy": "ax | ocr | coord-scan"
+}
+```
+
+若已处于目标状态，可以返回 `strategy: "already-done"`，但仍要设置 `successAttempt` 说明短路原因。
+
 ## 常见动作 → 成功信号
 
 | 上一步动作 | AX Tree 成功信号 | 失败 / 需重试信号 |
@@ -156,7 +189,7 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 
 ## 失败时的决策
 
-1. **idx 找不到目标** → 重新全量抓取，换选择器重搜（不要盲点旧 idx）
+1. **idx 找不到目标** → 重新全量抓取，换结构性信号/关键词在完整 AX Tree 重搜；仍找不到但截图可见 → 用 OCR 定位中心坐标；OCR 失败 → 坐标扫描候选数组；禁止盲点旧 idx 或单个硬编码坐标
 2. **浮层/弹框状态不对** → `Escape` → 全量抓取确认关闭 → 从该步重来
 3. **canvas 处于编辑态**（双击失败）→ 点调试区失焦 + `Escape` → 再双击
 4. **同一动作连续 2 次验证仍失败** → 停止连点，报告当前 AX 关键行，换策略
