@@ -8,8 +8,10 @@ description: >
   「bots 捕获元素」「bots 云浏览器采集」「bots 调试运行」「编排模式指令测试」
   「百度场景测试」「bilibili 场景测试」「B站工作流测试」
   「网页断言测试」「验证元素存在/可见/属性/不存在」「验证文本存在/不存在」「断言指令批量回归」
+  「上传文件指令测试」「UploadFileFromS3」「input[type=file] 测试」「图片上传组件测试」「附件上传指令」
+  「循环遍历元素」「LoopElements」「小红书循环」「outputList 测试」「@{toolId.index}」「批量抓取标题」
   「workflow command test」「bots workflow debug」「add instruction to bots workflow」。
-  内置测试场景：百度搜索、Bilibili 搜索、百度首页 9 条网页断言批量测试。指令参数以官方文档为准：
+  内置测试场景：百度搜索、Bilibili 搜索、百度首页 9 条网页断言批量测试、上传文件指令专项、循环遍历元素·小红书首页。指令参数以官方文档为准：
   https://document.waimai.st.sankuai.com/
   底层工具：cua-router-basic skill（sky.* API 操作 Chrome）。执行前必须先确认 cua-router-basic 已安装就绪。
   详细步骤在 reference/ 目录，按模块按需 Read，不要一次性加载全部 reference。
@@ -103,6 +105,8 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | 百度搜索结果 XPath | [reference/locators/baidu-search.elements.json](reference/locators/baidu-search.elements.json) | 百度搜索结果页（wd=你好） |
 | 百度场景 | [reference/scenarios/baidu.md](reference/scenarios/baidu.md) | 用户说「百度」 |
 | **百度断言批量场景**（9 条网页断言） | [reference/scenarios/baidu-assertions.md](reference/scenarios/baidu-assertions.md) | 用户说「网页断言测试」「验证元素/文本 xxx」「断言批量回归」 |
+| **上传文件专项场景**（`UploadFileFromS3`） | [reference/scenarios/upload-file.md](reference/scenarios/upload-file.md) | 用户说「上传文件指令测试」「UploadFileFromS3」「图片上传组件」「input[type=file] 测试」 |
+| **循环遍历元素场景**（`LoopElements` · 小红书首页） | [reference/scenarios/loop-elements-xhs.md](reference/scenarios/loop-elements-xhs.md) | 用户说「循环遍历元素」「LoopElements」「小红书循环」「outputList」「批量抓取标题」 |
 | B站场景 | [reference/scenarios/bilibili.md](reference/scenarios/bilibili.md) | 用户说「bilibili/B站」 |
 
 ### 扩展 / 更新 reference
@@ -131,6 +135,8 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - 关键词：rpa.sankuai.com、bots.sankuai.com、编排模式、工作流指令、调试运行、聊天区报错
 - 「百度场景」→ Read `reference/scenarios/baidu.md`
 - **「网页断言测试 / 验证元素 xx / 断言批量」→ Read `reference/scenarios/baidu-assertions.md`**
+- **「上传文件指令测试 / UploadFileFromS3 / 图片上传组件 / input[type=file]」→ Read `reference/scenarios/upload-file.md`**
+- **「循环遍历元素 / LoopElements / 小红书循环 / outputList / @{toolId.index} / 批量抓取标题」→ Read `reference/scenarios/loop-elements-xhs.md` + `reference/commands/loopelements.md`**
 - 「bilibili / B站场景」→ Read `reference/scenarios/bilibili.md`
 - **不适用于**：bots 对话流/知识库、普通网页操作、代码编写
 
@@ -148,3 +154,5 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - **Chrome `cgWindowNotFound` 或 sky 长 timeout**：Chrome 不是最前台，用 `osascript -e 'tell application "System Events" to set frontmost of application process "Google Chrome" to true'` + `sleep 2` 恢复；见 `debug.md` §常见环境级异常
 - **"网页断言"分组中"验证文本存在/不存在"平台指令名不含 `(web)` 后缀**：AX 匹配格式是 `文本 验证文本存在` 而非 `text 验证文本存在 (web)`；见 `commands/index.md` §"网页断言"分组、`scenarios/baidu-assertions.md`
 - **"文本输入区（Monaco 类）"字段中文粘贴常失败**：优先 `type_text` + ASCII；必须中文时先 pbcopy → Chrome 强制前台 → Cmd+V；见 `debug.md` §「文本输入区（Monaco 类）」中文粘贴
+- **`UploadFileFromS3` 指令**：底层 Playwright `setInputFiles()` 只吃**原生 `<input type=file>`**；S3 路径只支持 **`https://` 前缀**（不支持 `s3://`）；外网站点云浏览器 tunnel 不通（`ant-design.antgroup.com`、`file.io` 等超时）；`data:` URL 被 rpa 前置校验拒。首选**通路 A**：把静态 HTML 上传到 `s3plus.sankuai.com` 让工作流只需 2 节点；详见 `scenarios/upload-file.md`
+- **`LoopElements` 指令**：只有 `selector` + `outputList` 是必填；循环体内子指令用 **`@{toolId.index}`**（不是 `${}`）拼接当前 XPath；`outputList` 的 `value` 只能引用循环内部指令的 outKey；循环节点外用 `${outKey.字段名}` 访问收集到的数组。UI「输出参数」表格新加行的 sky idx 极不稳定（AntD Table virtual scroll），**必须同一次 sky exec 内完成「点+ 添加 → 填名称 → 填值」三步**；详见 `commands/loopelements.md` 与 `scenarios/loop-elements-xhs.md`

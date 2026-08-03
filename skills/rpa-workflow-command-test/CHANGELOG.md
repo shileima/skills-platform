@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **循环遍历元素专项文档** [`reference/commands/loopelements.md`](reference/commands/loopelements.md)：`LoopElements` 完整参数表（13 个），官方 XML DSL 示例（含 `outputList`、`@{toolId.index}`、`outKey`），3 类循环体子指令组合（单字段收集 / 多字段收集 / 滚动加载），配置要点，sky 自动化配置示例（关键：**同一次 sky exec 内完成"点+添加 → 填名称 → 填值"**，跨 exec idx 失效），常见踩坑对照表
+- **循环遍历·小红书首页场景** [`reference/scenarios/loop-elements-xhs.md`](reference/scenarios/loop-elements-xhs.md)：
+  - 目标：用 LoopElements 遍历 `xiaohongshu.com/explore` 首屏 32 条 `<a class="title">` 笔记标题
+  - 4 节点工作流：打开网页 → 循环遍历元素（含 GetText 子指令）→ 打印日志（循环外用 `${loopResult.titles}` 输出数组）
+  - 完整 XML DSL、5 步执行清单、预期结果、场景专属踩坑（GetText 未用 `@{loopResult.index}` → 拿到重复元素 / 子指令未嵌入循环内 / 表格 idx 失效等）
+- **上传文件指令专项场景** [`reference/scenarios/upload-file.md`](reference/scenarios/upload-file.md)：`UploadFileFromS3` 端到端测试（云浏览器网络限制清单、s3plus 静态 HTML 通路、rpa 自身「新建工作流→自定义上传」5 节点通路、失败 URL/XPath 表）
+- 场景索引 [`scenarios/index.md`](reference/scenarios/index.md) 加入场景 D 与场景 E 入口
+- 指令目录 [`commands/index.md`](reference/commands/index.md) 加入「循环遍历元素」行
+- 指令 [`commands/uploadfilefroms3.md`](reference/commands/uploadfilefroms3.md) 追加「适用性预判清单」「推荐通路」「已知失败案例」三节
+- SKILL.md description 与 reference 索引登记「上传文件」「循环遍历元素」两条触发关键词与场景文件；边界条款各补 1 条铁律
+
 ### 变更
 
 - `pnpm run pack` 改为白名单打包，zip 内不再包含 `package.json`、`pnpm-lock.yaml`、`scripts/install.js`、`scripts/pack.js` 等开发文件

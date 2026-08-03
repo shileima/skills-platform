@@ -29,6 +29,7 @@
 | 模拟快捷键 | `SendKeys` | 元素选择器, 快捷键组合 | [sendkeys.md](sendkeys.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/sendkeys/ |
 | 按偏移量滚动 | `ScrollToPosition` | 起点横坐标, 起点纵坐标 | [scrolltoposition.md](scrolltoposition.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/scrolltoposition/ |
 | 滚动到元素 | `ScrollToElement` | 元素选择器 | [scrolltoelement.md](scrolltoelement.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/scrolltoelement/ |
+| 循环遍历元素 | `LoopElements` | 元素选择器, outputList | [loopelements.md](loopelements.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/loopelements/ |
 | 点击元素（推荐） | `ClickElementMixed` | 元素选择器 | [clickelementmixed.md](clickelementmixed.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/clickelementmixed/ |
 | 等待元素不存在 | `WaitForElementNotPresent` | 元素选择器 | [waitforelementnotpresent.md](waitforelementnotpresent.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/waitforelementnotpresent/ |
 | 等待元素具有属性 | `WaitForElementHasAttribute` | 元素选择器, 属性名称 | [waitforelementhasattribute.md](waitforelementhasattribute.md) | https://document.waimai.st.sankuai.com/commands/ui-commands/waitforelementhasattribute/ |
