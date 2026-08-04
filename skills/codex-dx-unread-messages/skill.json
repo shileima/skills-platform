@@ -1,0 +1,22 @@
+{
+  "name": "codex-dx-unread-messages",
+  "version": "0.1.0",
+  "description": "读取大象 App 当前可见未读/近期消息，整理为摘要并发送给本人会话",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": ["daxiang", "message", "summary", "desktop-automation", "cua"],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+    }
+  ],
+  "pack": {
+    "include": ["SKILL.md", "skill.json", "scripts"]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-dx-unread-messages"
+  }
+}

@@ -6,7 +6,7 @@
 
 ## 1. 背景与现象
 
-- 项目：`skills-platform` / 技能 `rpa-workflow-command-test`
+- 项目：`skills-platform` / 技能 `codex-workflow-command-test`
 - 目标平台：`rpa.sankuai.com` / `bots.sankuai.com` — 编排模式工作流
 - 症状：在**网页断言**（`VerifyElementPresent`、`VerifyElementVisible`、`VerifyElementAttributeValue`、`VerifyElementHasAttribute`、`VerifyElementNotHasAttribute`、`VerifyElementNotPresent`、`VerifyElementNotVisible` 等，以及 `FillText`、`ClickElementMixed`、`WaitForElement*`、`GetText`、`GetElementAttribute`、`ScrollToElement`、`MouseOver` 等）指令弹框里，**「元素选择器」字段是 AntD Select/Combobox 组件**。它不响应 sky 层模拟出来的键盘事件：
   - `pbcopy + press_key(cmd+v)`：value 显示但底层 React `onChange` 不触发，保存时红字 **「该字段是必填字段」** 始终存在。
@@ -63,11 +63,11 @@
 
 ## 6. 相关文件
 
-- `skills/rpa-workflow-command-test/SKILL.md`
-- `skills/rpa-workflow-command-test/reference/element-selector.md`
-- `skills/rpa-workflow-command-test/reference/ax-verify.md`
-- `skills/rpa-workflow-command-test/reference/scenarios/baidu.md`
-- `skills/rpa-workflow-command-test/reference/scenarios/bilibili.md`
-- `skills/rpa-workflow-command-test/reference/locators/README.md`
-- `skills/rpa-workflow-command-test/scripts/collect-locators.py`
-- `skills/rpa-workflow-command-test/scripts/update-locators.sh`
+- `skills/codex-workflow-command-test/SKILL.md`
+- `skills/codex-workflow-command-test/reference/element-selector.md`
+- `skills/codex-workflow-command-test/reference/ax-verify.md`
+- `skills/codex-workflow-command-test/reference/scenarios/baidu.md`
+- `skills/codex-workflow-command-test/reference/scenarios/bilibili.md`
+- `skills/codex-workflow-command-test/reference/locators/README.md`
+- `skills/codex-workflow-command-test/scripts/collect-locators.py`
+- `skills/codex-workflow-command-test/scripts/update-locators.sh`

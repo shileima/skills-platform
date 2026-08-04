@@ -70,8 +70,8 @@ JSON.stringify(['kw','chat-textarea'].map(id=>{const el=document.getElementById(
 按 [test-workflow.md](../test-workflow.md) 标准流程：
 
 1. rpa.sankuai.com **首页** → 点「工作流」→ 新建**空**编排工作流
-2. **追加式**按序添加 3 条指令（详见 `insert-command.md`）：
-   - **第 1 条**：点 canvas「拖拽添加指令」提示行 → 右侧搜索框搜「打开网页」→ 双击 (web) 结果 → 插入 → 配置保存
+2. **按序添加 3 条指令**（详见 `insert-command.md`）：
+   - **第 1 条**：选中**开始节点** → **Enter** 创建空行 → 右侧搜索框搜「打开网页」→ 双击 (web) 结果 → 插入 → 配置保存
    - **第 2 条**：选中「打开网页」→ **Enter** 创建空行 → 右侧搜索框搜「输入文本」→ 双击 (web) 结果 → 插入 → **校验「打开网页」在其上方** → 配置保存
    - **第 3 条**：选中「输入文本」→ **Enter** 创建空行 → 右侧搜索框搜「点击」→ 双击 (web) 结果 → 插入 → 配置保存
 3. **批量采集 XPath**（若 locators 缓存不可用或与云浏览器不符）：`element-selector.md` §批量采集 → 新建 Tab 探测 variant → 再配第 2、3 步

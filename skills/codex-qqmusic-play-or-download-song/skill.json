@@ -1,5 +1,5 @@
 {
-  "name": "qqmusic-play-song",
+  "name": "codex-qqmusic-play-or-download-song",
   "version": "0.0.1",
   "description": "QQ 音乐桌面客户端搜索并播放指定歌曲，或下载歌手热门歌曲前 5 首；支持 AX Tree、OCR、坐标扫描三级定位降级",
   "author": "mashilei",
@@ -17,6 +17,6 @@
   },
   "automan": {
     "source": "user",
-    "metaName": "qqmusic-play-song"
+    "metaName": "codex-qqmusic-play-or-download-song"
   }
 }

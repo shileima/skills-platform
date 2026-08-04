@@ -1,5 +1,5 @@
 {
-  "name": "rpa-workflow-create",
+  "name": "codex-rpa-workflow-create",
   "version": "0.1.0",
   "description": "在 rpa.sankuai.com 创建空的可视化编排工作流，并验证画布仅包含开始节点和结束节点",
   "author": "mashilei",
@@ -17,6 +17,6 @@
   },
   "automan": {
     "source": "user",
-    "metaName": "rpa-workflow-create"
+    "metaName": "codex-rpa-workflow-create"
   }
 }

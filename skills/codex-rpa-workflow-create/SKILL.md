@@ -1,11 +1,11 @@
 ---
-name: rpa-workflow-create
+name: codex-rpa-workflow-create
 description: >
   RPA / Bots 工作流创建技能。当用户表达“新建一个工作流”“创建 RPA 工作流”“在 rpa.sankuai.com 新建编排模式工作流”
   “创建 bots 编排工作流”“新建空编排工作流”“新建名称为 XXX 的工作流”“create RPA workflow”
   “create bots workflow”“create orchestration workflow”等意图时激活。本技能只负责进入 RPA 首页、点击左侧工作流、
   新建一个可视化编排/编排模式的空工作流、填写名称、创建后验证画布仅包含开始节点和结束节点。
-  不负责给工作流添加指令、配置元素选择器、调试运行、修复节点报错；这些属于 rpa-workflow-command-test。
+  不负责给工作流添加指令、配置元素选择器、调试运行、修复节点报错；这些属于 codex-workflow-command-test。
   不适用于普通代码仓库 workflow 文件、GitHub Actions、CI/CD pipeline 或数据构造 workflow。
 ---
 
@@ -17,7 +17,7 @@ description: >
 
 - 用户要求“新建/创建 RPA 工作流、bots 工作流、编排模式工作流、空编排工作流”时使用。
 - 用户给出工作流名称，例如“新建一个名称为「自动化测试-移动端普通指令」的工作流”时使用。
-- 只做工作流创建与空画布校验；如果用户还要添加指令或调试，创建完成后交给 `rpa-workflow-command-test`。
+- 只做工作流创建与空画布校验；如果用户还要添加指令或调试，创建完成后交给 `codex-workflow-command-test`。
 - 不处理本地 XML / YAML / GitHub Actions / CI pipeline 这类代码工程工作流。
 
 ## 依赖

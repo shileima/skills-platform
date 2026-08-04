@@ -4,7 +4,7 @@
 
 | 项 | 值 |
 |---|---|
-| 技能 ID（目录名） | `rpa-workflow-command-test` |
+| 技能 ID（目录名） | `codex-workflow-command-test` |
 | automan 注册名 | `rpa-workflow-instruction-test`（见 `skill.json` → `automan.metaName`） |
 | 当前版本 | 见 `skill.json` → `version` |
 | 作者 | mashilei |
@@ -22,7 +22,7 @@
 ## 目录结构
 
 ```
-rpa-workflow-command-test/
+codex-workflow-command-test/
 ├── SKILL.md                 # Agent 主入口（frontmatter + 流程索引）
 ├── skill.json               # 技能元数据（名称、版本、targets、依赖、打包白名单）— 权威来源
 ├── CHANGELOG.md             # 版本变更说明
@@ -48,7 +48,7 @@ rpa-workflow-command-test/
 | **`SKILL.md` frontmatter** | 仅 `name` / `description`（Agent 触发与执行说明），`name` 必须与目录名一致 |
 | **`.meta.json`（生成物）** | automan 平台 UI / 版本 / 依赖；由 `skilldev` 从 `skill.json` 派生，勿手改 |
 
-automan 注册名与目录名不同（`rpa-workflow-instruction-test` vs `rpa-workflow-command-test`），通过 `skill.json` 的 `automan.metaName` 保留，避免破坏既有 automan 注册。
+automan 注册名与目录名不同（`rpa-workflow-instruction-test` vs `codex-workflow-command-test`），通过 `skill.json` 的 `automan.metaName` 保留，避免破坏既有 automan 注册。
 
 ## 安装
 
@@ -56,13 +56,13 @@ automan 注册名与目录名不同（`rpa-workflow-instruction-test` vs `rpa-wo
 
 ```bash
 # 先干跑确认目标路径，不写盘
-skilldev install rpa-workflow-command-test --target automan --dry-run
+skilldev install codex-workflow-command-test --target automan --dry-run
 
 # 正式安装到某个生态（claude | codex | cursor | automan | all）
-skilldev install rpa-workflow-command-test --target automan
+skilldev install codex-workflow-command-test --target automan
 
 # 安装并一并装依赖（cua-router-basic，会执行其 install 脚本）
-skilldev install rpa-workflow-command-test --target automan --install-deps
+skilldev install codex-workflow-command-test --target automan --install-deps
 ```
 
 依赖来自 `skill.json` → `dependencies`。默认**不**自动执行依赖安装脚本（`curl | bash` 属外部动作）；需要时显式加 `--install-deps`，或手动执行下方命令并校验 `sky.*` 就绪：
@@ -74,7 +74,7 @@ curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scri
 ## 打包分发（automan zip）
 
 ```bash
-skilldev pack rpa-workflow-command-test
+skilldev pack codex-workflow-command-test
 ```
 
 按 `skill.json` → `pack.include` 白名单（`.meta.json`、`SKILL.md`、`README.md`、`CHANGELOG.md`、`reference`、`scripts`）打包，产物用 **automan 注册名 + 版本** 命名：
@@ -88,10 +88,10 @@ dist/rpa-workflow-instruction-test_0.0.1.zip
 ## 版本发布流程
 
 1. 完成代码 / 文档改动
-2. 升版本：`skilldev version rpa-workflow-command-test patch`（或 `minor` / `major` / 指定 `x.y.z`）——会更新 `skill.json` 并向 `CHANGELOG.md` 追加条目骨架
+2. 升版本：`skilldev version codex-workflow-command-test patch`（或 `minor` / `major` / 指定 `x.y.z`）——会更新 `skill.json` 并向 `CHANGELOG.md` 追加条目骨架
 3. 在 `CHANGELOG.md` 填写本次变更
-4. 校验：`skilldev validate rpa-workflow-command-test`
-5. 打包：`skilldev pack rpa-workflow-command-test`
+4. 校验：`skilldev validate codex-workflow-command-test`
+5. 打包：`skilldev pack codex-workflow-command-test`
 6. 提交 git 并打 tag（可选）：`v0.0.2`
 
 ## 快速链接

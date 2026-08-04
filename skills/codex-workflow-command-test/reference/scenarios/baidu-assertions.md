@@ -86,9 +86,10 @@
 按 [test-workflow.md](../test-workflow.md) 标准流程，插入操作遵循 `insert-command.md`，**每一条新指令**都要严格执行：
 
 ```
-1. 光标定位（insert-command.md §插入位置约束）：
-   - 首条：点 canvas「拖拽添加指令」提示行
-   - 非首条：点 canvas 上"最后一条已保存节点的末尾 text 行" → Enter 空出新行
+1. 光标定位（insert-command.md §Enter 空行规则）：
+   - **首条**：选中**开始节点** → Enter
+   - **向后追加**：选中**锚点指令**（最后一条已保存） → Enter
+   - **向前插入**：选中**目标指令的上一条** → Enter
 2. 若右侧 Tab 已切回 Chat（首次调试后常见）→ 点"指令" Tab
 3. 搜索框 set_value 中文指令名（无 (web) 后缀，如"验证元素可见"）
 4. 双击"网页断言"分组下匹配结果

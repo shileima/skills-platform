@@ -1,11 +1,11 @@
 ---
-name: qqmusic-play-song
+name: codex-qqmusic-play-or-download-song
 description: >
   QQ 音乐桌面客户端搜索并播放指定歌曲，或下载歌手热门歌曲前 5 首；支持 AX Tree、OCR、坐标扫描三级定位降级。
   当用户说「QQ 音乐播放 X」「在 QQ 音乐搜 X 并播放」「用 QQ 音乐听 X」或提供歌名/歌手组合时激活。
 ---
 
-# qqmusic-play-song — QQ 音乐固化播放技能
+# codex-qqmusic-play-or-download-song — QQ 音乐播放/下载技能
 
 在 QQ 音乐桌面客户端 (`com.tencent.QQMusicMac`) 搜索并播放指定歌曲；也支持在已打开的歌手详情页下载热门歌曲前 5 首。播放歌曲流程已固化，元素定位顺序为 AX Tree → macOS Vision OCR → 固定坐标扫描。
 

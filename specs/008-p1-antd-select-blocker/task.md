@@ -61,9 +61,9 @@
 - 内容：
   - 项目根新建 `scripts/verify/` 目录。
   - 新增 `scripts/verify/verify_collect_locators.sh`：
-    1. 调 `bash skills/rpa-workflow-command-test/scripts/update-locators.sh __e2e_example https://example.com`
-    2. 断言 `skills/rpa-workflow-command-test/reference/locators/__e2e_example.elements.json` 存在，`elementCount > 0`，随机抽 3 条 elements[i].xpath 都以 `//` 开头
-    3. 断言 `skills/rpa-workflow-command-test/reference/locators/__e2e_example.md` 中含 "快捷 XPath" 章节
+    1. 调 `bash skills/codex-workflow-command-test/scripts/update-locators.sh __e2e_example https://example.com`
+    2. 断言 `skills/codex-workflow-command-test/reference/locators/__e2e_example.elements.json` 存在，`elementCount > 0`，随机抽 3 条 elements[i].xpath 都以 `//` 开头
+    3. 断言 `skills/codex-workflow-command-test/reference/locators/__e2e_example.md` 中含 "快捷 XPath" 章节
     4. cleanup：删除 `__e2e_example.*` 两个文件
   - 幂等、可重复执行。
 - 验收：`bash scripts/verify/verify_collect_locators.sh` 退出码 0。
@@ -73,7 +73,7 @@
 - Owner：reviewer（作为 review gate 的一部分）
 - 内容：
   - 跑 `node bin/skilldev.mjs validate` 全绿。
-  - 跑 `node bin/skilldev.mjs build rpa-workflow-command-test --target all`，确保新增/修改文件同步到 dist/。
+  - 跑 `node bin/skilldev.mjs build codex-workflow-command-test --target all`，确保新增/修改文件同步到 dist/。
 - 验收：validate & build 全部无错。
 
 ## T9. 知识沉淀（Step 6）

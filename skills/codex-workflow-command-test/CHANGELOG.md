@@ -49,5 +49,5 @@
 
 - `cua-router-basic`（sky.* API 操作 Chrome）
 
-[Unreleased]: https://github.com/shileima/rpa-workflow-command-test/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/shileima/rpa-workflow-command-test/releases/tag/v0.0.1
+[Unreleased]: https://github.com/shileima/codex-workflow-command-test/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/shileima/codex-workflow-command-test/releases/tag/v0.0.1

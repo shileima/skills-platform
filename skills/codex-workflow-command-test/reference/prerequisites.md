@@ -49,4 +49,4 @@ bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
 1. 读取 `$SKILL_ROOT/SKILL.md`，按其中的 Bootstrap 与操作规范初始化 sky runtime
 2. 确认 cua-router 服务已运行（`daemon.sh start`）
 3. 阅读 **`reference/ax-verify.md`**（动作-验证循环，每次 sky 操作必遵）
-4. 继续 `reference/platform-ops.md` 或用户指定的测试场景
+4. 继续 `reference/platform-ops.md` 或用户指定的测试场景；**未指定时直接 Read `reference/scenarios/bilibili.md`（禁止询问）**

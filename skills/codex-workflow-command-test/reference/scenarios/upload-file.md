@@ -124,7 +124,7 @@
 按 [test-workflow.md](../test-workflow.md) 标准流程：
 
 1. rpa.sankuai.com **首页** → 点「工作流」→ 新建**空**编排工作流
-2. **第 1 条 · 打开网页**：点 canvas「拖拽添加指令」提示行 → 右侧搜索框搜「打开网页」→ 双击 (web) 结果 → 网址栏 `pbcopy` 粘贴 s3plus HTML URL → 保存
+2. **第 1 条 · 打开网页**：选中**开始节点** → **Enter** 创建空行 → 右侧搜索框搜「打开网页」→ 双击 (web) 结果 → 网址栏 `pbcopy` 粘贴 s3plus HTML URL → 保存
 3. **第 2 条 · 上传文件**：选中「打开网页」→ Enter 创建空行 → 搜「上传文件」→ 双击结果 → 元素选择器组合框 `pbcopy` + `Cmd+V` `//input[@type="file"]` + `Enter` → 文件 S3 路径粘贴 `https://www.baidu.com/img/flexible/logo/pc/result.png` → 保存
 4. 点「**检查**」确认无「配置异常节点」
 5. **调试 → 运行**

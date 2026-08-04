@@ -1,5 +1,5 @@
 ---
-name: rpa-workflow-command-test
+name: codex-workflow-command-test
 description: >
   Bots 平台编排模式工作流指令配置与调试技能。当用户在对话中表达以下意图时激活：
   「在 bots 上新建编排模式工作流」「bots 工作流加指令」「配置 bots 自动化流程」
@@ -11,13 +11,12 @@ description: >
   「上传文件指令测试」「UploadFileFromS3」「input[type=file] 测试」「图片上传组件测试」「附件上传指令」
   「循环遍历元素」「LoopElements」「小红书循环」「outputList 测试」「@{toolId.index}」「批量抓取标题」
   「workflow command test」「bots workflow debug」「add instruction to bots workflow」。
-  内置测试场景：百度搜索、Bilibili 搜索、百度首页 9 条网页断言批量测试、上传文件指令专项、循环遍历元素·小红书首页。指令参数以官方文档为准：
-  https://document.waimai.st.sankuai.com/
+  未指定场景/指令时默认 B站四步（打开网页→输入文本→点击→刷新网页），直接开始、禁止询问。内置场景含百度/B站/断言/上传/LoopElements。指令文档 https://document.waimai.st.sankuai.com/
   底层工具：cua-router-basic skill（sky.* API 操作 Chrome）。执行前必须先确认 cua-router-basic 已安装就绪。
   详细步骤在 reference/ 目录，按模块按需 Read，不要一次性加载全部 reference。
   不要把"查 bots 平台文档""普通网页浏览""代码 review"误进入；本技能只负责在
   bots.sankuai.com 编排模式工作流中添加、配置、调试 web 自动化指令这一件事。
-  测试前提：rpa.sankuai.com 新建空工作流 → 编排区按序加指令 → 配表单 → 保存后点「检查」→ 调试前扫右侧配置警示 → 调试运行 → 查聊天区日志与编排区左侧/右侧 icon → 修复。
+  测试前提：rpa 新建空编排工作流 → 按序加指令 → 配表单保存 → 检查 → 调试 → 查日志与 icon → 修复。
 ---
 
 # Bots 编排模式工作流指令测试
@@ -33,7 +32,7 @@ description: >
 完整流程见 **[reference/test-workflow.md](reference/test-workflow.md)**：
 
 1. 打开 **rpa.sankuai.com 首页** → 左侧点击「**工作流**」→ 新建**空**编排模式工作流
-2. 在编排区**追加式按顺序**添加待测指令：🚫 **非首条指令强制铁律** —— 单击 canvas 中**最后一条已保存指令**的文本行 → 按 **Enter** 键，在其**正下方**空出一个新行（首条指令则点 canvas「拖拽添加指令」提示行让光标进入编辑区，无需 Enter）→ 右侧「指令」Tab 搜索框输入**中文指令名**（打开网页 → 输入文本 → 点击 / 验证元素存在 / 验证元素可见）→ **双击**「网页自动化」分组下匹配的 `xxx (web)` 项；每条新指令必然追加在**已有指令末尾**（结束节点前），**绝不能**点在已有指令上方或两条指令之间插入（否则新指令会排到前面，顺序即刻非法），禁止其他方式（`/` 唤起浮层、拖拽、复制现有节点），插入后**必须**校验新节点确实排在锚点指令**之后**（见 `insert-command.md` §插入位置约束、§插入后强制核对）
+2. 在编排区**按顺序**添加待测指令（`insert-command.md`）：**首条**选中**开始节点 → Enter** 在开始节点下方空行插入；**向后追加**选中锚点指令（通常为上一条/最后一条）→ Enter 空行 → 搜索+双击；**禁止**从结束节点上方起建、禁止拖拽提示行、禁止无锚点插入；插入后**必须**校验新节点在锚点**之后**（见 `insert-command.md` §插入后强制核对）
 3. 逐条**完善表单并保存**（保存前必验：弹框 label 前红色 `*` 为必填；**条件必填**须对照 `commands/<slug>.md`「设置方式 → 对应必填字段」，见 `test-workflow.md` §3、`platform-ops.md` §2.4），保存报错当场修复
 4. **每条保存后**：点顶部「**检查**」→ 下拉无「配置异常节点 / 节点配置不完整」、按钮无红色数字 badge（见 `test-workflow.md` §保存后配置校验）
 5. **调试前**：场景顺序终检 + 编排区每条指令**右侧**无配置警示 icon（见 `test-workflow.md` §调试前配置终检、`debug.md` §调试前置）
@@ -86,13 +85,22 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 
 > ⚠️ **禁止**在工作流 Tab 地址栏导航探测；**禁止**配一条指令采一条——应预先批量采集。
 
+## 默认场景（无用户输入时）
+
+用户仅激活本技能、**未指定测试场景或测试指令**时：
+
+- **禁止**向用户询问场景、指令列表或工作流名称
+- **直接** Read `reference/scenarios/bilibili.md` 并按默认四步执行：**打开网页 → 输入文本 → 点击元素 → 刷新网页**
+- 工作流名称可用 `Bilibili搜索测试-YYYYMMDD`；仅当用户显式给出名称时才改用用户名称
+- 验证依赖就绪后**立即**进入 platform-ops / test-workflow，不要等待用户确认
+
 ## 执行流程
 
 ```
 1. reference/prerequisites.md       ← cua-router-basic 安装验证
 2. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
 3. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
-4. reference/scenarios/<场景>.md    ← 测试场景与指令顺序
+4. reference/scenarios/<场景>.md    ← 测试场景与指令顺序（未指定 → bilibili.md）
 5. reference/element-selector.md  ← 需 XPath 时：§批量采集（新建 Tab）采齐全部元素
 6. reference/locators/<site>.*      ← 元素 XPath 缓存（可选，优先 Read）
 7. reference/commands/<指令>.md     ← 单条指令参数
@@ -127,7 +135,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | **百度断言批量场景**（9 条网页断言） | [reference/scenarios/baidu-assertions.md](reference/scenarios/baidu-assertions.md) | 用户说「网页断言测试」「验证元素/文本 xxx」「断言批量回归」 |
 | **上传文件专项场景**（`UploadFileFromS3`） | [reference/scenarios/upload-file.md](reference/scenarios/upload-file.md) | 用户说「上传文件指令测试」「UploadFileFromS3」「图片上传组件」「input[type=file] 测试」 |
 | **循环遍历元素场景**（`LoopElements` · 小红书首页） | [reference/scenarios/loop-elements-xhs.md](reference/scenarios/loop-elements-xhs.md) | 用户说「循环遍历元素」「LoopElements」「小红书循环」「outputList」「批量抓取标题」 |
-| B站场景 | [reference/scenarios/bilibili.md](reference/scenarios/bilibili.md) | 用户说「bilibili/B站」 |
+| **B站场景（默认）** | [reference/scenarios/bilibili.md](reference/scenarios/bilibili.md) | 用户说「bilibili/B站」；**未指定场景/指令时自动使用** |
 
 ### 扩展 / 更新 reference
 
@@ -153,6 +161,7 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 
 - 用户要在 RPA/bots 编排模式工作流中新建指令或调试
 - 关键词：rpa.sankuai.com、bots.sankuai.com、编排模式、工作流指令、调试运行、聊天区报错
+- **未指定场景/指令**（如仅 `/codex-workflow-command-test` 或泛化「工作流指令测试」）→ **禁止询问**，默认 Read `reference/scenarios/bilibili.md`（B站：打开网页 → 输入文本 → 点击元素 → 刷新网页）
 - 「百度场景」→ Read `reference/scenarios/baidu.md`
 - **「网页断言测试 / 验证元素 xx / 断言批量」→ Read `reference/scenarios/baidu-assertions.md`**
 - **「上传文件指令测试 / UploadFileFromS3 / 图片上传组件 / input[type=file]」→ Read `reference/scenarios/upload-file.md`**
