@@ -16,7 +16,6 @@
     "include": [".meta.json", "SKILL.md", "README.md", "CHANGELOG.md", "reference", "scripts"]
   },
   "automan": {
-    "source": "user",
-    "metaName": "rpa-workflow-instruction-test"
+    "source": "user"
   }
 }

@@ -5,7 +5,7 @@
 | 项 | 值 |
 |---|---|
 | 技能 ID（目录名） | `codex-workflow-command-test` |
-| automan 注册名 | `rpa-workflow-instruction-test`（见 `skill.json` → `automan.metaName`） |
+| automan 注册名 | `codex-workflow-command-test`（与目录名一致） |
 | 当前版本 | 见 `skill.json` → `version` |
 | 作者 | mashilei |
 | 依赖 | [cua-router-basic](https://github.com/shileima/cua-router-basic) |
@@ -48,8 +48,6 @@ codex-workflow-command-test/
 | **`SKILL.md` frontmatter** | 仅 `name` / `description`（Agent 触发与执行说明），`name` 必须与目录名一致 |
 | **`.meta.json`（生成物）** | automan 平台 UI / 版本 / 依赖；由 `skilldev` 从 `skill.json` 派生，勿手改 |
 
-automan 注册名与目录名不同（`rpa-workflow-instruction-test` vs `codex-workflow-command-test`），通过 `skill.json` 的 `automan.metaName` 保留，避免破坏既有 automan 注册。
-
 ## 安装
 
 在 `skills-platform` 仓库根执行（生态目录默认 `~/.<eco>/skills/<name>/`）：
@@ -80,7 +78,7 @@ skilldev pack codex-workflow-command-test
 按 `skill.json` → `pack.include` 白名单（`.meta.json`、`SKILL.md`、`README.md`、`CHANGELOG.md`、`reference`、`scripts`）打包，产物用 **automan 注册名 + 版本** 命名：
 
 ```
-dist/rpa-workflow-instruction-test_0.0.1.zip
+dist/codex-workflow-command-test_0.0.1.zip
 ```
 
 `.meta.json` 会在打包时自动生成并置于包内根层。
