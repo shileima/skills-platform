@@ -5,6 +5,7 @@ import { listSkills, loadSkill } from "../lib/skill.mjs";
 import { isValid as isSemver } from "../lib/semver.mjs";
 import { ECOSYSTEM_IDS } from "../lib/ecosystems.mjs";
 import { exists } from "../lib/fsutil.mjs";
+import { validateModules } from "../lib/modules.mjs";
 import { ok, warn, info, fail, c } from "../lib/log.mjs";
 
 const LINK_RE = /\]\(([^)]+)\)/g;
@@ -69,6 +70,8 @@ export async function validateSkill(name) {
 
   const brokenLinks = await checkLinks(skill);
   for (const l of brokenLinks) errors.push(`broken relative link in SKILL.md: ${l}`);
+
+  errors.push(...(await validateModules(skill)));
 
   return { errors, warnings };
 }

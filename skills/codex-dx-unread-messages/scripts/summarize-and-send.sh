@@ -392,120 +392,36 @@ await (async () => {
     const unreadConversationCount = collected.unreadConversationCount || 0;
     const summary = buildSummary(items);
 
-    // 下钻多个会话后界面可能变化，发送前重新激活并尽量放大窗口
-    const { execFileSync } = await import("node:child_process");
-    const daxiangApp = "/Applications/大象.app";
-    try {
-      execFileSync("/usr/bin/open", [daxiangApp]);
-    } catch (_) {
-      try { execFileSync("/usr/bin/open", ["-b", "cn.neixin.pc"]); } catch (_) {}
-    }
-    await new Promise(r => setTimeout(r, 300));
-    const maximizeScript = `tell application "System Events"
-  set daxiangProc to missing value
-  try
-    set daxiangProc to first application process whose bundle identifier is "cn.neixin.pc"
-  end try
-  if daxiangProc is missing value then
-    if exists process "大象" then set daxiangProc to process "大象"
-  end if
-  if daxiangProc is missing value then error "daxiang process not found"
-  set frontmost of daxiangProc to true
-  tell daxiangProc
-    set position of window 1 to {0, 33}
-    set size of window 1 to {1512, 850}
-  end tell
-end tell`;
-    let maximizeError = null;
-    try {
-      execFileSync("/usr/bin/osascript", ["-e", maximizeScript]);
-    } catch (maxErr) {
-      maximizeError = String(maxErr);
-    }
-    await new Promise(r => setTimeout(r, 1000));
-
-    let sendState = await sky.get_app_state({ app, disableDiff: true });
-    if (maximizeError && !/文本输入区.*说点什么|消息/.test(sendState.text)) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "maximize_window_failed_before_send", hint: "请手动将大象窗口放大后重试", detail: maximizeError }));
-      return;
-    }
-    await clickAllTab(sendState.text);
-    sendState = await sky.get_app_state({ app, disableDiff: true });
-    const receiverLine = sendState.text.split("\n").find(l => l.includes(`container ${receiver}`))
-      || sendState.text.split("\n").find(l => l.includes(`文本 ${receiver}`));
-    if (!receiverLine) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "receiver_not_found", receiver, itemCount: items.length, summary }));
-    } else {
-      const receiverIdx = parseIdx(receiverLine);
-      await sky.click({ app, element_index: receiverIdx });
-      await new Promise(r => setTimeout(r, 1000));
-
-      const latestBeforeMarkdown = await sky.get_app_state({ app, disableDiff: true });
-      const latestLines = latestBeforeMarkdown.text.split("\n");
-      const inputLine = latestLines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
-      const inputIdx = inputLine ? parseIdx(inputLine) : null;
-      const markdownButtonLine = inputIdx === null ? null : latestLines.filter(l => {
-        const idx = parseIdx(l);
-        return idx !== null && idx < inputIdx && idx >= inputIdx - 120 && /^\s*\d+\s+按钮\s+/.test(l);
-      }).pop();
-
-      if (!markdownButtonLine) {
-        const markdownPreview = latestLines.filter(l => /Markdown|Mark|发送|按钮|文本输入区/.test(l)).slice(-120);
-        nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_button_not_found_after_maximize", receiver, receiverIdx, itemCount: items.length, inputIdx, markdownPreview, summary }));
-        return;
-      }
-
-      const markdownIdx = parseIdx(markdownButtonLine);
-      await sky.click({ app, element_index: markdownIdx });
-      await new Promise(r => setTimeout(r, 800));
-
-      let editorState = await sky.get_app_state({ app, disableDiff: true });
-      let editorLines = editorState.text.split("\n");
-      const markdownMenuLine = editorLines.find(l => /发送\s*Markdown\s*消息/.test(l));
-      if (markdownMenuLine && !/Markdown编辑器/.test(editorState.text)) {
-        await sky.click({ app, element_index: parseIdx(markdownMenuLine) });
-        await new Promise(r => setTimeout(r, 800));
-        editorState = await sky.get_app_state({ app, disableDiff: true });
-        editorLines = editorState.text.split("\n");
-      }
-      const markdownInputLine = editorLines.find(l => /文本输入区/.test(l) && /请输入内容/.test(l));
-      if (!markdownInputLine) {
-        nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_input_not_found", receiver, receiverIdx, markdownIdx, itemCount: items.length, summary, editorPreview: editorState.text.slice(0, 1000) }));
-      } else {
-        const markdownInputIdx = parseIdx(markdownInputLine);
-        await sky.set_value({ app, element_index: markdownInputIdx, value: summary });
-        await new Promise(r => setTimeout(r, 500));
-
-        const filledState = await sky.get_app_state({ app, disableDiff: true });
-        const sendLine = filledState.text.split("\n").find(l => /^\s*\d+\s+按钮\s+发送/.test(l));
-        const hasContent = /大象消息汇总|未读概览/.test(filledState.text);
-        const hasReceiver = filledState.text.includes(receiver);
-        if (!sendLine || !hasContent || !hasReceiver) {
-          nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_editor_not_ready", receiver, receiverIdx, markdownIdx, markdownInputIdx, itemCount: items.length, hasSend: !!sendLine, hasContent, hasReceiver, summary, editorPreview: filledState.text.slice(0, 1000) }));
-        } else {
-          const sendIdx = parseIdx(sendLine);
-          await sky.click({ app, element_index: sendIdx });
-          await new Promise(r => setTimeout(r, 1200));
-          const s4 = await sky.get_app_state({ app, disableDiff: true });
-          nodeRepl.write(JSON.stringify({
-            ok: true,
-            receiver,
-            receiverIdx,
-            markdownIdx,
-            markdownInputIdx,
-            sendIdx,
-            itemCount: items.length,
-            drilledChats,
-            unreadConversationCount,
-            sentLikely: /大象消息汇总|未读概览/.test(s4.text),
-            summary
-          }));
-        }
-      }
-    }
+    nodeRepl.write(JSON.stringify({
+      ok: true,
+      receiver,
+      itemCount: items.length,
+      drilledChats,
+      unreadConversationCount,
+      summary
+    }));
   }
 })()
 '''.replace('RECEIVER_PLACEHOLDER', json.dumps(receiver, ensure_ascii=False)).replace('TIME_LABEL_PLACEHOLDER', json.dumps(time_label, ensure_ascii=False)))
 PY
 
-bash "$SKILL_ROOT/scripts/exec.sh" -t 90000 -f "$JS_FILE"
+FETCH_RESULT="$(bash "$SKILL_ROOT/scripts/exec.sh" -t 90000 -f "$JS_FILE")"
+echo "$FETCH_RESULT"
+LAST_LINE="$(printf '%s\n' "$FETCH_RESULT" | tail -n 1)"
+
+python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok") else 1)' "$LAST_LINE" || exit 1
+
+SUMMARY="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["summary"])' <<< "$LAST_LINE")"
+
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SEND_SCRIPT=""
+if [ -f "$SKILL_DIR/modules/dx-send-markdown/scripts/send-markdown.sh" ]; then
+  SEND_SCRIPT="$SKILL_DIR/modules/dx-send-markdown/scripts/send-markdown.sh"
+elif [ -f "$SKILL_DIR/../../src/modules/dx-send-markdown/scripts/send-markdown.sh" ]; then
+  SEND_SCRIPT="$SKILL_DIR/../../src/modules/dx-send-markdown/scripts/send-markdown.sh"
+else
+  echo '{"ok":false,"error":"dx-send-markdown module not found"}' >&2
+  exit 1
+fi
+
+printf '%s' "$SUMMARY" | bash "$SEND_SCRIPT" "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览"

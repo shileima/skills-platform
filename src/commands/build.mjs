@@ -5,6 +5,7 @@ import { listSkills, loadSkill, repoRoot } from "../lib/skill.mjs";
 import { ECOSYSTEM_IDS } from "../lib/ecosystems.mjs";
 import { getAdapter } from "../adapters/index.mjs";
 import { rmrf } from "../lib/fsutil.mjs";
+import { stageModules } from "../lib/modules.mjs";
 import { ok, step, info, fail, c } from "../lib/log.mjs";
 
 export function distRoot() {
@@ -33,6 +34,7 @@ export async function stageSkill(skill, targetId, outDir) {
   const adapter = getAdapter(targetId);
   await rmrf(outDir);
   await adapter.stage(skill, skill.dir, outDir);
+  await stageModules(skill, outDir);
   return outDir;
 }
 

@@ -83,13 +83,14 @@ bash "./scripts/summarize-and-send.sh" "马世磊" "2026-08-03 21:55左右"
 6. 组织为 Markdown 中文摘要：`未读概览` + 扁平未读列表（不分组、不分类）。每条未读会话一行，使用 `- ` 列表，单条不超过约 150 字；多个会话之间插入一行 `------------------------------------------------`；每条消息的来源（群名称、系统会话名）必须加粗，例如 `**大前端**：57条未读；...`；同一会话只保留一条，不重复展示。
 7. 摘要生成前必须去噪：过滤历史 `大象消息汇总`、AX 类型前缀（`文本`/`text`/`container`）、纯时间、纯数字、导航项和过长链接，避免旧摘要被再次吸入。
 8. 摘要生成前必须去噪：过滤历史 `大象消息汇总`、AX 类型前缀（`文本`/`text`/`container`）、纯时间、纯数字、导航项和过长链接，避免旧摘要被再次吸入。
-9. 点击左侧本人单聊（默认 `马世磊`），操作后重新 `get_app_state({ disableDiff: true })`。
-10. 进入本人会话后不要先输入、不要粘贴、不要点击全屏输入。
-11. 再次确认大象窗口仍处于放大后的可用尺寸；如尺寸被手动改小，必须重新放大并重新读取 AX Tree。
-12. 放大尺寸后必须重新 `get_app_state({ disableDiff: true })`，在 AX Tree 中定位底部输入框 `文本输入区` / `说点什么...`，再在输入框前方工具栏附近优先查找 `按钮 `（实测为 Markdown 入口）；不要复用未放大前的 `按钮 ` / `...` 流程。
-13. 点击 `按钮 ` 后必须重新读取 AX Tree：若已打开 `Markdown编辑器`，继续写入；若出现浮层，则在浮层中查找并点击 `发送 Markdown 消息`。
-14. 打开 `Markdown编辑器` 弹框后，必须使用 AX Tree 定位左侧 `文本输入区 (settable, string) 请输入内容`，并通过 `sky.set_value({ app, element_index, value: summary })` 直接写入 Markdown 摘要；不要使用剪贴板、`pbcopy`、`Command+V` 或普通 `type_text`。
-15. 写入后重新读取状态，确认 `请输入内容` 区域有摘要内容（如包含 `大象消息汇总`、`未读概览`），且左下角发送人是目标接收人（默认 `马世磊`），再点击弹框右下角 `发送`；发送后重新读取状态，校验 AX Tree 中包含摘要关键词。
+9. 调用公共模块 `dx-send-markdown` 发送摘要（`skill.json` 声明 `"modules": ["dx-send-markdown"]`，安装后在 `modules/dx-send-markdown/scripts/send-markdown.sh`）：
+
+```bash
+printf '%s' "$summary" | bash "$SKILL_DIR/modules/dx-send-markdown/scripts/send-markdown.sh" \
+  "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览"
+```
+
+发送细节见 `modules/dx-send-markdown/MODULE.md`（最大化窗口、Markdown 编辑器、`set_value` 写入等）。
 
 ## 关键实现片段
 

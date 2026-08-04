@@ -25,7 +25,8 @@ node bin/skilldev.mjs version <name> patch
 
 - `bin/skilldev.mjs` → `src/cli.mjs`（命令分发）→ `src/commands/*.mjs`
 - `src/adapters/*.mjs`：每生态一个，统一接口 `id / skillsDir() / stage() / postInstall()`
-- `src/lib/*.mjs`：`frontmatter`、`skill`、`ecosystems`（路径集中处）、`fsutil`、`semver`、`zip`、`log`
+- `src/lib/*.mjs`：`frontmatter`、`skill`、`ecosystems`（路径集中处）、`fsutil`、`semver`、`zip`、`log`、`modules`
+- `src/modules/<name>/`：技能共享模块（build/install 时拷贝到 `<skill>/modules/<name>/`）
 - 测试：`tests/*.test.mjs`（`node --test`）
 
 修改工具行为时，优先改 `src/lib` 与 `src/adapters`，命令层保持薄。

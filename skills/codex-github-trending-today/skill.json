@@ -1,10 +1,10 @@
 {
-  "name": "codex-dx-unread-messages",
-  "version": "0.1.0",
-  "description": "读取大象 App 当前可见未读/近期消息，整理为摘要并发送给本人会话",
+  "name": "codex-github-trending-today",
+  "version": "0.0.1",
+  "description": "通过 Chrome 打开 GitHub 今日 Trending 热榜，汇总前 10 条仓库（名称、Star 数、中文描述），并以 Markdown 消息发送到大象本人会话。",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["daxiang", "message", "summary", "desktop-automation", "cua"],
+  "keywords": ["github", "trending", "daxiang", "markdown", "desktop-automation", "cua"],
   "targets": ["claude", "codex", "automan", "cursor"],
   "dependencies": [
     {
@@ -18,6 +18,6 @@
   },
   "automan": {
     "source": "user",
-    "metaName": "codex-dx-unread-messages"
+    "metaName": "codex-github-trending-today"
   }
 }
