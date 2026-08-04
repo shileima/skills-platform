@@ -33,7 +33,7 @@ B 站首页 DOM 会随版本变化，执行前 **必须** 按 `reference/element
 3. **批量采集选择器**（配置表单前）：`element-selector.md` §批量采集 → **Cmd+T 新建 Tab** 打开 bilibili.com → DevTools **一次性**采集搜索框 + 搜索按钮 XPath → 切回工作流 Tab
 4. 逐条配置并保存表单（保存前确认必填项无红色边框）
 5. **调试前场景顺序终检**（`test-workflow.md` §调试前场景顺序终检）：对照本文件「指令节点」表，确认 canvas 顺序为 `开始 → 打开网页 → 输入文本 → 点击 → 刷新网页 → 结束`
-6. `reference/debug.md` 调试运行，直到 4 条业务指令全部 ✅
+6. 终检与「检查」均无报错 → **直接** `reference/debug.md` 调试运行（禁止询问用户），直到 4 条业务指令全部 ✅
 
 ## 与场景 A（百度）的差异
 

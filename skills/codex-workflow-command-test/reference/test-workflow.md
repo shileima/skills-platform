@@ -308,10 +308,30 @@
     incompleteFromPanel: incompleteFromPanel.slice(0, 10),
     execErrors: execErrors.slice(0, 10),
     readyForDebug,
-    action: readyForDebug ? "click-debug" : "fix-config-first"
+    action: readyForDebug ? "click-debug-immediately" : "fix-config-first"
   }));
+
+  // readyForDebug === true → 禁止询问用户，同一 exec 内立即进入 §第 4 步调试运行
 }
 ```
+
+## 无报错即调试门控（强制 · 禁止询问）
+
+§调试前场景顺序终检 **且** §调试前配置终检 均返回 `readyForDebug: true`，且保存/检查阶段**无任何报错文案**时：
+
+```
+下一动作 = 点「调试」→ 弹框直接「运行」→ 等待 → §第 5 步四处扫描
+```
+
+**禁止**在此刻输出进度摘要后停下来问用户；**禁止**写「如需我继续调试请告知」类收尾。
+
+仅当以下任一成立才可暂停（并说明阻塞，仍不询问「要不要继续」）：
+
+- `readyForDebug: false`（须修复后重检）
+- cua-router 未就绪 / Chrome AX 不可达
+- 平台需人工登录或 VNC 接管
+
+sky 自动化：顺序终检 + 配置终检通过后，**同一代码块**内接着执行 §第 4 步「调试 → 运行」脚本（见 `debug.md` §调试运行），不要拆成两轮等用户回复。
 
 ## 第 4 步：调试运行
 

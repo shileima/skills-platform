@@ -1,0 +1,22 @@
+{
+  "name": "codex-note-create-and-write",
+  "version": "0.0.1",
+  "description": "macOS 备忘录自动化：新建一条备忘录并写入指定内容；未提供内容时默认写入白居易《琵琶行》全篇。优先走 Notes AppleScript 后台创建，不占用桌面和鼠标；失败时自动切换到前台 AX 点击「新建备忘录」按钮并粘贴内容。",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": ["notes", "apple-notes", "desktop-automation", "cua", "备忘录"],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+    }
+  ],
+  "pack": {
+    "include": ["SKILL.md", "skill.json", "scripts"]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-note-create-and-write"
+  }
+}

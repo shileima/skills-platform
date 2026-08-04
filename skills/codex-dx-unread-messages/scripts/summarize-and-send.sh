@@ -15,11 +15,32 @@ fi
 bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
 bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
 
-if ! osascript \
-  -e 'tell application "大象" to activate' \
-  -e 'delay 0.5' \
-  -e 'tell application "System Events" to tell process "大象" to set position of window 1 to {0, 33}' \
-  -e 'tell application "System Events" to tell process "大象" to set size of window 1 to {1512, 850}' >/dev/null 2>&1; then
+# 优先用 .app 路径启动（部分环境下 open -b 无法解析 bundle，但 plist 仍为 cn.neixin.pc）
+DAXIANG_APP="${DAXIANG_APP:-/Applications/大象.app}"
+if [ -d "$DAXIANG_APP" ]; then
+  open "$DAXIANG_APP" >/dev/null 2>&1 || true
+else
+  open -b cn.neixin.pc >/dev/null 2>&1 || true
+fi
+sleep 0.8
+
+MAXIMIZE_DAXIANG_OSASCRIPT='tell application "System Events"
+  set daxiangProc to missing value
+  try
+    set daxiangProc to first application process whose bundle identifier is "cn.neixin.pc"
+  end try
+  if daxiangProc is missing value then
+    if exists process "大象" then set daxiangProc to process "大象"
+  end if
+  if daxiangProc is missing value then error "daxiang process not found"
+  set frontmost of daxiangProc to true
+  tell daxiangProc
+    set position of window 1 to {0, 33}
+    set size of window 1 to {1512, 850}
+  end tell
+end tell'
+
+if ! osascript -e "$MAXIMIZE_DAXIANG_OSASCRIPT" >/dev/null 2>&1; then
   python3 - <<'PY'
 import json
 print(json.dumps({
@@ -110,21 +131,19 @@ await (async () => {
     }
 
     function finishCard() {
-      if (!current || !current.name) return;
-      const parts = [];
-      if (current.unread) parts.push(current.unread);
+      if (!current || !current.name || !current.unread) return;
+      const parts = [current.unread];
       if (current.preview) parts.push(current.preview);
-      if (parts.length) cards.push(`${current.name}：${parts.join("；")}`);
+      cards.push(`${current.name}：${parts.join("；")}`);
     }
 
     for (const line of lines) {
       if (!/(文本|text|container)/.test(line)) continue;
       const text = normalizeText(line);
-      if (shouldIgnore(text)) continue;
-
       const isContainer = /\bcontainer\b/.test(line);
       const isTime = /^\d{1,2}:\d{2}$/.test(text);
       const unread = text.match(/^\[\s*(\d+)条\s*\]$/)?.[1];
+      const plainUnread = text.match(/^(\d+)$/)?.[1];
 
       if (isContainer && isConversationName(text)) {
         finishCard();
@@ -133,18 +152,145 @@ await (async () => {
       }
 
       if (!current) continue;
-      if (isTime) continue;
-      if (text === current.name) continue;
-      if (unread) {
-        current.unread = `${unread}条未读`;
+      if (unread || (plainUnread && !current.unread)) {
+        current.unread = `${unread || plainUnread}条未读`;
         continue;
       }
+      if (shouldIgnore(text)) continue;
+      if (isTime) continue;
+      if (text === current.name) continue;
       if (!current.preview && /(未读|@你|@马世磊|P[0-3]|告警|恢复正常|故障|审批|Pull request|PR|Talos|发布|部署|打卡|消息助手|磊哥|先走了|加入了群聊|个群有新消息|工作流|Automan|xgpt|测试|开发|^.{2,30}：)/.test(text)) {
         current.preview = text;
       }
     }
     finishCard();
     return uniq(cards).slice(0, 80);
+  }
+  /** 点击消息列表上方的「未读」Tab（AX 可能为 按钮/text/文本 未读，末尾可有未读数角标） */
+  async function clickUnreadTab(stateText) {
+    const lines = stateText.split("\n");
+    const tabLine = lines.find(l => /^\s*\d+\s+(按钮|text|文本)\s+未读/.test(l));
+    if (!tabLine) return { clicked: false };
+    const idx = parseIdx(tabLine);
+    await sky.click({ app, element_index: idx });
+    await new Promise(r => setTimeout(r, 800));
+    return { clicked: true, idx };
+  }
+
+  async function clickAllTab(stateText) {
+    const lines = stateText.split("\n");
+    const tabLine = lines.find(l => /^\s*\d+\s+(按钮|text|文本)\s+全部/.test(l));
+    if (!tabLine) return { clicked: false };
+    const idx = parseIdx(tabLine);
+    await sky.click({ app, element_index: idx });
+    await new Promise(r => setTimeout(r, 800));
+    return { clicked: true, idx };
+  }
+
+  /** 从未读列表解析：会话名、未读条数、可点击 idx */
+  function parseUnreadConversations(axText) {
+    const allLines = axText.split("\n");
+    const leftListLines = allLines.filter(line => {
+      const idx = parseIdx(line);
+      return idx !== null && idx >= 80 && idx < 240;
+    });
+    const lines = leftListLines.length > 20 ? leftListLines : allLines;
+    const convs = [];
+    let current = null;
+
+    function nameOk(text) {
+      if (!text || shouldIgnore(text)) return false;
+      if (/^\[\s*\d+条\s*\]$/.test(text)) return false;
+      if (/^(\d+条未读|未读\s*\d+)$/.test(text)) return false;
+      if (text.length > 40) return false;
+      return true;
+    }
+
+    for (const line of lines) {
+      if (!/(文本|text|container)/.test(line)) continue;
+      const idx = parseIdx(line);
+      const text = normalizeText(line);
+      const isContainer = /\bcontainer\b/.test(line);
+      const bracketUnread = text.match(/^\[\s*(\d+)条\s*\]$/)?.[1];
+      const textUnread =
+        text.match(/^(\d+)条未读$/)?.[1] || text.match(/^未读\s*(\d+)$/)?.[1];
+      const plainUnread = text.match(/^(\d+)$/)?.[1];
+
+      if (isContainer && nameOk(text)) {
+        if (current && current.idx) convs.push(current);
+        current = { name: text, unread: 0, idx, preview: "" };
+        continue;
+      }
+      if (!current) continue;
+      if (bracketUnread) current.unread = parseInt(bracketUnread, 10);
+      else if (textUnread) current.unread = parseInt(textUnread, 10);
+      else if (plainUnread && current.unread === 0) current.unread = parseInt(plainUnread, 10);
+      else if (shouldIgnore(text)) continue;
+      else if (!current.preview && text !== current.name && !/^\d{1,2}:\d{2}$/.test(text)) current.preview = text;
+    }
+    if (current && current.idx) convs.push(current);
+    return convs.filter(c => c.unread > 0);
+  }
+
+  /** 从当前会话聊天区提取最近 limit 条消息 */
+  function extractChatMessages(axText, limit, conversationName) {
+    const allLines = axText.split("\n");
+    const inputLine = allLines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
+    const inputIdx = inputLine ? parseIdx(inputLine) : 99999;
+    const titleLine = allLines.find(l => {
+      const idx = parseIdx(l);
+      return idx !== null && idx < inputIdx && new RegExp(`\\b(文本|text)\\s+${conversationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`).test(l);
+    });
+    const startIdx = titleLine ? parseIdx(titleLine) : 240;
+    const messages = [];
+    for (const line of allLines) {
+      const idx = parseIdx(line);
+      if (idx === null || idx <= startIdx || idx >= inputIdx) continue;
+      if (!/(文本|text|文本栏)/.test(line)) continue;
+      const text = normalizeText(line);
+      if (shouldIgnore(text)) continue;
+      if (/^\d{1,2}:\d{2}$/.test(text)) continue;
+      if (text === conversationName) continue;
+      if (text.length < 2) continue;
+      messages.push(text);
+    }
+    return uniq(messages).slice(-Math.max(1, limit));
+  }
+
+  /** 未读 Tab + 逐会话打开，合并列表预览与聊天正文 */
+  async function collectUnreadItems(initialText) {
+    const unreadTab = await clickUnreadTab(initialText);
+    if (!unreadTab.clicked) {
+      return { ok: false, error: "unread_tab_not_found", items: [] };
+    }
+    let s = await sky.get_app_state({ app, disableDiff: true });
+    let items = [];
+
+    const MAX_CHATS = 10;
+    let drilled = 0;
+    const visited = new Set();
+    const unreadConversationNames = new Set(parseUnreadConversations(s.text).map(c => c.name));
+    for (let round = 0; round < MAX_CHATS; round++) {
+      s = await sky.get_app_state({ app, disableDiff: true });
+      await clickUnreadTab(s.text);
+      await new Promise(r => setTimeout(r, 500));
+      s = await sky.get_app_state({ app, disableDiff: true });
+      const convs = parseUnreadConversations(s.text).filter(c => !visited.has(c.name));
+      const conv = convs[0];
+      if (!conv || !conv.unread || !conv.idx) break;
+      visited.add(conv.name);
+
+      await sky.click({ app, element_index: conv.idx });
+      await new Promise(r => setTimeout(r, 900));
+      const chatState = await sky.get_app_state({ app, disableDiff: true });
+      const n = Math.min(conv.unread, 20);
+      const chatMessages = extractChatMessages(chatState.text, n, conv.name);
+      const effectiveMessages = chatMessages.length ? chatMessages : (conv.preview ? [conv.preview] : []);
+      const preview = effectiveMessages.slice(-1)[0] || "";
+      items.push(preview ? `${conv.name}：${conv.unread}条未读；${preview}` : `${conv.name}：${conv.unread}条未读`);
+      drilled += 1;
+    }
+    return { ok: true, items: uniq(items), drilledChats: drilled, unreadConversationCount: unreadConversationNames.size };
   }
 
   function boldSource(text) {
@@ -158,8 +304,17 @@ await (async () => {
     return `**${source}**：${rest}`;
   }
 
-  function pick(items, re, limit = 3, maxLen = 150) {
-    return uniq(items.filter(x => re.test(x)).map(x => shorten(boldSource(formatItem(x)), maxLen))).slice(0, limit);
+  function dedupeBySource(items) {
+    const seen = new Set();
+    const out = [];
+    for (const item of items) {
+      const formatted = formatItem(item);
+      const source = formatted.split("：")[0]?.trim() || formatted;
+      if (!source || seen.has(source)) continue;
+      seen.add(source);
+      out.push(item);
+    }
+    return out;
   }
 
   function formatItem(text) {
@@ -201,34 +356,18 @@ await (async () => {
     const parts = [];
     if (unread.length) parts.push(`未读标记：${unread.join("、")}`);
     if (counts.length) parts.push(`会话未读：${counts.slice(0, 8).join("、")}`);
-    return parts.length ? parts.join("；") : "未检测到明确未读数字，以当前可见近期消息为准";
-  }
-
-  function section(title, rows) {
-    if (!rows.length) return "";
-    const separator = "------------------------------------------------";
-    return `\n【${title}】\n${rows.map(x => `- ${x}`).join(`\n${separator}\n`)}`;
+    return parts.length ? parts.join("；") : "未检测到带数字的未读会话；小红点会话已忽略";
   }
 
   function buildSummary(items) {
-    const pr = pick(items, /Pull request|来源分支|目标分支|Code代码仓库/, 3, 170);
-    const alerts = pick(items, /\[P[0-3]\]|P[0-3]|恢复正常|故障|错误总量|504|告警/, 4, 160);
-    const deploys = pick(items, /Talos|部署成功|发布 - success|托管部署成功/, 4, 160);
-    const approvals = pick(items, /待你审批|申请人|审批/, 3, 150);
-    const reminders = pick(items, /今天工作辛苦|打卡|移动HR|学城/, 4, 120);
-    const groups = pick(items, /\d+条未读|个群有新消息|加入了群聊|群/, 8, 120);
-
     let body = `【大象消息汇总｜${timeLabel}】\n\n未读概览：${unreadOverview(items)}\n`;
-    body += section("代码 / PR", pr);
-    body += section("告警", alerts);
-    body += section("发布 / 部署", deploys);
-    body += section("审批 / 待办", approvals);
-    body += section("提醒", reminders);
-    body += section("群聊未读", groups);
+    if (!items.length) return body.trim();
 
-    if (!body.includes("- ")) {
-      body += section("近期消息", items.slice(0, 8).map(x => shorten(formatItem(x), 130)));
-    }
+    const rows = dedupeBySource(items).map(x => shorten(boldSource(formatItem(x)), 150));
+    if (!rows.length) return body.trim();
+
+    const separator = "------------------------------------------------";
+    body += `\n\n${rows.map(x => `- ${x}`).join(`\n${separator}\n`)}`;
     return body.trim();
   }
 
@@ -238,11 +377,62 @@ await (async () => {
   } else if (!/Window: "大象"|App: 大象|消息/.test(s.text)) {
     nodeRepl.write(JSON.stringify({ ok: false, error: "daxiang_not_ready", hint: "请先打开大象桌面客户端" }));
   } else {
-    const items = extractVisibleMessages(s.text);
+    const collected = await collectUnreadItems(s.text);
+    if (!collected.ok) {
+      nodeRepl.write(JSON.stringify({
+        ok: false,
+        error: collected.error,
+        hint: "请手动点击消息列表上方的「未读」Tab 后重试",
+        itemCount: collected.items.length
+      }));
+      return;
+    }
+    const items = collected.items;
+    const drilledChats = collected.drilledChats || 0;
+    const unreadConversationCount = collected.unreadConversationCount || 0;
     const summary = buildSummary(items);
 
-    const receiverLine = s.text.split("\n").find(l => l.includes(`container ${receiver}`))
-      || s.text.split("\n").find(l => l.includes(`文本 ${receiver}`));
+    // 下钻多个会话后界面可能变化，发送前重新激活并尽量放大窗口
+    const { execFileSync } = await import("node:child_process");
+    const daxiangApp = "/Applications/大象.app";
+    try {
+      execFileSync("/usr/bin/open", [daxiangApp]);
+    } catch (_) {
+      try { execFileSync("/usr/bin/open", ["-b", "cn.neixin.pc"]); } catch (_) {}
+    }
+    await new Promise(r => setTimeout(r, 300));
+    const maximizeScript = `tell application "System Events"
+  set daxiangProc to missing value
+  try
+    set daxiangProc to first application process whose bundle identifier is "cn.neixin.pc"
+  end try
+  if daxiangProc is missing value then
+    if exists process "大象" then set daxiangProc to process "大象"
+  end if
+  if daxiangProc is missing value then error "daxiang process not found"
+  set frontmost of daxiangProc to true
+  tell daxiangProc
+    set position of window 1 to {0, 33}
+    set size of window 1 to {1512, 850}
+  end tell
+end tell`;
+    let maximizeError = null;
+    try {
+      execFileSync("/usr/bin/osascript", ["-e", maximizeScript]);
+    } catch (maxErr) {
+      maximizeError = String(maxErr);
+    }
+    await new Promise(r => setTimeout(r, 1000));
+
+    let sendState = await sky.get_app_state({ app, disableDiff: true });
+    if (maximizeError && !/文本输入区.*说点什么|消息/.test(sendState.text)) {
+      nodeRepl.write(JSON.stringify({ ok: false, error: "maximize_window_failed_before_send", hint: "请手动将大象窗口放大后重试", detail: maximizeError }));
+      return;
+    }
+    await clickAllTab(sendState.text);
+    sendState = await sky.get_app_state({ app, disableDiff: true });
+    const receiverLine = sendState.text.split("\n").find(l => l.includes(`container ${receiver}`))
+      || sendState.text.split("\n").find(l => l.includes(`文本 ${receiver}`));
     if (!receiverLine) {
       nodeRepl.write(JSON.stringify({ ok: false, error: "receiver_not_found", receiver, itemCount: items.length, summary }));
     } else {
@@ -305,6 +495,8 @@ await (async () => {
             markdownInputIdx,
             sendIdx,
             itemCount: items.length,
+            drilledChats,
+            unreadConversationCount,
             sentLikely: /大象消息汇总|未读概览/.test(s4.text),
             summary
           }));

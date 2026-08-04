@@ -10,9 +10,10 @@
 |------|-----------|---------------|
 | A：百度搜索 | 百度、baidu | [baidu.md](baidu.md) |
 | B：Bilibili 搜索 | bilibili、B站、哔哩哔哩 | [bilibili.md](bilibili.md) |
-| **C：百度首页 9 条网页断言批量测试** | 网页断言、验证元素、断言测试、verify 全量、断言场景 | [baidu-assertions.md](baidu-assertions.md) |
-| **D：上传文件指令测试**（`UploadFileFromS3`） | 上传文件、UploadFileFromS3、图片上传组件测试、`input[type=file]`、附件上传测试 | [upload-file.md](upload-file.md) |
-| **E：循环遍历元素·小红书首页标题**（`LoopElements`） | 循环遍历元素、LoopElements、小红书循环、遍历页面元素、批量抓取标题、`@{toolId.index}`、outputList 测试 | [loop-elements-xhs.md](loop-elements-xhs.md) |
+| **C：搜狗搜索四步** | sogou、搜狗 | [sogou.md](sogou.md) |
+| **D：百度首页 9 条网页断言批量测试** | 网页断言、验证元素、断言测试、verify 全量、断言场景 | [baidu-assertions.md](baidu-assertions.md) |
+| **E：上传文件指令测试**（`UploadFileFromS3`） | 上传文件、UploadFileFromS3、图片上传组件测试、`input[type=file]`、附件上传测试 | [upload-file.md](upload-file.md) |
+| **F：循环遍历元素·小红书首页标题**（`LoopElements`） | 循环遍历元素、LoopElements、小红书循环、遍历页面元素、批量抓取标题、`@{toolId.index}`、outputList 测试 | [loop-elements-xhs.md](loop-elements-xhs.md) |
 
 ## 默认场景（无用户输入时）
 
@@ -30,7 +31,7 @@
 
 **插入约束**（`insert-command.md` §Enter 空行规则）：**首条**选中开始节点 → Enter；**向后追加**选中锚点指令 → Enter；**向前插入**选中目标上一条 → Enter。禁止从结束节点上方起建。插入后校验顺序依赖（如「打开网页」在「输入文本」之前）。
 
-**调试前终检**：全部保存后、点「调试」前，必须对照场景「指令节点」表做整链顺序终检（`test-workflow.md` §调试前场景顺序终检）。终检未通过禁止调试。
+**调试前终检**：全部保存后、点「调试」前，必须对照场景「指令节点」表做整链顺序终检（`test-workflow.md` §调试前场景顺序终检）。终检未通过禁止调试。**终检通过且无报错 → 直接调试运行，禁止询问用户**（`test-workflow.md` §无报错即调试门控）。
 
 ## 扩展新场景
 

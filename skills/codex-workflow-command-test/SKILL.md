@@ -10,6 +10,7 @@ description: >
   「网页断言测试」「验证元素存在/可见/属性/不存在」「验证文本存在/不存在」「断言指令批量回归」
   「上传文件指令测试」「UploadFileFromS3」「input[type=file] 测试」「图片上传组件测试」「附件上传指令」
   「循环遍历元素」「LoopElements」「小红书循环」「outputList 测试」「@{toolId.index}」「批量抓取标题」
+  「sogou场景」「搜狗工作流测试」
   「workflow command test」「bots workflow debug」「add instruction to bots workflow」。
   未指定场景/指令时默认 B站四步（打开网页→输入文本→点击→刷新网页），直接开始、禁止询问。内置场景含百度/B站/断言/上传/LoopElements。指令文档 https://document.waimai.st.sankuai.com/
   底层工具：cua-router-basic skill（sky.* API 操作 Chrome）。执行前必须先确认 cua-router-basic 已安装就绪。
@@ -40,6 +41,32 @@ description: >
 7. 执行后检查：**聊天区调试日志** + 编排区**左侧**执行 icon + **右侧**配置 icon + 「检查」面板（见 `test-workflow.md` §第 5 步）
 8. 根据报错修复；同一指令多次失败 → **删除并在原位置重插、重配表单**
 9. 直到聊天区无报错、编排区无配置/执行警示、且「检查」无异常
+
+## 无报错即调试（强制 · 禁止询问）
+
+配置与终检全部通过后，**下一动作必须是「调试 → 运行」**，不得停顿、不得向用户确认。
+
+### 调试门控（全部满足 → 立即调试）
+
+| # | 条件 | 不通过时 |
+|---|------|---------|
+| 1 | `prerequisites.md` 验证输出 `ok` | 先装/启 cua-router |
+| 2 | 场景全部指令已保存 | 继续配表保存 |
+| 3 | 「检查」无 badge、无「节点配置不完整」 | 双击修复 → 再检查 |
+| 4 | 调试前顺序终检 `readyForDebug: true` | 调序后重检 |
+| 5 | 调试前配置终检 `readyForDebug: true` | 补配置后重检 |
+| 6 | AX / 聊天区 / 保存弹框**无任何报错文案** | 先修复，禁止带错调试 |
+
+**满足 1–6 → 同一轮 automation 内连续执行**：点「调试」→ 弹框直接点「运行」（默认随机设备）→ 等待执行 → 四处扫描。禁止在步骤 5 与调试之间插入用户交互。
+
+### 禁止行为
+
+- **禁止**问用户「是否继续调试」「需要我帮你运行吗」「要不要收尾」
+- **禁止**终检已通过却输出「建议手动调试」而不执行 sky 调试脚本
+- **禁止**以「部分完成」「遇阻」为由跳过调试——应修复阻塞项后继续，而非停下来询问
+- 响应末尾**禁止**附带确认式追问；仅当**硬阻塞**（平台不可达、依赖未安装、需用户登录/VNC）才报告阻塞原因
+
+详见 `reference/test-workflow.md` §无报错即调试门控、`reference/debug.md` §调试运行。
 
 ## 元素查找降级顺序（强制）
 
@@ -136,6 +163,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | **上传文件专项场景**（`UploadFileFromS3`） | [reference/scenarios/upload-file.md](reference/scenarios/upload-file.md) | 用户说「上传文件指令测试」「UploadFileFromS3」「图片上传组件」「input[type=file] 测试」 |
 | **循环遍历元素场景**（`LoopElements` · 小红书首页） | [reference/scenarios/loop-elements-xhs.md](reference/scenarios/loop-elements-xhs.md) | 用户说「循环遍历元素」「LoopElements」「小红书循环」「outputList」「批量抓取标题」 |
 | **B站场景（默认）** | [reference/scenarios/bilibili.md](reference/scenarios/bilibili.md) | 用户说「bilibili/B站」；**未指定场景/指令时自动使用** |
+| **搜狗场景** | [reference/scenarios/sogou.md](reference/scenarios/sogou.md) | 用户说「sogou/搜狗」；四步：打开网页→输入文本→点击→刷新 |
 
 ### 扩展 / 更新 reference
 
@@ -167,6 +195,7 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - **「上传文件指令测试 / UploadFileFromS3 / 图片上传组件 / input[type=file]」→ Read `reference/scenarios/upload-file.md`**
 - **「循环遍历元素 / LoopElements / 小红书循环 / outputList / @{toolId.index} / 批量抓取标题」→ Read `reference/scenarios/loop-elements-xhs.md` + `reference/commands/loopelements.md`**
 - 「bilibili / B站场景」→ Read `reference/scenarios/bilibili.md`
+- 「sogou / 搜狗场景」→ Read `reference/scenarios/sogou.md`（打开网页 → 输入文本 → 点击 → 刷新网页）
 - **不适用于**：bots 对话流/知识库、普通网页操作、代码编写
 
 ## 边界
