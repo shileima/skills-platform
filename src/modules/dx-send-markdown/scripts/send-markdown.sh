@@ -108,7 +108,6 @@ await (async () => {
     return candidates.find(l => /\uE124/.test(l))
       || candidates.find(l => /\uE04D/.test(l))
       || candidates.find(l => /\uE01E/.test(l))
-      || candidates[candidates.length - 1]
       || null;
   }
 
@@ -187,6 +186,19 @@ await (async () => {
     return { ok: false, error: "markdown_menu_not_found", markdownIdx, preview: state.text.slice(0, 1000) };
   }
 
+  function findMarkdownInputLine(lines) {
+    return lines.find(l => /文本输入区/.test(l) && /请输入内容/.test(l));
+  }
+
+  function findMarkdownSendLine(lines) {
+    const sendLines = lines.filter(l => /^\s*\d+\s+按钮\s+发送\s*$/.test(l));
+    return sendLines[sendLines.length - 1] || null;
+  }
+
+  function isMarkdownEditorOpen(text) {
+    return /Window: "Markdown编辑器"|发送\s*Markdown\s*消息/.test(text) && /请输入内容|按钮\s+发送/.test(text);
+  }
+
   function contentOk(text) {
     if (contentMarker) {
       try { return new RegExp(contentMarker).test(text); } catch (_) { return text.includes(contentMarker); }
@@ -255,7 +267,7 @@ await (async () => {
 
   state = await freshState();
   lines = state.text.split("\n");
-  const markdownInputLine = lines.find(l => /文本输入区/.test(l) && /请输入内容/.test(l));
+  const markdownInputLine = findMarkdownInputLine(lines);
   if (!markdownInputLine) {
     nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_input_not_found", receiver, receiverIdx, maximize, editorOpen, editorPreview: state.text.slice(0, 1000) }));
     return;
@@ -263,11 +275,12 @@ await (async () => {
 
   const markdownInputIdx = parseIdx(markdownInputLine);
   await sky.set_value({ app, element_index: markdownInputIdx, value: summary });
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 800));
 
-  const filledState = await freshState();
-  const sendLine = filledState.text.split("\n").find(l => /^\s*\d+\s+按钮\s+发送/.test(l));
-  const hasContent = contentOk(filledState.text);
+  let filledState = await freshState();
+  let filledLines = filledState.text.split("\n");
+  let sendLine = findMarkdownSendLine(filledLines);
+  let hasContent = contentOk(filledState.text);
   const hasReceiver = filledState.text.includes(receiver);
 
   if (!sendLine || !hasContent) {
@@ -275,19 +288,36 @@ await (async () => {
     return;
   }
 
-  const sendIdx = parseIdx(sendLine);
+  let sendIdx = parseIdx(sendLine);
   await sky.click({ app, element_index: sendIdx });
   await new Promise(r => setTimeout(r, 1200));
-  const after = await freshState();
+
+  let after = await freshState();
+  let sentLikely = contentOk(after.text) && !isMarkdownEditorOpen(after.text);
+
+  if (!sentLikely && isMarkdownEditorOpen(after.text)) {
+    const retryLines = after.text.split("\n");
+    const retrySendLine = findMarkdownSendLine(retryLines);
+    if (retrySendLine) {
+      sendIdx = parseIdx(retrySendLine);
+      await sky.click({ app, element_index: sendIdx });
+      await new Promise(r => setTimeout(r, 1500));
+      after = await freshState();
+      sentLikely = contentOk(after.text) && !isMarkdownEditorOpen(after.text);
+    }
+  }
+
   nodeRepl.write(JSON.stringify({
-    ok: true,
+    ok: sentLikely,
+    error: sentLikely ? undefined : "send_button_click_not_confirmed",
     receiver,
     receiverIdx,
     maximize,
     editorOpen,
     markdownInputIdx,
     sendIdx,
-    sentLikely: contentOk(after.text),
+    sentLikely,
+    editorStillOpen: isMarkdownEditorOpen(after.text),
     summaryPreview: summary.slice(0, 200)
   }));
 })()
