@@ -232,17 +232,20 @@ await (async () => {
     return convs.filter(c => c.unread > 0);
   }
 
-  /** 从当前会话聊天区提取最近 limit 条消息 */
-  function extractChatMessages(axText, limit, conversationName) {
+  /** 从当前会话聊天区提取可见消息文本，并返回一个位于聊天区内、可用于滚动的节点。 */
+  function extractChatSnapshot(axText, conversationName) {
     const allLines = axText.split("\n");
     const inputLine = allLines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
     const inputIdx = inputLine ? parseIdx(inputLine) : 99999;
-    const titleLine = allLines.find(l => {
+    const escapedName = conversationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const titleLine = allLines.filter(l => {
       const idx = parseIdx(l);
-      return idx !== null && idx < inputIdx && new RegExp(`\\b(文本|text)\\s+${conversationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`).test(l);
-    });
+      return idx !== null && idx < inputIdx && new RegExp(`\\b(文本|text)\\s+${escapedName}$`).test(l);
+    }).pop();
     const startIdx = titleLine ? parseIdx(titleLine) : 240;
     const messages = [];
+    let scrollIdx = null;
+
     for (const line of allLines) {
       const idx = parseIdx(line);
       if (idx === null || idx <= startIdx || idx >= inputIdx) continue;
@@ -251,10 +254,63 @@ await (async () => {
       if (shouldIgnore(text)) continue;
       if (/^\d{1,2}:\d{2}$/.test(text)) continue;
       if (text === conversationName) continue;
+      if (/^(应删除|全部改正 无需纠错 设置)$/.test(text)) continue;
       if (text.length < 2) continue;
       messages.push(text);
+      scrollIdx = idx;
     }
-    return uniq(messages).slice(-Math.max(1, limit));
+    return { messages, scrollIdx };
+  }
+
+  /** 将更早的可见窗口拼到已有消息前，仅消除两个相邻窗口的重叠部分。 */
+  function prependOverlappingWindow(existing, older) {
+    if (!existing.length) return older.slice();
+    if (!older.length) return existing.slice();
+    const maxOverlap = Math.min(existing.length, older.length);
+    let overlap = 0;
+    for (let size = maxOverlap; size > 0; size--) {
+      const olderTail = older.slice(-size);
+      const existingHead = existing.slice(0, size);
+      if (olderTail.every((message, idx) => message === existingHead[idx])) {
+        overlap = size;
+        break;
+      }
+    }
+    return older.concat(existing.slice(overlap));
+  }
+
+  /**
+   * 大象聊天区采用虚拟列表，首次打开通常只暴露最后一条消息。
+   * 从底部开始逐页向上滚动并合并相邻窗口，直到收集到最近 N 条或没有更多内容。
+   */
+  async function collectRecentChatMessages(initialState, limit, conversationName) {
+    let merged = [];
+    let state = initialState;
+    let previousSignature = "";
+    const maxScrolls = Math.min(24, Math.max(2, limit + 2));
+
+    for (let attempt = 0; attempt <= maxScrolls; attempt++) {
+      const snapshot = extractChatSnapshot(state.text, conversationName);
+      const signature = snapshot.messages.join("\u0001");
+      if (signature && signature !== previousSignature) {
+        merged = prependOverlappingWindow(merged, snapshot.messages);
+      }
+
+      if (merged.length >= limit || !snapshot.scrollIdx || signature === previousSignature) {
+        return merged.slice(-limit);
+      }
+
+      previousSignature = signature;
+      try {
+        await sky.scroll({ app, element_index: snapshot.scrollIdx, direction: "up", pages: 1 });
+      } catch (_) {
+        return merged.slice(-limit);
+      }
+      await new Promise(r => setTimeout(r, 650));
+      state = await sky.get_app_state({ app, disableDiff: true });
+    }
+
+    return merged.slice(-limit);
   }
 
   /** 未读 Tab + 逐会话打开，合并列表预览与聊天正文 */
@@ -284,9 +340,9 @@ await (async () => {
       await new Promise(r => setTimeout(r, 900));
       const chatState = await sky.get_app_state({ app, disableDiff: true });
       const n = Math.min(conv.unread, 20);
-      const chatMessages = extractChatMessages(chatState.text, n, conv.name);
+      const chatMessages = await collectRecentChatMessages(chatState, n, conv.name);
       const effectiveMessages = chatMessages.length ? chatMessages : (conv.preview ? [conv.preview] : []);
-      const preview = effectiveMessages.slice(-n).join("；");
+      const preview = effectiveMessages.slice(-n).map(message => shorten(message, 120)).join("；");
       items.push(preview ? `${conv.name}：${conv.unread}条未读；${preview}` : `${conv.name}：${conv.unread}条未读`);
       drilled += 1;
     }
@@ -363,7 +419,7 @@ await (async () => {
     let body = `【大象消息汇总｜${timeLabel}】\n\n未读概览：${unreadOverview(items)}\n`;
     if (!items.length) return body.trim();
 
-    const rows = dedupeBySource(items).map(x => shorten(boldSource(formatItem(x)), 320));
+    const rows = dedupeBySource(items).map(x => boldSource(formatItem(x)));
     if (!rows.length) return body.trim();
 
     const separator = "------------------------------------------------";

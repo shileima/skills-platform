@@ -1,0 +1,63 @@
+---
+description: 生成 Git commit 信息时必须遵守的规则
+globs:
+alwaysApply: true
+---
+
+# Git Commit 信息规范
+
+## 强制规则
+
+1. **commit 信息必须使用中文简体撰写**，禁止使用英文、日文、韩文。
+2. 采用 conventional commit 格式，但 type 保留英文关键词，scope 和描述使用中文。
+
+## 格式
+
+```
+<type>(<scope>): <中文描述>
+
+<可选的中文正文>
+```
+
+### type（保持英文）
+
+- `feat`：新功能
+- `fix`：修复 bug
+- `docs`：文档变更
+- `refactor`：重构（既不修复 bug 也不添加功能）
+- `perf`：性能优化
+- `test`：测试相关
+- `chore`：构建/工具/辅助变更
+- `style`：代码格式（不影响逻辑）
+
+### scope
+
+- 使用技能目录名或模块名作为 scope（如 `codex-dx-unread-messages`）
+- 若变更跨多个技能，可省略 scope
+
+### 描述和正文
+
+- 描述（subject）必须使用中文，简明扼要，不超过 50 字
+- 正文（body）若有，也必须使用中文，用换行分条说明
+- 不要在正文中使用无意义的套话，专注于「为什么」而非「做了什么」
+
+## 示例
+
+```
+feat(codex-dx-unread-messages): 新增未读消息汇总并发送功能
+
+- 支持虚拟聊天列表的消息提取
+- 优化消息去重和过滤逻辑
+```
+
+```
+fix(rpa-workflow-command-test): 修正元素定位策略的优先级判断
+```
+
+```
+refactor(modules): 抽取共享模块系统，统一技能间复用逻辑
+```
+
+```
+docs: 完善 RPA 工作流指令插入规范
+```

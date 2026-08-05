@@ -1,0 +1,51 @@
+---
+description: skills-platform 项目通用开发规则
+globs:
+alwaysApply: true
+---
+
+# Skills Platform 开发规则
+
+## 项目概述
+
+`skills-platform` 是技能开发/发布仓库，技能源只维护一份，投递到多生态（Claude、Cursor、Codex、Automan 等）。
+
+## 语言规则
+
+- 所有与用户的交流必须使用**中文简体**
+- Git commit 信息必须使用中文（详见 commit-message 规则）
+- 代码注释推荐使用中文
+- 代码中的变量名、函数名使用英文
+
+## 硬规则
+
+1. **唯一事实来源是 `skills/<name>/`**——不要手改 `dist/`，也不要直接编辑各生态目录里的文件
+2. **`SKILL.md` frontmatter 只放 `name` 和 `description`**，其它元数据放 `skill.json`
+3. **automan 的 `.meta.json` 是生成物**，不手写
+4. **改完必须 `skilldev validate` 通过**再提交
+5. **安装到生态目录前先 `--dry-run`**，确认不会覆盖别人的技能
+
+## 常用命令
+
+```bash
+node bin/skilldev.mjs new <name>              # 新建技能
+node bin/skilldev.mjs validate                # 校验全部
+node bin/skilldev.mjs build <name> --target all
+node bin/skilldev.mjs install <name> --target claude --dry-run
+node bin/skilldev.mjs pack <name>             # 打包 automan zip
+node bin/skilldev.mjs version <name> patch    # 升版本号
+```
+
+## 代码结构
+
+- `bin/skilldev.mjs` → `src/cli.mjs`（命令分发）→ `src/commands/*.mjs`
+- `src/adapters/*.mjs`：每生态一个适配器
+- `src/lib/*.mjs`：公共库（frontmatter、skill、ecosystems、fsutil、semver、zip、log、modules）
+- `src/modules/<name>/`：技能共享模块
+- `tests/*.test.mjs`：测试（`node --test`）
+
+## 修改原则
+
+- 修改工具行为时，优先改 `src/lib` 与 `src/adapters`，命令层保持薄
+- 新增技能时使用 `skilldev new` 命令，不要手动创建目录结构
+- 提交前务必运行 `node bin/skilldev.mjs validate`
