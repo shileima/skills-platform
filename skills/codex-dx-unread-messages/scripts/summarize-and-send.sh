@@ -88,7 +88,7 @@ await (async () => {
     if (/^\d{1,2}:\d{2}$/.test(text)) return true;
     if (/^\d+$/.test(text)) return true;
     if (/^(全部|@我|单聊|群聊|稍后|消息|通讯录|日历|工作台|更多|发送|说点什么\.\.\.|container|文本|text)$/.test(text)) return true;
-    if (/^(Code代码仓库|Raptor-P[0-3]告警|Talos发布推送|审批|学城|移动HR)$/.test(text)) return true;
+    if (/^(学城)$/.test(text)) return true;
     if (/大象消息汇总|未读概览|重点消息|【代码 \/ PR】|【告警】|【发布 \/ 部署】|【审批 \/ 待办】|【提醒】|【群聊未读】/.test(text)) return true;
     if (/Command \+ Enter/.test(text)) return true;
     return false;
@@ -286,7 +286,7 @@ await (async () => {
       const n = Math.min(conv.unread, 20);
       const chatMessages = extractChatMessages(chatState.text, n, conv.name);
       const effectiveMessages = chatMessages.length ? chatMessages : (conv.preview ? [conv.preview] : []);
-      const preview = effectiveMessages.slice(-1)[0] || "";
+      const preview = effectiveMessages.slice(-n).join("；");
       items.push(preview ? `${conv.name}：${conv.unread}条未读；${preview}` : `${conv.name}：${conv.unread}条未读`);
       drilled += 1;
     }
@@ -363,7 +363,7 @@ await (async () => {
     let body = `【大象消息汇总｜${timeLabel}】\n\n未读概览：${unreadOverview(items)}\n`;
     if (!items.length) return body.trim();
 
-    const rows = dedupeBySource(items).map(x => shorten(boldSource(formatItem(x)), 150));
+    const rows = dedupeBySource(items).map(x => shorten(boldSource(formatItem(x)), 320));
     if (!rows.length) return body.trim();
 
     const separator = "------------------------------------------------";
