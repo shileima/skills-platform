@@ -463,17 +463,6 @@ await (async () => {
     return { ok: true, items: uniq(items), drilledChats: drilled, unreadConversationCount: unreadConversationNames.size };
   }
 
-  function boldSource(text) {
-    const value = String(text || "").trim();
-    const idx = value.indexOf("：");
-    if (idx <= 0) return value;
-    const source = value.slice(0, idx).trim();
-    const rest = value.slice(idx + 1).trim();
-    if (!source || source.startsWith("**")) return value;
-    if (source.length > 40) return value;
-    return `**${source}**：${rest}`;
-  }
-
   function dedupeBySource(items) {
     const seen = new Set();
     const out = [];
@@ -485,6 +474,35 @@ await (async () => {
       out.push(item);
     }
     return out;
+  }
+
+  function splitMessageList(text) {
+    return uniq(String(text || "")
+      .split(/[；;]+/)
+      .map(x => x.trim())
+      .filter(x => x && x !== "-" && !shouldIgnore(x)));
+  }
+
+  function formatConversationBlock(text) {
+    const value = formatItem(text);
+    const match = value.match(/^(.+?)：\s*(\d+)条未读(?:[；;]\s*(.*))?$/);
+    if (match && match[1].trim().length <= 40) {
+      const source = match[1].trim();
+      const count = match[2];
+      const messages = splitMessageList(match[3] || "").map(message => shorten(message, 120));
+      if (!messages.length) return `- **${source}**：${count}条未读`;
+      return `- **${source}**：${count}条未读\n\n${messages.map(message => `  - ${message}`).join("\n")}`;
+    }
+
+    const idx = value.indexOf("：");
+    if (idx > 0) {
+      const source = value.slice(0, idx).trim();
+      const rest = value.slice(idx + 1).trim();
+      if (source && source.length <= 40 && rest) {
+        return `- **${source}**：\n\n  - ${shorten(rest, 120)}`;
+      }
+    }
+    return `- ${value}`;
   }
 
   function formatItem(text) {
@@ -533,11 +551,11 @@ await (async () => {
     let body = `【大象消息汇总｜${timeLabel}】\n\n未读概览：${unreadOverview(items)}\n`;
     if (!items.length) return body.trim();
 
-    const rows = dedupeBySource(items).map(x => boldSource(formatItem(x)));
+    const rows = dedupeBySource(items).map(x => formatConversationBlock(x));
     if (!rows.length) return body.trim();
 
     const separator = "------------------------------------------------";
-    body += `\n\n${rows.map(x => `- ${x}`).join(`\n${separator}\n`)}`;
+    body += `\n\n${rows.join(`\n\n${separator}\n\n`)}`;
     return body.trim();
   }
 
