@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RECEIVER="${1:?usage: send-markdown.sh <receiver> [--all-tab] [--marker REGEX]  # markdown on stdin}"
-shift
+# 用法：send-markdown.sh [<receiver>] [--all-tab] [--marker REGEX]   # markdown on stdin
+# receiver 可省略；若省略，则依次尝试：
+#   1. 本地 automan 客户端登录人（~/Library/Preferences/automan/config.json.operator）
+#   2. 仍为空时，退出并要求调用方指定接收人（不再使用任何写死的默认值）
+
+RECEIVER=""
+if [ $# -gt 0 ] && [[ "$1" != -* ]]; then
+  RECEIVER="$1"
+  shift
+fi
 
 CLICK_ALL_TAB=0
 CONTENT_MARKER=""
@@ -23,6 +31,23 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+MODULE_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./resolve-receiver.sh
+source "$MODULE_SCRIPTS_DIR/resolve-receiver.sh"
+RECEIVER="$(resolve_dx_receiver "$RECEIVER")"
+
+if [ -z "$RECEIVER" ]; then
+  python3 - <<'PY'
+import json
+print(json.dumps({
+  "ok": False,
+  "error": "receiver_required",
+  "hint": "未指定接收人，且未从 ~/Library/Preferences/automan/config.json 读取到 operator；请显式传入接收人姓名"
+}, ensure_ascii=False))
+PY
+  exit 1
+fi
 
 SUMMARY="$(cat)"
 if [ -z "$SUMMARY" ]; then

@@ -13,12 +13,24 @@ bash "$SKILL_DIR/modules/dx-send-markdown/scripts/send-markdown.sh" \
   < summary.md
 ```
 
+接收人参数可省略。若省略，则按以下优先级解析，不再使用任何写死的默认值：
+
+1. 读取本地 automan 客户端登录人：`~/Library/Preferences/automan/config.json` 的 `operator` 字段（可用 `AUTOMAN_CONFIG_FILE` 环境变量覆盖路径）；
+2. 若仍为空，脚本输出 `{"ok":false,"error":"receiver_required",...}` 并以非零退出，由调用方（或 Agent）向用户询问「发送给谁」后再传入。
+
 可选参数：
 
 | 参数 | 说明 |
 |------|------|
 | `--all-tab` | 发送前点击「全部」Tab（`codex-dx-unread-messages` 从未读 Tab 返回时需要） |
 | `--marker REGEX` | 写入 Markdown 编辑器后校验正文包含的关键词（默认：摘要首行非空） |
+
+如需在其它脚本里复用同一套解析逻辑，可 `source` 模块的 `resolve-receiver.sh`：
+
+```bash
+source "$SKILL_DIR/modules/dx-send-markdown/scripts/resolve-receiver.sh"
+RECEIVER="$(resolve_dx_receiver "${RECEIVER:-}")"
+```
 
 ## 依赖
 

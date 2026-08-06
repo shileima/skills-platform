@@ -9,7 +9,13 @@ description: >
 
 # codex-dx-unread-messages — 大象消息汇总并发送本人
 
-读取大象桌面客户端 (`cn.neixin.pc`) **「未读」Tab** 下的未读会话（列表预览 + 逐会话打开读取最近 N 条，N 为未读数），整理为简洁摘要，并发送给用户本人（默认“马世磊”）的大象单聊。
+读取大象桌面客户端 (`cn.neixin.pc`) **「未读」Tab** 下的未读会话（列表预览 + 逐会话打开读取最近 N 条，N 为未读数），整理为简洁摘要，并发送到接收人的大象单聊。
+
+接收人不再写死默认值，按下列优先级解析：
+
+1. 命令行显式传入（`bash scripts/summarize-and-send.sh <接收人>`）；
+2. 本地 automan 客户端登录人：读取 `~/Library/Preferences/automan/config.json` 的 `operator` 字段；
+3. 两者都拿不到时，脚本会退出并输出 `receiver_required` 错误，Agent 必须向用户询问「发送给谁」后再执行。
 
 ## 依赖
 
@@ -40,23 +46,31 @@ bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
 
 ## 一键执行
 
-优先直接执行脚本：
+直接执行脚本，它会自动从 automan 本地登录人读取接收人：
 
 ```bash
 bash "./scripts/summarize-and-send.sh"
 ```
 
-可指定接收人和摘要时间标签：
+若本地未登录 automan，或需要发送给其他人，显式传入接收人和摘要时间标签：
 
 ```bash
-bash "./scripts/summarize-and-send.sh" "马世磊" "2026-08-03 21:55左右"
+bash "./scripts/summarize-and-send.sh" "<接收人姓名>" "2026-08-03 21:55左右"
 ```
 
-脚本成功时最后一行输出 JSON：
+脚本成功时最后一行输出 JSON（`receiver` 字段回显实际使用的接收人）：
 
 ```json
-{"ok":true,"receiver":"马世磊","inputIdx":210,"sentLikely":true}
+{"ok":true,"receiver":"mashilei","inputIdx":210,"sentLikely":true}
 ```
+
+若解析不到接收人，脚本会先退出并输出：
+
+```json
+{"ok":false,"error":"receiver_required","hint":"未指定接收人..."}
+```
+
+此时 Agent 必须向用户询问「发送给谁」后再重试。
 
 ## 稳定流程
 
@@ -240,7 +254,7 @@ printf '%s' "$summary" | bash "$SKILL_DIR/modules/dx-send-markdown/scripts/send-
 | 首次打开会话只读取到最后一条 | 大象聊天区使用虚拟列表，较早未读消息尚未进入 AX Tree | 以聊天正文节点为滚动目标向上逐页滚动，每页重新读取并合并去重，直到达到未读数 N 或内容不再变化 |
 | 操作后不重取 AX Tree | 读到旧状态，校验不准 | 每次 click / set_value 后重新获取 `disableDiff:true` |
 | 只扫低 idx | 漏掉当前会话、输入框或浮层 | 始终在完整 `s.text` 上搜索 |
-| 发送到群聊 | 当前会话未切到本人 | 先点击左侧 `文本 马世磊`，再确认标题或输入框存在 |
+| 发送到群聊 | 当前会话未切到接收人本人 | 先点击左侧 `文本 <接收人>`（`send-markdown.sh` 会用解析后的姓名搜索），再确认标题或输入框存在 |
 | 发送失败后盲目重发 | 可能重复消息 | 先重新读取状态，确认摘要是否已出现在会话中 |
 
 ## 输出要求
@@ -255,4 +269,4 @@ printf '%s' "$summary" | bash "$SKILL_DIR/modules/dx-send-markdown/scripts/send-
 
 - 只汇总当前大象窗口可见的未读/近期消息列表和当前会话内容，不滚动读取全部历史。
 - 不打开外部链接、不处理 PR、不审批、不处理告警，只做摘要转发。
-- 默认接收人为“马世磊”；用户指定其他接收人时才改用其它会话。
+- 接收人无写死默认值：优先取用户显式传入，其次读取 automan 客户端登录人（`~/Library/Preferences/automan/config.json.operator`），都拿不到时以 `receiver_required` 报错并要求 Agent 询问用户。

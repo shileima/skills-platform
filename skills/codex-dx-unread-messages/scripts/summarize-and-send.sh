@@ -1,8 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RECEIVER="${1:-马世磊}"
+RECEIVER="${1:-}"
 TIME_LABEL="${2:-$(date '+%Y-%m-%d %H:%M左右')}"
+
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# 定位 dx-send-markdown 模块（安装后在 skill 目录里；开发态回退到仓库 src/modules）
+DX_MODULE_DIR=""
+if [ -d "$SKILL_DIR/modules/dx-send-markdown" ]; then
+  DX_MODULE_DIR="$SKILL_DIR/modules/dx-send-markdown"
+elif [ -d "$SKILL_DIR/../../src/modules/dx-send-markdown" ]; then
+  DX_MODULE_DIR="$(cd "$SKILL_DIR/../../src/modules/dx-send-markdown" && pwd)"
+else
+  echo '{"ok":false,"error":"dx-send-markdown module not found"}' >&2
+  exit 1
+fi
+
+# shellcheck source=../../src/modules/dx-send-markdown/scripts/resolve-receiver.sh
+source "$DX_MODULE_DIR/scripts/resolve-receiver.sh"
+RECEIVER="$(resolve_dx_receiver "$RECEIVER")"
+
+if [ -z "$RECEIVER" ]; then
+  python3 - <<'PY'
+import json
+print(json.dumps({
+  "ok": False,
+  "error": "receiver_required",
+  "hint": "未指定接收人，且未从 ~/Library/Preferences/automan/config.json 读取到 operator；请以 `bash summarize-and-send.sh <接收人>` 显式传入"
+}, ensure_ascii=False))
+PY
+  exit 1
+fi
 
 SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
@@ -469,15 +498,5 @@ python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok"
 
 SUMMARY="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["summary"])' <<< "$LAST_LINE")"
 
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SEND_SCRIPT=""
-if [ -f "$SKILL_DIR/modules/dx-send-markdown/scripts/send-markdown.sh" ]; then
-  SEND_SCRIPT="$SKILL_DIR/modules/dx-send-markdown/scripts/send-markdown.sh"
-elif [ -f "$SKILL_DIR/../../src/modules/dx-send-markdown/scripts/send-markdown.sh" ]; then
-  SEND_SCRIPT="$SKILL_DIR/../../src/modules/dx-send-markdown/scripts/send-markdown.sh"
-else
-  echo '{"ok":false,"error":"dx-send-markdown module not found"}' >&2
-  exit 1
-fi
-
-printf '%s' "$SUMMARY" | bash "$SEND_SCRIPT" "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览"
+printf '%s' "$SUMMARY" | bash "$DX_MODULE_DIR/scripts/send-markdown.sh" \
+  "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览"
