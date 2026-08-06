@@ -273,11 +273,15 @@ await (async () => {
     }).pop();
     const startIdx = titleLine ? parseIdx(titleLine) : 240;
     const messages = [];
-    let scrollIdx = null;
+    const structuralScrollCandidates = [];
+    const messageScrollCandidates = [];
 
     for (const line of allLines) {
       const idx = parseIdx(line);
       if (idx === null || idx <= startIdx || idx >= inputIdx) continue;
+      if (/(container|group|列表|滚动区域|scroll area)/i.test(line)) {
+        structuralScrollCandidates.push(idx);
+      }
       if (!/(文本|text|文本栏)/.test(line)) continue;
       const text = normalizeText(line);
       if (shouldIgnore(text)) continue;
@@ -286,9 +290,12 @@ await (async () => {
       if (/^(应删除|全部改正 无需纠错 设置)$/.test(text)) continue;
       if (text.length < 2) continue;
       messages.push(text);
-      scrollIdx = idx;
+      messageScrollCandidates.push(idx);
     }
-    return { messages, scrollIdx };
+    return {
+      messages,
+      scrollCandidates: [...new Set(structuralScrollCandidates.concat(messageScrollCandidates))]
+    };
   }
 
   /** 将更早的可见窗口拼到已有消息前，仅消除两个相邻窗口的重叠部分。 */
@@ -316,26 +323,37 @@ await (async () => {
     let merged = [];
     let state = initialState;
     let previousSignature = "";
-    const maxScrolls = Math.min(24, Math.max(2, limit + 2));
+    let unchangedScrolls = 0;
+    const maxScrolls = Math.min(30, Math.max(6, limit * 2 + 2));
 
     for (let attempt = 0; attempt <= maxScrolls; attempt++) {
       const snapshot = extractChatSnapshot(state.text, conversationName);
       const signature = snapshot.messages.join("\u0001");
       if (signature && signature !== previousSignature) {
         merged = prependOverlappingWindow(merged, snapshot.messages);
+        unchangedScrolls = 0;
+      } else if (attempt > 0) {
+        unchangedScrolls += 1;
       }
 
-      if (merged.length >= limit || !snapshot.scrollIdx || signature === previousSignature) {
+      if (merged.length >= limit || !snapshot.scrollCandidates.length || unchangedScrolls >= 3) {
         return merged.slice(-limit);
       }
 
       previousSignature = signature;
+      const candidateOrder = attempt % 3;
+      const candidatePosition = candidateOrder === 0
+        ? 0
+        : candidateOrder === 1
+          ? Math.floor((snapshot.scrollCandidates.length - 1) / 2)
+          : snapshot.scrollCandidates.length - 1;
+      const scrollIdx = snapshot.scrollCandidates[candidatePosition];
       try {
-        await sky.scroll({ app, element_index: snapshot.scrollIdx, direction: "up", pages: 1 });
+        await sky.scroll({ app, element_index: scrollIdx, direction: "up", pages: 2 });
       } catch (_) {
-        return merged.slice(-limit);
+        unchangedScrolls += 1;
       }
-      await new Promise(r => setTimeout(r, 650));
+      await new Promise(r => setTimeout(r, 900));
       state = await sky.get_app_state({ app, disableDiff: true });
     }
 
