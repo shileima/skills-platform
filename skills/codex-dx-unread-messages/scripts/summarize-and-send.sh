@@ -245,6 +245,20 @@ await (async () => {
         text.match(/^(\d+)条未读$/)?.[1] || text.match(/^未读\s*(\d+)$/)?.[1];
       const plainUnread = text.match(/^(\d+)$/)?.[1];
 
+      // 未读 Tab 下会话常合并为单行：`会话名 ：N条未读；最新预览`
+      const single = text.match(/^(.+?)\s*：\s*(\d+)条未读[；;]?\s*(.*)$/);
+      if (single && idx !== null && single[1].trim().length <= 40 && nameOk(single[1].trim())) {
+        if (current && current.idx) convs.push(current);
+        current = null;
+        convs.push({
+          name: single[1].trim(),
+          unread: parseInt(single[2], 10),
+          idx,
+          preview: single[3].trim()
+        });
+        continue;
+      }
+
       if (isContainer && nameOk(text)) {
         if (current && current.idx) convs.push(current);
         current = { name: text, unread: 0, idx, preview: "" };
@@ -261,7 +275,12 @@ await (async () => {
     return convs.filter(c => c.unread > 0);
   }
 
-  /** 从当前会话聊天区提取可见消息文本，并返回一个位于聊天区内、可用于滚动的节点。 */
+  /**
+   * 从当前会话聊天区提取可见消息，并返回可用于滚动的节点。
+   * 大象聊天区节点结构：每条消息气泡通常由「头像图片 + 发送者名文本」开头，
+   * 随后是正文文本节点与业务图片节点（`未加标签的图片 /...@640w...`）。
+   * 图片消息不是文本节点，必须显式识别为 `[图片]`，否则会被整体丢弃。
+   */
   function extractChatSnapshot(axText, conversationName) {
     const allLines = axText.split("\n");
     const inputLine = allLines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
@@ -269,33 +288,81 @@ await (async () => {
     const escapedName = conversationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const titleLine = allLines.filter(l => {
       const idx = parseIdx(l);
-      return idx !== null && idx < inputIdx && new RegExp(`\\b(文本|text)\\s+${escapedName}$`).test(l);
+      return idx !== null && idx < inputIdx && new RegExp(`(文本|text)\\s+${escapedName}\\s*$`).test(l);
     }).pop();
     const startIdx = titleLine ? parseIdx(titleLine) : 240;
-    const messages = [];
-    const structuralScrollCandidates = [];
-    const messageScrollCandidates = [];
+
+    const scrollCandidates = [];
+    const bubbles = [];
+    let sender = "";
+    let expectSenderName = false;
+    let newBubble = true;
+
+    // 头像：`*_200_200` 结尾或纯 UUID；业务图片：含 `@数字w` 或 `w=数字` 尺寸参数；
+    // 群缩略 `?t=THUMB` 与工具栏图标 `*.png` 一律忽略。
+    const isAvatar = p => /_200_200\b/.test(p) || /^\/[0-9a-f]{8}-[0-9a-f-]+$/i.test(p);
+    const isBizImage = p => /@\d+w/.test(p) || /[?&]w=\d+/.test(p);
+    const isThumb = p => /\?t=THUMB/i.test(p);
+    const isIcon = p => /\.(png|jpe?g|gif|svg)\b/i.test(p);
+
+    function pushText(text) {
+      const last = bubbles[bubbles.length - 1];
+      if (newBubble || !last || last.isImage || last.sender !== sender) {
+        bubbles.push({ sender, text, isImage: false });
+      } else {
+        last.text += " " + text;
+      }
+      newBubble = false;
+    }
+    function pushImage() {
+      bubbles.push({ sender, text: "[图片]", isImage: true });
+      newBubble = true;
+    }
 
     for (const line of allLines) {
       const idx = parseIdx(line);
       if (idx === null || idx <= startIdx || idx >= inputIdx) continue;
-      if (/(container|group|列表|滚动区域|scroll area)/i.test(line)) {
-        structuralScrollCandidates.push(idx);
+      if (/(container|group|列表|内容列表|滚动区域|scroll area)/i.test(line)) {
+        scrollCandidates.push(idx);
+        continue;
+      }
+      const imgMatch = line.match(/未加标签的图片\s+(\S+)/);
+      if (imgMatch) {
+        const path = imgMatch[1];
+        if (isIcon(path) || isThumb(path)) continue;
+        if (isAvatar(path)) { expectSenderName = true; newBubble = true; continue; }
+        if (isBizImage(path)) { pushImage(); scrollCandidates.push(idx); continue; }
+        continue;
       }
       if (!/(文本|text|文本栏)/.test(line)) continue;
       const text = normalizeText(line);
-      if (shouldIgnore(text)) continue;
-      if (/^\d{1,2}:\d{2}$/.test(text)) continue;
+      if (!text) continue;
+      // 时间戳（HH:MM / MM-DD / MM-DD HH:MM）作为气泡分隔
+      if (/^\d{1,2}:\d{2}$/.test(text) || /^\d{1,2}-\d{1,2}(\s+\d{1,2}:\d{2})?$/.test(text)) { newBubble = true; continue; }
+      // 头像之后紧跟的短文本即发送者名
+      if (expectSenderName) {
+        expectSenderName = false;
+        if (text.length <= 8 && !/：$/.test(text)) { sender = text; newBubble = true; continue; }
+      }
+      if (/^.{1,8}：$/.test(text)) continue; // 引用块的发送者名（以全角冒号结尾）
+      if (/^(应删除|全部改正 无需纠错 设置|Markdown 预览视图|智能概括)$/.test(text)) continue;
+      if (/^\d+条回复$/.test(text)) continue;
+      if (/邀请你加入了群聊/.test(text)) continue;
       if (text === conversationName) continue;
-      if (/^(应删除|全部改正 无需纠错 设置)$/.test(text)) continue;
-      if (text.length < 2) continue;
-      messages.push(text);
-      messageScrollCandidates.push(idx);
+      if (shouldIgnore(text)) continue;
+      pushText(text);
+      scrollCandidates.push(idx);
     }
-    return {
-      messages,
-      scrollCandidates: [...new Set(structuralScrollCandidates.concat(messageScrollCandidates))]
-    };
+
+    const messages = bubbles
+      .map(b => {
+        const content = String(b.text || "").trim();
+        if (!content) return "";
+        return b.sender ? `${b.sender}：${content}` : content;
+      })
+      .filter(Boolean);
+
+    return { messages, scrollCandidates: [...new Set(scrollCandidates)] };
   }
 
   /** 将更早的可见窗口拼到已有消息前，仅消除两个相邻窗口的重叠部分。 */
