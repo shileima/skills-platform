@@ -1,0 +1,215 @@
+---
+name: codex-jd-taobao-price-compare
+description: >
+  京东与淘宝/天猫同款商品比价与采购建议技能。当用户说「对比京东和淘宝 X 的价格」
+  「京东淘宝哪个便宜」「帮我比价 X」「同款商品京东和淘宝对比」「淘宝京东哪个买划算」
+  「比一下 jd.com 和 taobao.com 的 X」等意图时激活。通过 Chrome 桌面浏览器分别打开
+  京东与淘宝搜索、进入官方旗舰店/自营商品详情页，提取价格、国补/优惠、销量、售后、
+  分期、发货时效等字段，输出对比表格并给出推荐购买链接。登录敏感场景每 10s 轮询检测，
+  或用户主动告知「已登录」后继续。
+---
+
+# codex-jd-taobao-price-compare — 京东 × 淘宝同款比价与采购建议
+
+面向消费者的桌面浏览器比价技能：给定一个商品关键词（如「华为WATCH GT 7 黑色」），
+分别在 [jd.com](https://www.jd.com/) 与 [taobao.com](https://www.taobao.com/)
+上搜索并进入官方旗舰店/自营详情页，抓取关键采购字段，输出结构化对比表 +
+购买链接 + 推荐结论。
+
+## 依赖
+
+参照 `cua-router-basic` 的 `references/install.md` 与 `references/runtime-exec.md`。
+执行 sky 操作前必须验证服务在线：
+
+```bash
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
+  SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
+fi
+if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
+  SKILL_ROOT="${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic"
+fi
+if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
+  SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
+fi
+bash "$SKILL_ROOT/scripts/daemon.sh" start
+bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+```
+
+输出 `ok` 后才能继续。Chrome 操作遵循 `cua-router-basic` 核心规范：
+地址栏 `set_value` + `Return`、每次操作后 `get_app_state({ disableDiff: true })`、
+在完整 `s.text` 上搜索元素、AX 参数名统一 snake_case（`element_index`）。
+
+## 触发判定
+
+- 「对比京东和淘宝的 X」「京东淘宝比价 X」
+- 「X 京东和淘宝哪个便宜/划算」
+- 「帮我在京东和淘宝搜同款 X 并对比」
+- 「同款商品 jd.com vs taobao.com」
+- 明确给出 `https://www.jd.com/` 和 `https://www.taobao.com/` 两个链接 + 商品关键词
+
+单一平台比价不激活本技能（如只在京东内比不同 SKU）。
+
+## 稳定流程
+
+1. **准备**：启动并验证 `cua-router-basic`；从用户诉求提取 `商品关键词`（`query`）。
+2. **京东侧**：
+   1. 地址栏导航到 `https://www.jd.com/`，等 Ready。
+   2. 直接跳搜索页 URL：`https://search.jd.com/Search?keyword=<encoded>&enc=utf-8`（比走搜索框更稳定）。
+   3. 在 AX Tree 里定位第一个 **京东自营/华为官方旗舰店** 类目下与 `query` 强匹配的商品卡（`container` 节点标题）。
+   4. `sky.click({ element_index })` 打开详情页，等待 5～6s。
+   5. 抓取字段：
+      - 商品标题（Window title）
+      - 详情页 URL（地址栏 Value）
+      - 标价 / 国补领后价 / 到手价
+      - 分期（如 `¥xxx × 3期 0服务费`）
+      - 售后条目（`90天只换不修`、`一年质保`、`7天价保`、`免费上门退换`、`59元免基础运费`、`正品行货带票`）
+      - 销量 / 评价数 / 加购数
+      - 店铺（`华为京东自营旗舰店` 等）
+      - 延保加购（`3年全保 +¥xxx` / `5年全保 +¥xxx`）
+3. **淘宝/天猫侧**：
+   1. 地址栏导航到 `https://www.taobao.com/` 以复用 Cookie，再跳 `https://s.taobao.com/search?q=<encoded>`。
+   2. 从搜索结果里找 `Description` 含 **"华为官方旗舰店"** 或 **"天猫旗舰店"** 且标题含 `query` 关键短语的 `link` 元素。
+   3. `sky.click({ element_index })` 打开详情页（`detail.tmall.com/item.htm?id=…` 或 `item.taobao.com`）。
+   4. 抓取字段：
+      - 商品标题
+      - 详情页 URL（尽量剥离 `spm/xxc/ali_refid/utparam` 等追踪参数，只保留 `id` / `skuId`）
+      - 价格 / 优惠后价 / 补贴后价
+      - 分期 / 花呗
+      - 发货时效（`预售，X 月 X 日前发货` / `48 小时内发`）
+      - 服务（`7天价保`、`7天无理由退换`、`退货宝`、`假一赔四`、`极速退款`、`88VIP 退货包运费`）
+      - 销量（`已售 xxx+` / `xxx 人付款` / `xxx 加购`）
+      - 店铺信誉（`华为官方旗舰店 5.0 88VIP 好评率 xx%`）
+4. **登录检测**（见下一节）：若命中未登录关键词，提示用户手动登录并每 10s 轮询。
+5. **输出**：Markdown 对比表 + 推荐购买链接 + 采购建议 + 时效声明（下方"输出格式"）。
+
+## 登录检测与轮询
+
+每一步 `get_app_state` 后按下表判定：
+
+| 平台 | 未登录信号（正则） |
+|------|------------------|
+| 京东 | `请登录` / `Hi，请登录` / `passport\.jd\.com` / `扫码登录` |
+| 淘宝天猫 | `亲，请登录` / `login\.taobao\.com` / `login\.tmall\.com` / `扫码登录` |
+
+命中即：
+
+1. 向用户输出提示：`⚠️ 检测到 <平台> 未登录，请在浏览器中完成登录（扫码或账号密码），登录完成后告诉我，或我将每 10s 自动复检…`
+2. 循环 `await new Promise(r => setTimeout(r, 10000))` 并复取 AX Tree；未命中登录关键词时视为登录完成。
+3. 用户主动说「已登录 / 登好了 / 完成了」也立即退出轮询继续下一步。
+4. 单次会话最长等待 10 分钟（`maxWaitMs = 10 * 60 * 1000`）；超时告知用户并中止流程。
+
+推荐轮询模板（在 `nodeRepl.write` 的 IIFE 里）：
+
+```js
+async function waitLogin({ app = "com.google.Chrome", platform = "jd", maxWaitMs = 10 * 60 * 1000 } = {}) {
+  const PATTERNS = {
+    jd: /请登录|passport\.jd\.com|扫码登录/,
+    tb: /亲，请登录|login\.(taobao|tmall)\.com|扫码登录/,
+  };
+  const pat = PATTERNS[platform] ?? PATTERNS.jd;
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const s = await sky.get_app_state({ app, disableDiff: true });
+    if (!s.text.split("\n").some(l => pat.test(l))) return { ok: true, waitedMs: Date.now() - start };
+    await new Promise(r => setTimeout(r, 10000));
+  }
+  return { ok: false, timeout: true };
+}
+```
+
+Agent 在每次浏览器动作后可调用 `waitLogin({ platform })` 保证后续采集有效。
+若用户在对话中主动打断（"我登录好了 / 已登录"），立即跳出轮询继续。
+
+## 商品匹配启发式
+
+搜索结果通常混入配件（表带 / 保护壳 / 贴膜）。按下列顺序过滤：
+
+1. 剔除标题含 `表带 | 保护壳 | 保护套 | 钢化膜 | 贴膜 | 支架 | 充电线` 的行。
+2. 优先命中 **官方旗舰店** / **京东自营** 关键词的卡片。
+3. 标题包含用户 query 里所有实词（如 `华为 WATCH GT 7 黑色` → 必须同时含 `华为`、`GT 7 / GT7`、`黑色 / 疾影黑 / 碳晶黑`）。
+4. 排除 Pro/Ultra 等升级款，除非用户明确要 Pro。
+5. 若多款均满足，取「京东自营 / 华为官方旗舰店 + 到手价最低」的一款。
+
+## 售后字段解析
+
+按 AX 文本行匹配：
+
+| 字段 | 关键词 |
+|------|--------|
+| 送货上门 | `送货上门` / `京东物流` |
+| 运费门槛 | `59 ?元免基础运费` |
+| 正品发票 | `正品行货带票` / `可开发票` |
+| 换新政策 | `90 ?天只换不修` |
+| 质保 | `一年质保` / `厂家质保` |
+| 价保 | `7 ?天价保` |
+| 无理由 | `7 ?天无理由` |
+| 免费上门 | `免费上门退换` |
+| 假一赔四 | `假一赔四` |
+| 极速退款 | `极速退款` |
+| 88VIP | `88 ?VIP` |
+| 分期 | `X 期 ?0 ?服务费` / `花呗` / `白条` |
+
+## 输出格式
+
+统一 Markdown 对比表，**至少包含**下列列（价格、发货、售后、销量、购买链接）：
+
+```markdown
+## <商品关键词> · 京东 vs 淘宝天猫 对比
+
+| 维度 | 京东（<店铺名>）| 淘宝天猫（<店铺名>）|
+|---|---|---|
+| **商品** | <标题> | <标题> |
+| **购买链接** | [item.jd.com/xxx.html](https://item.jd.com/xxx.html) | [detail.tmall.com/item.htm?id=xxx](https://detail.tmall.com/item.htm?id=xxx) |
+| **标价** | ¥xxxx | ¥xxxx |
+| **国补/优惠** | ... | ... |
+| **到手价** | ¥xxxx | ¥xxxx |
+| **分期** | ... | ... |
+| **发货** | ... | ... |
+| **运费** | ... | ... |
+| **销量/热度** | ... | ... |
+| **店铺信誉** | ... | ... |
+| **售后** | ... | ... |
+| **延保加购** | ... | ... |
+| **开发票** | ✅/❌ | ✅/❌ |
+
+### 采购建议 ✅
+- **推荐链接**：<绝对 URL>
+- **理由**：到手价 / 发货时效 / 售后 三点内说明
+- **备选**：给出另一端的绝对 URL 与适用场景
+
+> ⚠️ 价格与国补/发货时间为 <YYYY-MM-DD> 实时抓取，下单前请再次确认到手价与国补资格。
+```
+
+## 一键执行
+
+```bash
+# 唤起 Chrome，检查 cua-router，然后 Agent 分两步走：京东采集 → 淘宝采集
+bash "./scripts/compare.sh" "<商品关键词>"
+```
+
+`scripts/compare.sh` 只负责启动 daemon 并把 `query` 传给 Agent；具体的抓取
+和登录轮询由 Agent 使用 `bash "$SKILL_ROOT/scripts/exec.sh"` 执行内联 JS
+完成，避免把复杂 AX 解析写死到 shell。
+
+## 避坑清单
+
+| 陷阱 | 解决 |
+|------|------|
+| `type_text` 输 URL 触发中文 IME | 一律 `set_value(addrIdx, url)` + `press_key("Return")` |
+| AX 参数写 `elementIndex` / `idx` 报错 | 用 `element_index`（snake_case） |
+| Playwright 占用 Chrome 无窗口 | `CUA_ROUTER_CHROME_PREFLIGHT=auto` 或 `preflight-chrome.sh fix` |
+| 京东搜索结果里全是配件 | 用启发式过滤：剔除 `表带 / 保护壳 / 贴膜`；优先 `京东自营 / 官方旗舰店` |
+| 淘宝详情页跳登录 | 触发 `waitLogin({ platform: "tb" })`，每 10s 复检 |
+| 详情页 URL 带一大堆追踪参数 | 输出时保留 `id` / `skuId` / 短路径，剥离 `spm/xxc/ali_refid/utparam` 等 |
+| 复用旧 AX idx | 每次 click 后立即 `get_app_state({ disableDiff: true })` 重新取树 |
+| 到手价 ≠ 标价 | 优先输出到手价（考虑国补、券后、88VIP），标价单列 |
+| 预售发货 | 明确写「预售，X 月 X 日前发货」，不要与"次日达"混淆 |
+
+## 边界
+
+- 只对比两个平台（京东 + 淘宝/天猫），不扩展到拼多多 / 抖音商城，除非用户明确要求。
+- 不下单、不加购、不修改用户购物车。
+- 不长期缓存价格；每次比价均实时抓取。
+- 不针对 Pro/Ultra 等衍生型号做偏移推荐，除非用户指定。
+- 输出建议仅供参考，最终以用户下单时页面显示为准。
