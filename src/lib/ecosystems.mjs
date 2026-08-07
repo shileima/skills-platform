@@ -35,7 +35,7 @@ export const ECOSYSTEMS = {
   automan: {
     id: "automan",
     label: "Automan",
-    defaultSkillsDir: join(home, ".automan", "skills"),
+    defaultSkillsDir: join(home, ".automan", "claude-code-agents", "cua-agent", "skills"),
     envVar: "SKILLDEV_AUTOMAN_SKILLS_DIR",
   },
 };

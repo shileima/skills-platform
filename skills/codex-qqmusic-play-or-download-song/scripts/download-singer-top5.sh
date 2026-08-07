@@ -12,7 +12,7 @@ if [ -z "$SINGER" ]; then
 fi
 
 # 定位 cua-router-basic
-SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi

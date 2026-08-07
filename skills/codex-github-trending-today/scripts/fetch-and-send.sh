@@ -8,7 +8,7 @@ TIME_LABEL="${3:-$(date '+%Y-%m-%d %H:%M左右')}"
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 resolve_cua_root() {
-  local root="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+  local root="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
   if [ ! -f "$root/SKILL.md" ]; then
     root="${HOME}/.cursor/skills/cua-router-basic"
   fi

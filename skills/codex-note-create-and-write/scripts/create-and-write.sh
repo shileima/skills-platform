@@ -76,7 +76,7 @@ create_with_applescript() {
 }
 
 create_with_ax_fallback() {
-  local skill_root="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+  local skill_root="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
   if [ ! -f "$skill_root/SKILL.md" ]; then
     skill_root="${HOME}/.cursor/skills/cua-router-basic"
   fi

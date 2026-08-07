@@ -6,7 +6,7 @@ PROMPT="${2:-帮我新建一个前端工程，功能为简洁功能社区站点}
 CURSOR_APP="com.todesktop.230313mzl4w4u92"
 
 resolve_skill_root() {
-  local root="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+  local root="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
   if [ ! -f "$root/SKILL.md" ]; then
     root="${HOME}/.cursor/skills/cua-router-basic"
   fi

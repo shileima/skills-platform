@@ -75,7 +75,7 @@ skills/<name>/
 | claude | `~/.claude/skills` | `SKILLDEV_CLAUDE_SKILLS_DIR` |
 | codex | `~/.codex/skills` | `SKILLDEV_CODEX_SKILLS_DIR` |
 | cursor | `~/.cursor/skills` | `SKILLDEV_CURSOR_SKILLS_DIR` |
-| automan | `~/.automan/skills` | `SKILLDEV_AUTOMAN_SKILLS_DIR` |
+| automan | `~/.automan/claude-code-agents/cua-agent/skills` | `SKILLDEV_AUTOMAN_SKILLS_DIR` |
 
 `claude/codex/cursor` 只需拷贝 `SKILL.md` + 支撑目录；`automan` 额外生成 `.meta.json` 并支持 zip 打包与依赖安装。
 

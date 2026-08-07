@@ -33,12 +33,12 @@ PY
   exit 1
 fi
 
-SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
-  SKILL_ROOT="${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic"
+  SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
 fi
 
 bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
@@ -342,12 +342,16 @@ await (async () => {
       // 头像之后紧跟的短文本即发送者名
       if (expectSenderName) {
         expectSenderName = false;
-        if (text.length <= 8 && !/：$/.test(text)) { sender = text; newBubble = true; continue; }
+        // 发送人姓名可能带上英文别名（如 `吴冰莹(Ingrid Wu)`），放宽到 30 字
+        if (text.length <= 30 && !/：$/.test(text) && !/[，。？！,!?]/.test(text)) { sender = text; newBubble = true; continue; }
       }
-      if (/^.{1,8}：$/.test(text)) continue; // 引用块的发送者名（以全角冒号结尾）
+      if (/^.{1,30}：$/.test(text)) continue; // 引用块的发送者名（以全角冒号结尾）
       if (/^(应删除|全部改正 无需纠错 设置|Markdown 预览视图|智能概括)$/.test(text)) continue;
       if (/^\d+条回复$/.test(text)) continue;
-      if (/邀请你加入了群聊/.test(text)) continue;
+      // 邀请类系统消息一律忽略：`邀请xxx加入了群聊`、`xx加入了群聊`、`新成员入群可查看所有的历史消息` 等
+      if (/邀请.{0,40}加入了群聊/.test(text)) continue;
+      if (/新成员入群可查看.*历史消息/.test(text)) continue;
+      if (/^.{1,30}加入了群聊$/.test(text)) continue;
       if (text === conversationName) continue;
       if (shouldIgnore(text)) continue;
       pushText(text);
@@ -358,9 +362,17 @@ await (async () => {
       .map(b => {
         const content = String(b.text || "").trim();
         if (!content) return "";
-        return b.sender ? `${b.sender}：${content}` : content;
+        // 群聊/多人会话消息带发送人时，用 **发送人** 标注；单聊无发送人时直出正文
+        return b.sender ? `**${b.sender}**：${content}` : content;
       })
-      .filter(Boolean);
+      .filter(message => {
+        if (!message) return false;
+        // 二次过滤：极少数邀请类消息在 bubble 拼接后才成完整句
+        if (/邀请.{0,40}加入了群聊/.test(message)) return false;
+        if (/新成员入群可查看.*历史消息/.test(message)) return false;
+        if (/^\*\*[^*]+\*\*：.{0,30}加入了群聊$/.test(message)) return false;
+        return true;
+      });
 
     return { messages, scrollCandidates: [...new Set(scrollCandidates)] };
   }
@@ -490,8 +502,9 @@ await (async () => {
       const source = match[1].trim();
       const count = match[2];
       const messages = splitMessageList(match[3] || "").map(message => shorten(message, 120));
-      if (!messages.length) return `- **${source}**：${count}条未读`;
-      return `- **${source}**：${count}条未读\n\n${messages.map(message => `  - ${message}`).join("\n")}`;
+      if (!messages.length) return `**${source}**：${count}条未读`;
+      // 会话标题使用无 bullet 的加粗行；具体消息使用顶层 `- ` 列表，避免二级列表被渲染成实心黑块
+      return `**${source}**：${count}条未读\n\n${messages.map(message => `- ${message}`).join("\n")}`;
     }
 
     const idx = value.indexOf("：");
@@ -499,7 +512,7 @@ await (async () => {
       const source = value.slice(0, idx).trim();
       const rest = value.slice(idx + 1).trim();
       if (source && source.length <= 40 && rest) {
-        return `- **${source}**：\n\n  - ${shorten(rest, 120)}`;
+        return `**${source}**：\n\n- ${shorten(rest, 120)}`;
       }
     }
     return `- ${value}`;

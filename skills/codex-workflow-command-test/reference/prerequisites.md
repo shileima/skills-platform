@@ -4,10 +4,10 @@
 
 ## 检查是否已就绪
 
-`SKILL_ROOT` 默认路径：若存在 `~/.automan/skills` 则为 `~/.automan/skills/cua-router-basic`，否则为 `~/.cursor/skills/cua-router-basic`（可通过 `CUA_ROUTER_INSTALL_DIR` 覆盖）。
+`SKILL_ROOT` 默认路径：若存在 `~/.automan/claude-code-agents/cua-agent/skills` 则为 `~/.automan/claude-code-agents/cua-agent/skills/cua-router-basic`，否则为 `~/.cursor/skills/cua-router-basic`（可通过 `CUA_ROUTER_INSTALL_DIR` 覆盖）。
 
 ```bash
-SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi
@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scri
 ## 安装后验证
 
 ```bash
-SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi

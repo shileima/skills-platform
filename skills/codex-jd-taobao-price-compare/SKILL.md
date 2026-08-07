@@ -22,7 +22,7 @@ description: >
 执行 sky 操作前必须验证服务在线：
 
 ```bash
-SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/skills/cua-router-basic}"
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi
@@ -30,7 +30,7 @@ if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic"
 fi
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
-  SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
+  SKILL_ROOT="${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic"
 fi
 bash "$SKILL_ROOT/scripts/daemon.sh" start
 bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
