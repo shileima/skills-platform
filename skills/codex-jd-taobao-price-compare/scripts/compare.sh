@@ -5,7 +5,8 @@
 # 本脚本只负责：
 # 1. 定位并启动 cua-router-basic daemon
 # 2. 做 Chrome 预检（Playwright 冲突自动处理）
-# 3. 打印 SKILL_ROOT / QUERY / URLS 供 Agent 后续 exec.sh 内联脚本使用
+# 3. 检查 Chrome 是否以 --force-renderer-accessibility 启动，未启动则提示（默认不硬重启，避免误关用户窗口）
+# 4. 打印 SKILL_ROOT / QUERY / URLS / 过滤词表供 Agent 后续 exec.sh 内联脚本使用
 #
 # 复杂的 AX 解析、登录轮询、字段抽取交给 Agent 在 SKILL.md 里编排的
 # `bash "$SKILL_ROOT/scripts/exec.sh"` 内联 JS 完成。
@@ -13,8 +14,13 @@
 set -euo pipefail
 
 QUERY="${1:-}"
+INCLUDE_USED="${INCLUDE_USED:-0}"   # 默认只对比全新；置 1 才放行二手/准新
+FORCE_A11Y_RESTART="${FORCE_A11Y_RESTART:-0}"  # 置 1 才允许一键重启 Chrome 加 a11y 参数
+
 if [ -z "$QUERY" ]; then
   echo "用法：bash scripts/compare.sh \"<商品关键词>\"" >&2
+  echo "  可选环境变量：INCLUDE_USED=1 允许对比二手/准新（默认 0，仅全新）" >&2
+  echo "  可选环境变量：FORCE_A11Y_RESTART=1 允许在 AX 不完整时重启 Chrome 加 --force-renderer-accessibility" >&2
   exit 1
 fi
 
@@ -39,27 +45,65 @@ url_encode() {
   python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
 }
 
+check_chrome_a11y() {
+  # 检查 Chrome 是否带 --force-renderer-accessibility 启动
+  # 如果没有，且允许自动重启，则重启；否则只提示由 Agent 引导用户
+  if pgrep -f "Google Chrome" >/dev/null 2>&1; then
+    if pgrep -f -- "--force-renderer-accessibility" >/dev/null 2>&1; then
+      echo "chrome_a11y=on"
+      return 0
+    fi
+    if [ "$FORCE_A11Y_RESTART" = "1" ]; then
+      echo "[compare.sh] Chrome 未带 --force-renderer-accessibility，正在重启..." >&2
+      osascript -e 'tell application "Google Chrome" to quit' >/dev/null 2>&1 || true
+      sleep 3
+      open -a "Google Chrome" --args --force-renderer-accessibility
+      sleep 5
+      echo "chrome_a11y=restarted"
+      return 0
+    fi
+    echo "chrome_a11y=off"
+    return 0
+  fi
+  # Chrome 未运行时由后续步骤拉起
+  open -a "Google Chrome" --args --force-renderer-accessibility
+  sleep 4
+  echo "chrome_a11y=freshstart"
+}
+
 SKILL_ROOT="$(resolve_cua_root)"
 export CUA_ROUTER_CHROME_PREFLIGHT="${CUA_ROUTER_CHROME_PREFLIGHT:-auto}"
 
 bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
 bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+CHROME_A11Y_STATE="$(check_chrome_a11y || true)"
 
 ENCODED="$(url_encode "$QUERY")"
 JD_URL="https://search.jd.com/Search?keyword=${ENCODED}&enc=utf-8"
 TB_URL="https://s.taobao.com/search?q=${ENCODED}"
+# 天猫商城模式 URL（仅在 tab=mall 下搜第三方新机专营店）
+TB_MALL_URL="https://s.taobao.com/search?q=${ENCODED}&tab=mall"
 
 cat <<EOF
 {
   "ok": true,
   "skillRoot": "$SKILL_ROOT",
   "query": "$QUERY",
+  "includeUsed": ${INCLUDE_USED:-0},
+  "chromeA11yState": "${CHROME_A11Y_STATE}",
   "urls": {
     "jd": "$JD_URL",
     "taobao": "$TB_URL",
+    "taobaoMall": "$TB_MALL_URL",
     "jdHome": "https://www.jd.com/",
-    "taobaoHome": "https://www.taobao.com/"
+    "taobaoHome": "https://www.taobao.com/",
+    "appleTmall": "https://apple.tmall.com/"
   },
-  "hint": "Agent 现在可以调用 exec.sh 内联 JS 采集两个平台的详情页字段。登录敏感处使用 waitLogin({ platform: 'jd'|'tb' }) 每 10s 轮询。"
+  "filters": {
+    "excludeUsedRegex": "(二手|拍拍|拍拍二手|准新机|95新|99新|9新|A\\\\+|严选|靓机|甄选|官方回收|认证翻新|官翻|后封|展示机|良品|二手买手店)",
+    "excludeAccessoriesRegex": "(表带|保护壳|保护套|钢化膜|贴膜|支架|充电线|数据线|手机壳|MagSafe.*保护)",
+    "keepBrandNewRegex": "(全新未激活|全新原封|全新原装|未激活国行|官方标配|京东自营|Apple\u4ea7\u54c1\u4eac\u4e1c\u81ea\u8425\u65d7\u8230\u5e97|\u5b98\u65b9\u65d7\u8230\u5e97)"
+  },
+  "hint": "Agent 现在可以调用 exec.sh 内联 JS 采集。默认仅对比全新（excludeUsedRegex 命中的卡片一律剔除，除非 INCLUDE_USED=1）。购买链接必须落到 item.jd.com/{sku}.html 或 detail.tmall.com/item.htm?id=xx&skuId=yy；禁止搜索页 URL。Apple 官方旗舰店无货时用 taobaoMall + 全新未激活国行 关键词兜底。若 chromeA11yState=off，先引导用户重启或让用户执行 FORCE_A11Y_RESTART=1 bash scripts/compare.sh <query>。"
 }
 EOF
