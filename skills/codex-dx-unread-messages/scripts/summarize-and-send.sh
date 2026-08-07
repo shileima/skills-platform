@@ -96,6 +96,21 @@ await (async () => {
   const app = "cn.neixin.pc";
   const { sky } = await import("@oai/sky");
 
+  // 本人身份标识：用于判断某条消息是否「与我有关」。
+  // 由接收人姓名派生（去掉 (英文别名)、去掉尾部 DX 工号），额外补充第一人称提及。
+  const SELF_TOKENS = (() => {
+    const tokens = new Set();
+    const raw = String(receiver || "").trim();
+    if (raw) {
+      tokens.add(raw);
+      const noAlias = raw.replace(/\(.*\)$/, "").trim();
+      if (noAlias) tokens.add(noAlias);
+      const noDx = noAlias.replace(/DX\d+$/i, "").trim();
+      if (noDx) tokens.add(noDx);
+    }
+    return [...tokens].filter(t => t && t.length >= 2);
+  })();
+
   function parseIdx(line) {
     const m = String(line || "").match(/^\s*(\d+)/);
     return m ? parseInt(m[1], 10) : null;
@@ -118,7 +133,7 @@ await (async () => {
     if (/^\d+$/.test(text)) return true;
     if (/^(全部|@我|单聊|群聊|稍后|消息|通讯录|日历|工作台|更多|发送|说点什么\.\.\.|container|文本|text)$/.test(text)) return true;
     if (/^(学城)$/.test(text)) return true;
-    if (/大象消息汇总|未读概览|重点消息|【代码 \/ PR】|【告警】|【发布 \/ 部署】|【审批 \/ 待办】|【提醒】|【群聊未读】/.test(text)) return true;
+    if (/大象消息汇总|未读概览|智能概括|✨|重点消息|【代码 \/ PR】|【告警】|【发布 \/ 部署】|【审批 \/ 待办】|【提醒】|【群聊未读】/.test(text)) return true;
     if (/Command \+ Enter/.test(text)) return true;
     return false;
   }
@@ -560,14 +575,347 @@ await (async () => {
     return parts.length ? parts.join("；") : "未检测到带数字的未读会话；小红点会话已忽略";
   }
 
+  function stripMarkdownBold(text) {
+    return String(text || "").replace(/\*\*([^*]+)\*\*/g, "$1").trim();
+  }
+
+  function parseConversationItems(items) {
+    return items.map(item => {
+      const formatted = formatItem(item);
+      const match = formatted.match(/^(.+?)：\s*(\d+)条未读(?:[；;]\s*(.*))?$/);
+      if (match && match[1].trim().length <= 40) {
+        return {
+          source: match[1].trim(),
+          unread: parseInt(match[2], 10),
+          messages: splitMessageList(match[3] || "")
+        };
+      }
+      return { source: formatted, unread: 0, messages: [formatted] };
+    });
+  }
+
+  function messageBody(message) {
+    const plain = stripMarkdownBold(message);
+    const idx = plain.indexOf("：");
+    if (idx > 0 && idx <= 30 && !/\d{4}-\d{2}-\d{2}/.test(plain.slice(0, idx))) {
+      return plain.slice(idx + 1).trim();
+    }
+    return plain;
+  }
+
+  function extractReleasePlanSummary(body) {
+    const m = String(body || "").match(
+      /系统于(\d{4}-\d{2}-\d{2})\s*(\d{2}:\d{2}).*?自动创建(.+?上线计划).*?值班QA为([^，,]+).*?预计上线时间(\d{4}-\d{2}-\d{2})\s*(\d{2}:\d{2}:\d{2})/
+    );
+    if (!m) return null;
+    return `系统于${m[1]} ${m[2]}自动创建${m[3]}，值班QA为${m[4]}，预计上线时间${m[5]} ${m[6]}`;
+  }
+
+  function extractSender(message) {
+    const plain = stripMarkdownBold(message);
+    const m = plain.match(/^([^：]{1,30})：/);
+    if (m && !/\d{4}-\d{2}-\d{2}/.test(m[1])) return m[1].trim();
+    return "";
+  }
+
+  function extractMentions(text) {
+    const mentions = [];
+    const re = /@([\u4e00-\u9fa5A-Za-z0-9_.-]{1,24})/g;
+    let match;
+    while ((match = re.exec(String(text || ""))) !== null) {
+      const name = match[1];
+      if (/^(我|你|全部|我$)/.test(name)) continue;
+      if (!mentions.includes(name)) mentions.push(name);
+    }
+    return mentions;
+  }
+
+  function atMention(name) {
+    const value = String(name || "").trim();
+    if (!value) return "";
+    return value.startsWith("@") ? value : `@${value}`;
+  }
+
+  function receiverCoreName(name) {
+    return String(name || "").replace(/\(.*\)$/, "").replace(/DX\d+$/i, "").trim();
+  }
+
+  function enrichSummaryWithPeople(message, summary) {
+    const plain = stripMarkdownBold(message);
+    const sender = extractSender(message);
+    const body = messageBody(message);
+    let text = String(summary || body).trim();
+
+    if (sender && !text.includes(atMention(sender)) && !new RegExp(`\\b${sender}\\b`).test(text)) {
+      text = `${atMention(sender)} ${text}`;
+    }
+
+    for (const name of extractMentions(plain)) {
+      const tagged = atMention(name);
+      if (body.includes(tagged) && !text.includes(tagged)) {
+        text = text.replace(name, tagged);
+      }
+    }
+
+    text = text.replace(/值班QA为([\u4e00-\u9fa5A-Za-z0-9_.-]{1,24})/g, (_, qa) => `值班QA为${atMention(qa)}`);
+    text = text.replace(/申请人[：: ]?([\u4e00-\u9fa5A-Za-z0-9_.-]{1,24})/g, (_, person) => `申请人${atMention(person)}`);
+
+    return shorten(text, 200);
+  }
+
+  // 返回消息中某个人名匹配到的本人标准姓名（未命中返回空串）
+  function matchedSelfToken(name) {
+    const value = String(name || "").replace(/^@/, "").trim();
+    if (!value || value.length < 2) return "";
+    return SELF_TOKENS.find(token => value === token || value.includes(token) || token.includes(value)) || "";
+  }
+
+  // 判断消息中的某个人名是否指向本人
+  function isSelfName(name) {
+    return matchedSelfToken(name) !== "";
+  }
+
+  /**
+   * 智能判断该消息/讨论是否与本人有关，并给出具体原因。
+   * 命中多个原因时合并；都不命中返回「无」。
+   */
+  function detectRelatedToMe(message) {
+    const plain = stripMarkdownBold(message);
+    const reasons = [];
+
+    // 1. 直接被 @你 / @我
+    if (/@\s*(你|我)\b|@\s*(你|我)[^\u4e00-\u9fa5A-Za-z0-9]/.test(plain) || /@(你|我)$/.test(plain)) {
+      reasons.push("被 @你 直接提及");
+    }
+
+    // 2. 消息里 @提及 命中本人姓名
+    for (const name of extractMentions(plain)) {
+      const self = matchedSelfToken(name);
+      if (self) {
+        reasons.push(`被 ${atMention(self)} 提及`);
+        break;
+      }
+    }
+
+    // 3. 正文（非 @）中出现本人姓名
+    if (!reasons.length) {
+      for (const token of SELF_TOKENS) {
+        if (plain.includes(token)) {
+          reasons.push(`内容提及 ${atMention(token)}`);
+          break;
+        }
+      }
+    }
+
+    // 4. 本人是本次值班 QA
+    const qa = plain.match(/值班QA为@?([\u4e00-\u9fa5A-Za-z0-9_.\-()]{1,24})/)?.[1];
+    if (qa && isSelfName(qa)) reasons.push("你是本次值班QA");
+
+    // 5. 审批 / 指派 / 跟进等指向本人的动作
+    if (/待你审批|等你审批|需你审批/.test(plain)) reasons.push("待你审批");
+    if (/(转给|指派给|交给|分配给|派给)\s*@?(你|我)/.test(plain)) reasons.push("已转交给你处理");
+    if (/@?(你|我)\s*(来|去)?(处理|负责|跟进|确认|核实|回复|看[下一]?|排查|评估)/.test(plain)) {
+      reasons.push("需你跟进处理");
+    }
+    if (/(请|麻烦|辛苦|拜托)\s*@?(你|我)/.test(plain)) reasons.push("有人请你协助");
+
+    // 6. @提及命中本人后又被要求处理（转给@本人处理）
+    for (const name of extractMentions(plain)) {
+      if (isSelfName(name) && /(处理|负责|跟进|确认|回复|转给)/.test(plain)) {
+        reasons.push("被点名跟进");
+        break;
+      }
+    }
+
+    return reasons.length ? uniq(reasons).join("；") : "无";
+  }
+
+  function detectDiscussionTag(body) {
+    if (/询问|请问|知道|有没有|吗[？?]/.test(body)) return "话题引入";
+    if (/表示|认为|觉得|建议|心得|经验|主要用于/.test(body)) return "工具使用观点";
+    if (/通知|公告|提醒|请关注/.test(body)) return "通知";
+    return "群聊讨论";
+  }
+
+  function deriveDiscussionCategory(source, body, plain) {
+    const quoted = body.match(/[“"「]([^”"」]{2,20})[”"」]/)?.[1];
+    if (quoted) return `${quoted}讨论`;
+    const keyword = plain.match(/([\u4e00-\u9fa5A-Za-z0-9_-]{2,12})(营销|工具|发布|上线|故障|审批)/)?.[0];
+    if (keyword) return `${keyword}讨论`;
+    return `${source}讨论`;
+  }
+
+  function classifyResult(message, source, partial) {
+    return {
+      category: partial.category,
+      tag: partial.tag,
+      summary: enrichSummaryWithPeople(message, partial.summary),
+      relatedToMe: detectRelatedToMe(message)
+    };
+  }
+
+  function detectIterationName(text) {
+    return text.match(/(ED\/FSD日常迭代--\d+)/)?.[1]
+      || text.match(/(\d{2}\.\d{2}-[^；;，,\s]{2,30})/)?.[1]
+      || null;
+  }
+
+  function detectTag(body, source, categoryHint, plainMessage) {
+    const text = `${plainMessage || body} ${source}`;
+    if (/自动创建.*上线计划/.test(text)) return "自动创建上线计划";
+    if (/Talos|开始发布|发布成功/.test(text)) return "Talos 发布";
+    if (/Pull request|PR|合并请求/.test(text)) return "PR 通知";
+    if (/\[P[0-3]\]/.test(text)) return text.match(/\[(P[0-3])\]/)?.[1] + (text.includes("恢复") ? "恢复" : "故障");
+    if (/待你审批|审批/.test(text)) return "审批待办";
+    if (/部署/.test(text)) return "部署通知";
+    if (/交付/.test(text)) return "交付通知";
+    if (/上线/.test(text)) return "上线通知";
+    if (/打卡|HR/.test(text)) return "提醒";
+    if (categoryHint && categoryHint.length <= 16) return categoryHint;
+    if (source.length <= 16) return source;
+    return "消息";
+  }
+
+  function classifyMessage(message, source) {
+    const plain = stripMarkdownBold(message);
+    const body = messageBody(message);
+    const full = `${source} ${plain}`;
+    const sender = extractSender(message);
+
+    const releasePlan = extractReleasePlanSummary(body);
+    if (releasePlan || /自动创建.*上线计划/.test(body)) {
+      return classifyResult(message, source, {
+        category: "上线计划创建与值班QA安排",
+        tag: "自动创建上线计划",
+        summary: releasePlan || shorten(body, 200)
+      });
+    }
+
+    const iteration = detectIterationName(full);
+    if (iteration) {
+      let theme = "相关通知";
+      if (/交付|部署|发布|Talos/.test(full)) theme = "交付与部署";
+      else if (/QA|值班/.test(full)) theme = "值班与QA安排";
+      return classifyResult(message, source, {
+        category: `${iteration}${theme}`,
+        tag: detectTag(body, source, iteration, plain),
+        summary: shorten(body, 200)
+      });
+    }
+
+    if (/\[P[0-3]\]/.test(plain) || /告警|故障|恢复正常/.test(plain)) {
+      return classifyResult(message, source, {
+        category: "故障与告警",
+        tag: detectTag(body, source, null, plain),
+        summary: shorten(plain.replace(/\[链接\]/g, "").trim(), 200)
+      });
+    }
+
+    if (/Pull request|PR|Code PR|合并请求/.test(plain)) {
+      return classifyResult(message, source, {
+        category: "代码评审与合并",
+        tag: "PR 通知",
+        summary: shorten(body, 200)
+      });
+    }
+
+    if (/Talos|发布成功|开始发布/.test(plain)) {
+      return classifyResult(message, source, {
+        category: "发布与部署",
+        tag: "Talos 发布",
+        summary: shorten(body, 200)
+      });
+    }
+
+    if (/待你审批|审批/.test(plain)) {
+      return classifyResult(message, source, {
+        category: "审批待办",
+        tag: "审批待办",
+        summary: shorten(body, 200)
+      });
+    }
+
+    if (/打卡|HR|提醒/.test(plain)) {
+      return classifyResult(message, source, {
+        category: "提醒与通知",
+        tag: "提醒",
+        summary: shorten(body, 200)
+      });
+    }
+
+    if (sender || extractMentions(plain).length) {
+      return classifyResult(message, source, {
+        category: deriveDiscussionCategory(source, body, plain),
+        tag: detectDiscussionTag(body),
+        summary: shorten(body, 200)
+      });
+    }
+
+    return classifyResult(message, source, {
+      category: source,
+      tag: detectTag(body, source, source, plain),
+      summary: shorten(plain, 200)
+    });
+  }
+
+  function mergeRelatedToMe(entries) {
+    const reasons = [];
+    for (const entry of entries) {
+      if (!entry.relatedToMe || entry.relatedToMe === "无") continue;
+      for (const part of entry.relatedToMe.split(/[；、]/)) {
+        const value = part.trim();
+        if (value && value !== "无" && !reasons.includes(value)) reasons.push(value);
+      }
+    }
+    return reasons.length ? reasons.join("；") : "无";
+  }
+
+  function buildIntelligentSummary(items) {
+    const convs = parseConversationItems(items);
+    const categoryMap = new Map();
+
+    for (const conv of convs) {
+      for (const msg of conv.messages) {
+        const { category, tag, summary, relatedToMe } = classifyMessage(msg, conv.source);
+        if (!summary || shouldIgnore(summary)) continue;
+        if (!categoryMap.has(category)) categoryMap.set(category, []);
+        const list = categoryMap.get(category);
+        const key = `${tag}|${summary}`;
+        if (!list.some(entry => `${entry.tag}|${entry.summary}` === key)) {
+          list.push({ tag, summary, relatedToMe });
+        }
+      }
+    }
+
+    if (categoryMap.size === 0) return "";
+
+    const lines = ["✨ 智能概括", ""];
+    let sectionNo = 1;
+    for (const [category, entries] of categoryMap) {
+      lines.push(`${sectionNo}. ${category}`);
+      for (const { tag, summary } of entries) {
+        lines.push(`- **[${tag}]** ${summary}`);
+      }
+      lines.push(`- 与我有关：${mergeRelatedToMe(entries)}`);
+      lines.push("");
+      sectionNo += 1;
+    }
+    return lines.join("\n").trim();
+  }
+
   function buildSummary(items) {
-    let body = `【大象消息汇总｜${timeLabel}】\n\n未读概览：${unreadOverview(items)}\n`;
+    const separator = "------------------------------------------------";
+    let body = `【大象消息汇总｜${timeLabel}】\n`;
+    const intelligent = buildIntelligentSummary(items);
+    if (intelligent) {
+      body += `\n${intelligent}\n\n${separator}\n`;
+    }
+    body += `\n未读概览：${unreadOverview(items)}\n`;
     if (!items.length) return body.trim();
 
     const rows = dedupeBySource(items).map(x => formatConversationBlock(x));
     if (!rows.length) return body.trim();
 
-    const separator = "------------------------------------------------";
     body += `\n\n${rows.join(`\n\n${separator}\n\n`)}`;
     return body.trim();
   }
@@ -615,4 +963,4 @@ python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok"
 SUMMARY="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["summary"])' <<< "$LAST_LINE")"
 
 printf '%s' "$SUMMARY" | bash "$DX_MODULE_DIR/scripts/send-markdown.sh" \
-  "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览"
+  "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览|智能概括"

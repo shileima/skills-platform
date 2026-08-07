@@ -1,7 +1,7 @@
 {
   "name": "codex-dx-unread-messages",
-  "version": "0.1.0",
-  "description": "读取大象 App 当前可见未读/近期消息，整理为摘要并发送给本人会话",
+  "version": "0.1.3",
+  "description": "读取大象 App 当前可见未读/近期消息，智能概括后整理为 Markdown 摘要并发送给本人会话",
   "author": "mashilei",
   "license": "MIT",
   "keywords": ["daxiang", "message", "summary", "desktop-automation", "cua"],
