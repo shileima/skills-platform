@@ -1,0 +1,16 @@
+{
+  "name": "code-build-offline-html",
+  "version": "0.0.1",
+  "description": "一句话说明技能做什么、何时激活",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": [],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [],
+  "pack": {
+    "include": [".meta.json", "SKILL.md", "README.md", "CHANGELOG.md", "reference", "scripts"]
+  },
+  "automan": {
+    "source": "user"
+  }
+}
