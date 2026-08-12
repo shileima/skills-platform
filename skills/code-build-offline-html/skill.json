@@ -1,10 +1,18 @@
 {
   "name": "code-build-offline-html",
-  "version": "0.0.1",
-  "description": "将 Vite/React 站点构建为可离线打开的单一 index.html，并可在 Electron React 宿主中通过 Shadow DOM 隔离渲染。",
+  "version": "0.2.0",
+  "description": "为 automan 客户端「个性化工作台」（~/.automan/personal-workspace/）构建 Vite / React 产物。宿主通过 automan://workspace/ 协议为整个产物目录服务，允许 assets/ 等子目录、图片、字体、JS chunk 等自然存在，无需内联合并。",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["offline-html", "single-file", "vite", "react", "shadow-dom", "electron"],
+  "keywords": [
+    "automan",
+    "workbench",
+    "personal-workspace",
+    "offline-html",
+    "shadow-dom",
+    "vite",
+    "react"
+  ],
   "targets": ["claude", "codex", "automan", "cursor"],
   "dependencies": [],
   "pack": {
