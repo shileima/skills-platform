@@ -82,7 +82,7 @@ note id x-coredata://.../ICNote/...
 | 新建后 `set_value` 写文本输入区 | 报 `Cannot set a value for an element that is not settable` | 用「剪贴板 + Cmd+V」 |
 | `sky.press_key({ key: "v", modifiers: ["cmd"] })` | `modifiers` 被忽略，`av` 被当作字面量输入 | 组合键必须写 `Command+a` / `Command+v` 单字符串（见 `cua-router-basic/references/input-keyboard.md`） |
 | `sky.type_text(中文)` | IME 吞字，只剩标点和 `****` 残留 | 禁用 `type_text` 输入中文，全部走剪贴板 |
-| `printf ... \| pbcopy` 写多行中文 | 某些 shell / sandbox 下 `pbpaste` 为空 | 改用 `osascript -e 'set the clipboard to "..."'`（脚本已通过临时文件 + AppleScript 处理换行和引号转义） |
+| `printf ... \| pbcopy` 后未用 sky 粘贴 | 只写剪贴板但没有触发目标 App 输入 | 必须聚焦输入区后使用 `sky.press_key({ app, key: "Command+v" })`，再刷新 AX 校验 |
 | 新建后立刻粘贴 | 编辑器还没获得焦点，Cmd+V 落到列表 | 粘贴前显式 `click({ element_index: 文本输入区 idx })` |
 
 ## AX Tree 定位辅助函数

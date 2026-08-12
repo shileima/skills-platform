@@ -139,9 +139,9 @@ echo "[qqmusic] activate app..."
 osascript -e "tell application id \"$QQM_BUNDLE\" to activate" >/dev/null
 sleep 1
 
-# 用 osascript 写剪贴板（pbcopy 在部分 shell 环境下会失败）
+# 写剪贴板，后续用 sky.press_key(Command+v) 粘贴到 QQ 音乐搜索框
 echo "[qqmusic] set clipboard: $QUERY"
-osascript -e "set the clipboard to \"$QUERY\"" >/dev/null
+printf '%s' "$QUERY" | pbcopy
 
 echo "[qqmusic] type into search..."
 SONG_JSON=$(to_json "$SONG")

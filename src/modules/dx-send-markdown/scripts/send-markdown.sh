@@ -102,6 +102,18 @@ await (async () => {
     return sky.get_app_state({ app, disableDiff: true });
   }
 
+  async function stablePaste(elementIndex, text, verify) {
+    execFileSync("/usr/bin/pbcopy", { input: text });
+    await sky.click({ app, element_index: elementIndex });
+    await new Promise(r => setTimeout(r, 300));
+    await sky.press_key({ app, key: "Command+a" });
+    await new Promise(r => setTimeout(r, 100));
+    await sky.press_key({ app, key: "Command+v" });
+    await new Promise(r => setTimeout(r, 700));
+    const state = await freshState();
+    return { state, ok: verify(state.text) };
+  }
+
   async function clickAllTab(stateText) {
     const tabLine = stateText.split("\n").find(l => /^\s*\d+\s+(按钮|text|文本)\s+全部/.test(l));
     if (!tabLine) return { clicked: false };
@@ -267,9 +279,12 @@ await (async () => {
     return;
   }
 
-  await sky.set_value({ app, element_index: searchIdx, value: receiver });
-  await new Promise(r => setTimeout(r, 1000));
-  state = await freshState();
+  let pasted = await stablePaste(searchIdx, receiver, text => text.includes(receiver));
+  if (!pasted.ok) {
+    nodeRepl.write(JSON.stringify({ ok: false, error: "receiver_search_input_failed", receiver, preview: pasted.state.text.slice(0, 1200) }));
+    return;
+  }
+  state = pasted.state;
   lines = state.text.split("\n");
 
   const contactLine = findContactLine(lines, receiver, searchIdx);
@@ -298,11 +313,13 @@ await (async () => {
     return;
   }
 
-  const markdownInputIdx = parseIdx(markdownInputLine);
-  await sky.set_value({ app, element_index: markdownInputIdx, value: summary });
-  await new Promise(r => setTimeout(r, 800));
+  let filled = await stablePaste(markdownInputIdx, summary, contentOk);
+  if (!filled.ok) {
+    nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_input_failed", receiver, receiverIdx, maximize, editorOpen, markdownInputIdx, editorPreview: filled.state.text.slice(0, 1000) }));
+    return;
+  }
 
-  let filledState = await freshState();
+  let filledState = filled.state;
   let filledLines = filledState.text.split("\n");
   let sendLine = findMarkdownSendLine(filledLines);
   let hasContent = contentOk(filledState.text);

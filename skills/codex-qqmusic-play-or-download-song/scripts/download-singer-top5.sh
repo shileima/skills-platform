@@ -43,7 +43,7 @@ osascript -e "tell application id \"$QQM_BUNDLE\" to activate" >/dev/null
 sleep 1
 
 echo "[qqmusic] download top 5 songs for singer: $SINGER"
-osascript -e "set the clipboard to \"$SINGER\"" >/dev/null
+printf '%s' "$SINGER" | pbcopy
 SINGER_JSON=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1], ensure_ascii=False))' "$SINGER")
 JS_CODE=$(cat <<'JS'
 {

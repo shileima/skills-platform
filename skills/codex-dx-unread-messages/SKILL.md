@@ -201,8 +201,13 @@ printf '%s' "$summary" | bash "$SKILL_DIR/modules/dx-send-markdown/scripts/send-
       nodeRepl.write(JSON.stringify({ error: "markdown input not found", preview: editorState.text.slice(0, 1000) }));
     } else {
       const inputIdx = parseInt(inputLine.match(/^\s*(\d+)/)[1]);
-      await sky.set_value({ app, element_index: inputIdx, value: msg });
-      await new Promise(r => setTimeout(r, 500));
+      execFileSync("/usr/bin/pbcopy", { input: msg });
+      await sky.click({ app, element_index: inputIdx });
+      await new Promise(r => setTimeout(r, 300));
+      await sky.press_key({ app, key: "Command+a" });
+      await new Promise(r => setTimeout(r, 100));
+      await sky.press_key({ app, key: "Command+v" });
+      await new Promise(r => setTimeout(r, 700));
 
       const filledState = await sky.get_app_state({ app, disableDiff: true });
       const hasContent = /大象消息汇总|未读概览/.test(filledState.text);
@@ -304,7 +309,7 @@ printf '%s' "$summary" | bash "$SKILL_DIR/modules/dx-send-markdown/scripts/send-
 |------|------|------|
 | 使用错误 app id | `Invalid app` | 大象桌面客户端使用 `cn.neixin.pc` |
 | 复用输入框 idx | 大象刷新后报 “user changed app” 或写错位置 | 每次发送前重新 `get_app_state` 并动态查找输入框 |
-| 直接 `type_text`/剪贴板粘贴中文摘要 | 中文、标点、换行可能丢失，`pbcopy`/权限环境可能失败 | 只用 `sky.set_value` 写入 Markdown 编辑器的 `文本输入区` |
+| 直接 `type_text` 或 `set_value` 写中文摘要 | 中文、标点、换行可能丢失，或 Web/Electron 输入框不触发真实输入事件 | 使用 `pbcopy` + `sky.press_key({ app, key: "Command+v" })`，刷新 AX 后校验内容与发送按钮 |
 | 直接 Return 发送 | 消息按普通文本发送，Markdown 不渲染 | 先用 `System Events` 把大象窗口拉到全屏尺寸，再从最大化后的 AX Tree 中点击 `按钮 ` 打开 `Markdown编辑器` |
 | 双击标题栏/顶部空白区最大化 | 大象窗口可能不响应双击，AX Tree 中找不到 `发送 Markdown 消息` | 不依赖双击；用系统窗口属性设置 `position {0,33}` 和 `size {1512,850}` |
 | 误点聊天内容工具栏 / 右侧栏 | 找不到 Markdown 发送项或打开错误菜单 | 最大化后使用输入框前方工具栏里的 `按钮 `，不是未最大化状态下的 `按钮 ` |

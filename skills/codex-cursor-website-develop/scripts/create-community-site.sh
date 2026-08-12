@@ -65,15 +65,17 @@ click_project_dropdown_and_new_folder() {
 
 paste_text() {
   local text="$1"
-  osascript \
-    -e "set the clipboard to $(printf '%s' "$text" | json_escape)" \
-    -e 'tell application "Cursor" to activate' \
-    -e 'delay 0.2' \
-    -e 'tell application "System Events" to tell process "Cursor"' \
-    -e 'keystroke "a" using command down' \
-    -e 'delay 0.1' \
-    -e 'keystroke "v" using command down' \
-    -e 'end tell'
+  printf '%s' "$text" | pbcopy
+  osascript -e 'tell application "Cursor" to activate' >/dev/null
+  run_exec '{
+    const app = "'"$CURSOR_APP"'";
+    await new Promise(r => setTimeout(r, 300));
+    await sky.press_key({ app, key: "Command+a" });
+    await new Promise(r => setTimeout(r, 100));
+    await sky.press_key({ app, key: "Command+v" });
+    await new Promise(r => setTimeout(r, 500));
+    nodeRepl.write("pasted");
+  }' >/dev/null
 }
 
 SKILL_ROOT="$(resolve_skill_root)"

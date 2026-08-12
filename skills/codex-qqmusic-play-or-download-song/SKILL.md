@@ -40,7 +40,7 @@ bash ./scripts/play-song.sh "晴天" "周杰伦"
 1. 启动 `cua-router` 守护进程（`daemon.sh start`，已在跳过）
 2. `open -b com.tencent.QQMusicMac` 启动 QQ 音乐并等待窗口
 3. `osascript` activate 到前台
-4. **`osascript` 写剪贴板**（`pbcopy` 在某些 shell 会静默失效）
+4. **`pbcopy` 写剪贴板**
 5. **坐标点击搜索栏 (438, 40)**（AX 里 `文本框 搜索` 不支持 `set_value`；用 idx click 不能真正聚焦）
 6. `Command+a` → `Delete` 清空 → `Command+v` 粘贴中文
 7. `Return` 提交搜索，等待进入完整搜索结果页
@@ -106,7 +106,7 @@ bash ./scripts/download-singer-top5.sh "毛阿敏"
 |------|------|------|
 | 对搜索框调用 `set_value` | 报 `Cannot set a value for an element that is not settable` | 只能坐标点击 + 粘贴 |
 | `sky.click({element_index:234})` 定位搜索框 | click 成功但输入框未真正获得焦点，后续按键无效果 | 用坐标 `(438, 40)` |
-| `printf ... \| pbcopy` 写中文剪贴板 | 某些 sandbox / 会话下写入后 `pbpaste` 为空 | 改用 `osascript -e 'set the clipboard to "..."'` |
+| `pbcopy` 后未用 `sky.press_key({ app, key: "Command+v" })` | 剪贴板已写入但搜索框没有文本 | 激活 QQ 音乐并聚焦搜索框后，用 sky 的 `Command+v` 粘贴 |
 | `type_text("晴天 周杰伦")` | 中文 IME 组合异常，可能漏字 | 只走剪贴板 `Command+v` |
 | 未 `activate` 就发 `Command+v` | 组合键落到别的前台 App | 每次执行前 `osascript activate` |
 | 搜索 `张雨生 歌手` | 结果容易停在搜索浮层或歌曲结果，不进歌手页 | 只搜索 `张雨生`，再点击「歌手:张雨生」 |

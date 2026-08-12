@@ -88,11 +88,7 @@ bash ./scripts/create-community-site.sh "new-curor-project" "帮我新建一个�
 ## 关键实现约定
 
 - Cursor app bundle id 通常为 `com.todesktop.230313mzl4w4u92`，窗口名为 `Cursor Agents`。
-- `sky.type_text` 输入中文可能丢字，中文提示词必须用：
-  ```bash
-  osascript -e 'set the clipboard to "..."'
-  ```
-  然后 `Command+A`、`Command+V`。
+- `sky.type_text` 输入中文可能丢字，中文提示词必须先 `pbcopy` 写剪贴板，再用 `sky.press_key({ app, key: "Command+a" })` 与 `sky.press_key({ app, key: "Command+v" })` 粘贴，并刷新 AX 校验。
 - `sky.set_value` 不同版本参数名可能不一致，遇到 `elementIndex must be an integer` 时不要继续重试，改用剪贴板粘贴。
 - 每次用户或系统改变 Cursor 状态后，先重新 `get_app_state({ disableDiff: true })`，避免触发 `The user changed '/Applications/Cursor.app'`。
 - 不要只用 `Plan, Build` 判断失败：旧会话、生成中或发送后的输入框可能显示 `Send follow-up`。如果打开后停在旧聊天，先点 `New Agent`，直到出现新建输入框再创建项目。

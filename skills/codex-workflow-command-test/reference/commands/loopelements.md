@@ -168,22 +168,23 @@ echo -n '//a[@class="title"]' | pbcopy
   await sky.click({ app: "com.google.Chrome", element_index: addIdx });
   await sleep(1500);
 
-  // 4. 立即（同一 exec）拿新输入框 idx 填参数名和参数值
+  // 4. 立即（同一 exec）拿新输入框 idx，用稳定粘贴填参数名和参数值
+  const { execFileSync } = await import("node:child_process");
+  async function stablePaste(elementIndex, text) {
+    execFileSync("/usr/bin/pbcopy", { input: text });
+    await sky.click({ app: "com.google.Chrome", element_index: elementIndex });
+    await sleep(300);
+    await sky.press_key({ app: "com.google.Chrome", key: "Command+a" });
+    await sleep(100);
+    await sky.press_key({ app: "com.google.Chrome", key: "Command+v" });
+    await sleep(600);
+  }
   const s3 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const inputs = s3.text.split("\n").filter(l => /文本输入区.*settable/.test(l) && !/编辑器容器|请输入|Enter/.test(l));
   const nameIdx = parseInt(inputs[0].match(/^\s*(\d+)/)[1]);
   const valueIdx = parseInt(inputs[1].match(/^\s*(\d+)/)[1]);
-  await sky.click({ app: "com.google.Chrome", element_index: nameIdx });
-  await sleep(500);
-  await sky.type_text({ app: "com.google.Chrome", text: "titles" });
-  await sleep(600);
-  await sky.click({ app: "com.google.Chrome", element_index: valueIdx });
-  await sleep(500);
-  // ${title} 含特殊字符 $ 与 { }，type_text 支持 ASCII 均可
-  await sky.type_text({ app: "com.google.Chrome", text: "$" });
-  await sleep(200);
-  await sky.type_text({ app: "com.google.Chrome", text: "{title}" });
-  await sleep(600);
+  await stablePaste(nameIdx, "titles");
+  await stablePaste(valueIdx, "${title}");
 
   // 5. 保存
   const s4 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });

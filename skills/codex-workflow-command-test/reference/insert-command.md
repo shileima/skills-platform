@@ -233,20 +233,27 @@
 
 **1c. 向前插入**（在已有指令 B 之前插入）：单击 **B 的上一条指令** → Enter → 空出新行 → 搜索+双击或粘贴。
 
-**第 2 步**：搜索框 set_value 中文指令名
+**第 2 步**：搜索框稳定粘贴中文指令名
 
 ```js
 {
-  const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const { execFileSync } = await import("node:child_process");
+  const app = "com.google.Chrome";
+  const query = "打开网页";
+  const s = await sky.get_app_state({ app, disableDiff: true });
   const searchLine = s.text.split("\n").find(l =>
     /settable, string/.test(l) && /Placeholder: 请输入/.test(l)
   );
   const searchIdx = searchLine ? parseInt(searchLine.match(/^\s*(\d+)/)[1]) : null;
-  await sky.set_value({ app: "com.google.Chrome", element_index: searchIdx, value: "打开网页" });
+  execFileSync("/usr/bin/pbcopy", { input: query });
+  await sky.click({ app, element_index: searchIdx });
+  await new Promise(r => setTimeout(r, 300));
+  await sky.press_key({ app, key: "Command+a" });
+  await sky.press_key({ app, key: "Command+v" });
   await new Promise(r => setTimeout(r, 1200));
-  const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  const s1 = await sky.get_app_state({ app, disableDiff: true });
   const hasResult = /打开网页\s*\(web\)/.test(s1.text);
-  nodeRepl.write(JSON.stringify({ step: "search", searchIdx, hasResult }));
+  nodeRepl.write(JSON.stringify({ step: "search", searchIdx, pasted: s1.text.includes(query), hasResult }));
 }
 ```
 

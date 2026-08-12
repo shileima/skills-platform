@@ -28,6 +28,7 @@ PY
 
 bash "$SKILL_ROOT/scripts/exec.sh" -t 120000 "
 await (async () => {
+  const { execFileSync } = await import('node:child_process');
   const workflowName = ${JS_NAME};
   function axHasLabel(line, label) {
     return new RegExp(label.split('').join('\\\\s*')).test(line);
@@ -40,6 +41,15 @@ await (async () => {
   }
   function important(lines, re) {
     return lines.filter(l => re.test(l)).slice(0, 80);
+  }
+  async function stablePaste(elementIndex, text) {
+    execFileSync('/usr/bin/pbcopy', { input: text });
+    await sky.click({ app: 'com.google.Chrome', element_index: elementIndex });
+    await new Promise(r => setTimeout(r, 300));
+    await sky.press_key({ app: 'com.google.Chrome', key: 'Command+a' });
+    await new Promise(r => setTimeout(r, 100));
+    await sky.press_key({ app: 'com.google.Chrome', key: 'Command+v' });
+    await new Promise(r => setTimeout(r, 700));
   }
 
   const s0 = await sky.get_app_state({ app: 'com.google.Chrome', disableDiff: true });
@@ -89,8 +99,7 @@ await (async () => {
     nodeRepl.write(JSON.stringify({ ok: false, step: 'find-name-input', reason: '未找到名称输入框', hints: important(lines3, /新建工作流|名称|例如|创建工作流/) }));
     return;
   }
-  await sky.set_value({ app: 'com.google.Chrome', element_index: nameIdx, value: workflowName });
-  await new Promise(r => setTimeout(r, 500));
+  await stablePaste(nameIdx, workflowName);
 
   const s4 = await sky.get_app_state({ app: 'com.google.Chrome', disableDiff: true });
   const lines4 = s4.text.split('\\n');
