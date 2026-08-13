@@ -1,0 +1,22 @@
+{
+  "name": "codex-calendar-room-booking",
+  "version": "0.1.0",
+  "description": "在美团日程 Chrome 页面按日期、会议室名称和时间段预订会议室",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": ["calendar", "meeting-room", "room-booking", "web-automation", "cua"],
+  "targets": ["claude", "codex", "automan", "cursor"],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+    }
+  ],
+  "pack": {
+    "include": ["SKILL.md", "skill.json"]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-calendar-room-booking"
+  }
+}
