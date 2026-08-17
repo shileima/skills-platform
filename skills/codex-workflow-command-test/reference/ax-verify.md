@@ -104,7 +104,7 @@ function axAnalyze(lines, checks) {
 | 粘贴 XPath（Cmd+V） | 组合框 Value 含 `//`；「该字段是必填字段」可能仍显示（需下一步 Enter） | 输入框仍空 |
 | 按 Enter（**方式 C 核心**） | 组合框旁出现 `\d+ text //...` 独立行 + 「该字段是必填字段」消失 | 红字仍在 → 重新聚焦 Cmd+V 再 Enter；重试仍失败 → 转方式 B（捕获） |
 | 填「待填充文本」 | 输入框含目标文本 | 仍空、仍红框 |
-| 填「网址」/ URL 字段 | 输入框含 `https://`（非 `https//`） | 冒号丢失；仍空、仍红框 |
+| 填「网址」/ URL 字段 | **弹框**「* 网址」label 下方 slice 含 `https://`（非 `https//`） | 冒号丢失；仍空、仍红框；**URL 仅出现在 Chrome 地址栏** |
 | **保存前总检** | 所有 label 前带 `*` 的字段已填；无红框；无「该字段是必填字段」 | 任一必填为空；输入框红框 → **禁止点保存** |
 | 点「保存」 | 弹框关闭；canvas 节点保留 | 弹框仍在；「该字段是必填字段」 |
 | 点顶部「调试」 | 右侧弹出调试面板；「选择我的浏览器环境」= **随机设备** | 弹框未出现 |
@@ -350,25 +350,41 @@ if (axSelectStillRequired(lines)) {
 }
 ```
 
-### Step B：pbcopy + 粘贴网址 → 验证含 `https://`
+### Step B：pbcopy + 粘贴网址 → 验证弹框内含 `https://`（禁止误填地址栏）
+
+> 🚫 弹框打开时**禁止**对 Chrome 地址栏（`/地址/` settable）做 set_value 或粘贴。完整 scoped 定位见 **`url-input.md`**。
 
 ```js
 {
   // echo -n "https://www.baidu.com" | pbcopy
+  const TARGET = "https://www.baidu.com";
   const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const urlIdx = parseInt(s0.text.split("\n").find(l =>
-    l.includes("网址") && /settable|textfield/i.test(l)
-  )?.match(/^\s*(\d+)/)?.[1]);
+  const lines0 = s0.text.split("\n");
+
+  const labelIdx = lines0.findIndex(l => /text\s+\*\s+网址/.test(l));
+  const inputLine = labelIdx >= 0
+    ? lines0.slice(labelIdx, labelIdx + 15).find(l =>
+        /settable|textfield|文本栏/i.test(l) &&
+        !(/settable, string/.test(l) && /地址/.test(l) && !/网址/.test(l))
+      )
+    : null;
+  const urlIdx = inputLine ? parseInt(inputLine.match(/^\s*(\d+)/)[1]) : null;
+
+  if (urlIdx == null) {
+    nodeRepl.write(JSON.stringify({ step: "openurl-B", ok: false, reason: "modal-url-field-not-found" }));
+    throw new Error("modal-url-field-not-found");
+  }
 
   await sky.click({ app: "com.google.Chrome", element_index: urlIdx });
   await sky.press_key({ app: "com.google.Chrome", key: "cmd+a" });
   await sky.press_key({ app: "com.google.Chrome", key: "cmd+v" });
 
   const lines1 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const urlOk = lines1.some(l => l.includes("https://www.baidu.com"));
+  const modalSlice = labelIdx >= 0 ? lines1.slice(labelIdx, labelIdx + 15).join("\n") : "";
+  const urlInModal = modalSlice.includes(TARGET);
   const colonMissing = lines1.some(l => /https\/\//.test(l));
-  nodeRepl.write(JSON.stringify({ step: "openurl-B", urlIdx, urlOk, colonMissing }));
-  // colonMissing === true → 禁止 type_text 补救，重新 pbcopy 再粘贴
+  nodeRepl.write(JSON.stringify({ step: "openurl-B", urlIdx, urlInModal, colonMissing }));
+  // urlInModal === false → 可能误填地址栏，按 url-input.md §误填地址栏后的修复 重试
 }
 ```
 

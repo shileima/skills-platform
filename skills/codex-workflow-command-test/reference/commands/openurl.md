@@ -17,11 +17,12 @@
 ## 配置要点
 
 - **必填**：`网址`（标签旁有红色 `*`，未填时输入框红色边框）
+- **填错位置高发**：URL 必须写入**弹框内**「* 网址」输入框，**禁止**写入 Chrome 顶部地址栏（见 [url-input.md](../url-input.md) §弹框网址 vs Chrome 地址栏）
 - 填写完整 URL（含 `https://`），**禁止** `type_text`（会丢冒号变成 `https//`）
-- **推荐**：Shell `echo -n "https://..." | pbcopy` → 聚焦输入框 → `cmd+a` → `cmd+v` 粘贴
-- **备选**：`set_value` 直接写入（填后 AX 验证含 `https://`）
+- **推荐**：Shell `echo -n "https://..." | pbcopy` → scoped 聚焦弹框「网址」→ `cmd+a` → `cmd+v` 粘贴
+- **备选**：`set_value` 写入**弹框内** scoped idx（填后 AX 验证弹框 slice 含 `https://`）
 - 完整 sky 示例与验证见 **[url-input.md](../url-input.md)**
-- **保存前**确认「网址」输入框无红框、AX 中 URL 含 `://`，再点弹框右下角「保存」
+- **保存前**确认弹框「网址」无红框、label 下方 slice 含 `://`（非仅地址栏），再点弹框右下角「保存」
 
 ## XML 示例
 

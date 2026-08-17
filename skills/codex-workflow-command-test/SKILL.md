@@ -203,6 +203,7 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - 不负责工作流发布上线，只做指令配置与调试验证
 - 元素采集依赖云浏览器连接，断线时需重新连接
 - **URL 含 `://` 时禁止 `type_text`**（macOS 会丢冒号 → `https//`）；用 `pbcopy+paste` 或 `set_value`，见 `reference/url-input.md`
+- **配置「打开网页」时禁止误填 Chrome 地址栏**：弹框打开后 URL 只能写入弹框内「* 网址」字段（scoped 定位）；地址栏仅用于平台导航/XPath 采集 Tab，见 `reference/url-input.md` §弹框网址 vs Chrome 地址栏
 - `type_text` 仅适合纯 ASCII 且无 Shift 修饰符的短文本；中文用 pbcopy+paste
 - **每次 sky 动作后必须全量抓 AX Tree 验证**，禁止连点不验证（见 `ax-verify.md`）
 - 指令语义以官方文档为准；与平台 UI 不一致时以文档为准

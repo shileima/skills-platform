@@ -128,6 +128,8 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 
 > ⚠️ 配置「打开网页」的「网址」时，**禁止** `type_text`（会丢冒号）。须 `pbcopy+paste` 或 `set_value`，见 **`url-input.md`**。
 >
+> 🚫 **弹框打开时禁止操作 Chrome 地址栏**：「网址」是弹框内「输入参数」字段，不是窗口顶部地址栏。误填地址栏时弹框仍空/仍红框——须 scoped 重填弹框字段，见 `url-input.md` §弹框网址 vs Chrome 地址栏。
+>
 > 🚫🚫🚫 **元素选择器写入铁律**：**首选** `pbcopy` + `Cmd+V` 粘贴 XPath → **紧接 Enter** 落库（`element-selector.md` §方式 C）；**退而求其次**点击弹框「捕获」按钮（§方式 B）。**禁止**其他写入方式。
 
 ## 2.4 指令弹框保存前校验（必做）

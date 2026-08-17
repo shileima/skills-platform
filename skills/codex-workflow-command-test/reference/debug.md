@@ -283,6 +283,7 @@ sleep 2
 | 元素未找到 | selector 不精确或页面改版 | 重新采集，勿沿用旧 XPath |
 | 导航失败 | URL 格式错误 | pbcopy+paste 重填 |
 | 网址显示 `https//`（缺冒号） | 用了 `type_text` 填 URL | 见 `url-input.md`：`pbcopy` + 粘贴或 `set_value`，禁止 type_text |
+| Chrome 地址栏出现目标 URL，弹框「网址」仍空/红框 | 误用地址栏 set_value 或未 scoped 定位 | 见 `url-input.md` §误填地址栏后的修复；禁止 Return 导航 |
 | 调试按钮灰色 | 上次调试未断开 | 点「断开」后重试 |
 | 保存时报「该字段是必填字段」 | 必填项未填 / 元素选择器粘贴后未按 Enter | 元素选择器：Cmd+V 粘贴 XPath **紧接着按 Enter** 让 AntD Select 接受为定位器（`element-selector.md` §方式 C）；其它必填按 `commands/<slug>.md` 补全 |
 | **「节点配置不完整」**（检查面板 / 编排区右侧 ⓘ） | 条件必填未满足（如 SetCookie Domain 为空、域名误填 Path） | 双击节点 → Read `commands/<slug>.md` 补全 → 保存 → 点「检查」确认无异常 |
