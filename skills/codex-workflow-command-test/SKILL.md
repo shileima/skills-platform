@@ -34,7 +34,7 @@ description: >
 
 1. 打开 **rpa.sankuai.com 首页** → 左侧点击「**工作流**」→ 新建**空**编排模式工作流
 2. 在编排区**按顺序**添加待测指令（`insert-command.md`）：**首条**选中**开始节点 → Enter** 在开始节点下方空行插入；**向后追加**选中锚点指令（通常为上一条/最后一条）→ Enter 空行 → 搜索+双击；**禁止**从结束节点上方起建、禁止拖拽提示行、禁止无锚点插入；插入后**必须**校验新节点在锚点**之后**（见 `insert-command.md` §插入后强制核对）
-3. 逐条**完善表单并保存**（保存前必验：弹框 label 前红色 `*` 为必填；**条件必填**须对照 `commands/<slug>.md`「设置方式 → 对应必填字段」，见 `test-workflow.md` §3、`platform-ops.md` §2.4），保存报错当场修复
+3. 逐条**完善表单并保存**（保存前**必须** `assertCanSave`：`canSave === true` 才允许点「保存」；弹框 label 前红色 `*` 为必填；**条件必填**须对照 `commands/<slug>.md`，见 `test-workflow.md` §3、`platform-ops.md` §2.4、`ax-verify.md` §assertCanSave），保存报错当场修复
 4. **每条保存后**：点顶部「**检查**」→ 下拉无「配置异常节点 / 节点配置不完整」、按钮无红色数字 badge（见 `test-workflow.md` §保存后配置校验）
 5. **调试前**：场景顺序终检 + 编排区每条指令**右侧**无配置警示 icon（见 `test-workflow.md` §调试前配置终检、`debug.md` §调试前置）
 6. **调试** → 弹框**直接运行**（无需配置弹框，默认「随机设备」）
@@ -203,6 +203,7 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - 不负责工作流发布上线，只做指令配置与调试验证
 - 元素采集依赖云浏览器连接，断线时需重新连接
 - **URL 含 `://` 时禁止 `type_text`**（macOS 会丢冒号 → `https//`）；用 `pbcopy+paste` 或 `set_value`，见 `reference/url-input.md`
+- **点「保存」前必须 assertCanSave**：任一 label 前带 `*` 的字段仍空、仍占位符、仍红框、或 AX 有「该字段是必填字段」→ `canSave === false`，**禁止 click 保存**（见 `platform-ops.md` §2.4、`ax-verify.md` §assertCanSave）
 - **配置「打开网页」时禁止误填 Chrome 地址栏**：弹框打开后 URL 只能写入弹框内「* 网址」字段（scoped 定位）；地址栏仅用于平台导航/XPath 采集 Tab，见 `reference/url-input.md` §弹框网址 vs Chrome 地址栏
 - `type_text` 仅适合纯 ASCII 且无 Shift 修饰符的短文本；中文用 pbcopy+paste
 - **每次 sky 动作后必须全量抓 AX Tree 验证**，禁止连点不验证（见 `ax-verify.md`）

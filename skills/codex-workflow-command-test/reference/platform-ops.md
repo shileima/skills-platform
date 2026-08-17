@@ -191,34 +191,60 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 ### sky 自动化：保存前自检 → 保存 → 验证关闭
 
 > 自动化时同样遵循 §保存前校验铁律：**canSave === false 时绝对不得 click 保存按钮**。
+>
+> 通用 helper 见 `ax-verify.md` §分析辅助函数 → `assertCanSave` / `assertCanSaveOpenUrl`。
 
 ```js
 {
-  // 按当前指令替换 requiredLabels，须与 commands/<slug>.md 及弹框 * 字段一致
-  const requiredLabels = ["延迟时间"]; // 例：延迟；打开网页用 ["网址"]；输入文本用 ["元素选择器","待填充文本"]
+  // ── 保存前门控 helper（与 ax-verify.md 保持一致）──
+  function axRequiredFieldSlice(lines, label) {
+    const labelIdx = lines.findIndex(l =>
+      (l.includes(`* ${label}`) || l.includes(`*${label}`)) && /text|静态文本|标签/i.test(l)
+    );
+    return labelIdx >= 0 ? lines.slice(labelIdx, labelIdx + 15) : [];
+  }
+  function axFieldSliceLooksEmpty(sliceText) {
+    return (
+      /输入.*插入上游节点变量/.test(sliceText) ||
+      (/settable|textfield|文本栏/i.test(sliceText) && !/value:\s*\S/.test(sliceText) && !/https?:\/\//.test(sliceText))
+    );
+  }
+  function assertCanSave(lines, requiredLabels, validators = {}) {
+    const hasRequiredErr = lines.some(l => l.includes("该字段是必填字段"));
+    const missing = [];
+    for (const label of requiredLabels) {
+      const sliceText = axRequiredFieldSlice(lines, label).join("\n");
+      if (sliceText.length === 0) { missing.push(label); continue; }
+      const emptyLike = axFieldSliceLooksEmpty(sliceText);
+      const ok = validators[label]
+        ? validators[label](sliceText)
+        : !emptyLike && (/value:\s*\S/.test(sliceText) || /\/\/\S/.test(sliceText));
+      if (!ok || emptyLike) missing.push(label);
+    }
+    return { canSave: !hasRequiredErr && missing.length === 0, missing, hasRequiredError: hasRequiredErr };
+  }
+
+  // 按当前指令替换 requiredLabels / validators
+  const requiredLabels = ["网址"]; // 打开网页；延迟用 ["延迟时间"]；输入文本用 ["元素选择器","待填充文本"]
+  const validators = {
+    网址: (t) => /https?:\/\//.test(t) && !/https\/\//.test(t) && !/输入.*插入上游节点变量/.test(t),
+  };
 
   const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const panel = s0.text.split("\n");
   const hasPanel = panel.some(l => /打开网页|输入文本|点击元素|延迟/.test(l));
-  const hasRequiredError = panel.some(l => l.includes("该字段是必填字段"));
+  const { canSave, missing, hasRequiredError } = assertCanSave(panel, requiredLabels, validators);
 
-  // 粗略校验：必填 label 附近应有非空 settable/value（具体 idx 因弹框结构而异，失败则目视补全）
-  const missingRequired = requiredLabels.filter(label => {
-    const labelLine = panel.find(l => l.includes(label));
-    if (!labelLine) return true;
-    const labelIdx = panel.indexOf(labelLine);
-    const nearby = panel.slice(labelIdx, labelIdx + 6).join("\n");
-    const hasValue = /value|settable.*[^\s]/.test(nearby) && !/value:\s*$/.test(nearby);
-    return !hasValue;
-  });
-
-  const canSave = hasPanel && !hasRequiredError && missingRequired.length === 0;
-  nodeRepl.write(JSON.stringify({ step: "save-check", canSave, missingRequired, hasRequiredError }));
+  nodeRepl.write(JSON.stringify({ step: "save-check", hasPanel, canSave, missing, hasRequiredError }));
 
   if (!canSave) {
-    nodeRepl.write(JSON.stringify({ step: "save-blocked", reason: "必填项未填完，禁止点保存" }));
+    nodeRepl.write(JSON.stringify({
+      step: "save-blocked",
+      reason: "必填项未填完，禁止点保存",
+      missing,
+      action: "补全 missing 所列字段 → 全量 AX → 重新 assertCanSave → canSave 为 true 后再保存"
+    }));
   } else {
-    // axButtonIdx 见 ax-verify.md §分析辅助函数（兼容「保 存」）
     function axHasLabel(line, label) {
       return new RegExp(label.split("").join("\\s*")).test(line);
     }
@@ -233,6 +259,15 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
     nodeRepl.write(JSON.stringify({ step: "save-verify", saved }));
   }
 }
+```
+
+**打开网页(web) 典型失败**（如图：「网址」仍空、仍占位符「输入'/'插入上游节点变量」、节点右侧出现配置警示 ⓘ）：
+
+```
+assertCanSave → canSave: false, missing: ["网址"]
+→ 禁止 click「保存」
+→ 按 url-input.md Step 1 补填弹框「网址」
+→ 重新 assertCanSave → canSave: true 后再保存
 ```
 
 ## 2.5 调试前场景顺序终检（必做）

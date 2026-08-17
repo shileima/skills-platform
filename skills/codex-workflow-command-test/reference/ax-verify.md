@@ -51,6 +51,60 @@ function axAnalyze(lines, checks) {
   };
   return { text, find, findAll, has, idxOf, axHasLabel, axFindButton, axButtonIdx, ...checks };
 }
+
+// ── 保存前门控（点击「保存」前必调）──
+// canSave === false → 绝对禁止 click 保存按钮；须先补全必填项再重新 assertCanSave
+function axRequiredFieldSlice(lines, label) {
+  const labelIdx = lines.findIndex(l =>
+    (l.includes(`* ${label}`) || l.includes(`*${label}`)) && /text|静态文本|标签/i.test(l)
+  );
+  if (labelIdx < 0) return [];
+  return lines.slice(labelIdx, labelIdx + 15);
+}
+
+function axFieldSliceLooksEmpty(sliceText) {
+  return (
+    /输入.*插入上游节点变量/.test(sliceText) ||
+    /placeholder|占位/.test(sliceText) ||
+    (/settable|textfield|文本栏/i.test(sliceText) && !/value:\s*\S/.test(sliceText) && !/https?:\/\//.test(sliceText))
+  );
+}
+
+function assertCanSave(lines, requiredLabels, validators = {}) {
+  const hasRequiredErr = lines.some(l => l.includes("该字段是必填字段"));
+  const missing = [];
+  const details = {};
+
+  for (const label of requiredLabels) {
+    const slice = axRequiredFieldSlice(lines, label);
+    const sliceText = slice.join("\n");
+    if (slice.length === 0) {
+      missing.push(label);
+      details[label] = { ok: false, reason: "label-not-found" };
+      continue;
+    }
+    const emptyLike = axFieldSliceLooksEmpty(sliceText);
+    const customOk = validators[label]
+      ? validators[label](sliceText)
+      : !emptyLike && (/value:\s*\S/.test(sliceText) || /\/\/\S/.test(sliceText) || /text\s+[^\s].{2,}/.test(sliceText));
+    if (!customOk || emptyLike) {
+      missing.push(label);
+      details[label] = { ok: false, emptyLike, slicePreview: sliceText.slice(0, 120) };
+    } else {
+      details[label] = { ok: true };
+    }
+  }
+
+  const canSave = !hasRequiredErr && missing.length === 0;
+  return { canSave, missing, hasRequiredErr, details };
+}
+
+// 打开网页(web) 专用：网址须在弹框 slice 内且含 ://
+function assertCanSaveOpenUrl(lines) {
+  return assertCanSave(lines, ["网址"], {
+    网址: (t) => /https?:\/\//.test(t) && !/https\/\//.test(t) && !/输入.*插入上游节点变量/.test(t),
+  });
+}
 ```
 
 > ⚠️ **按钮标签匹配**：调试弹框内按钮用 `axHasLabel(l, "运行")` / `axButtonIdx(lines, "运行")`，**禁止**仅用 `l.includes("运行")`——弹框内 Ant Design 按钮 AX 标签为「运 行」「重 置」，无空格写法会漏匹配。
@@ -388,19 +442,50 @@ if (axSelectStillRequired(lines)) {
 }
 ```
 
-### Step C：保存前总检 → 点保存
+### Step C：保存前总检（canSave 为 true 才允许点保存）
+
+> 🚫 **硬性门控**：须先 `assertCanSaveOpenUrl(lines)`；`canSave === false` 时**绝对禁止** click「保存」。网址仍空、仍占位符、仍「该字段是必填字段」→ 回到 Step B 补填。
 
 ```js
 {
-  const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
-  const hasUrl = lines.some(l => l.includes("https://"));
-  const hasRequiredErr = lines.some(l => l.includes("该字段是必填字段"));
-  const canSave = hasUrl && !hasRequiredErr && !lines.some(l => /https\/\//.test(l));
-  nodeRepl.write(JSON.stringify({ step: "openurl-C", canSave }));
+  function axHasLabel(line, label) {
+    return new RegExp(label.split("").join("\\s*")).test(line);
+  }
+  function axButtonIdx(lines, label) {
+    const line = lines.find(l => axHasLabel(l, label) && l.includes("按钮"));
+    return line ? parseInt(line.match(/^\s*(\d+)/)?.[1]) : null;
+  }
+  function axRequiredFieldSlice(lines, label) {
+    const labelIdx = lines.findIndex(l =>
+      (l.includes(`* ${label}`) || l.includes(`*${label}`)) && /text|静态文本|标签/i.test(l)
+    );
+    return labelIdx >= 0 ? lines.slice(labelIdx, labelIdx + 15) : [];
+  }
+  function assertCanSaveOpenUrl(lines) {
+    const sliceText = axRequiredFieldSlice(lines, "网址").join("\n");
+    const hasRequiredErr = lines.some(l => l.includes("该字段是必填字段"));
+    const hasPlaceholder = /输入.*插入上游节点变量/.test(sliceText);
+    const hasUrl = /https?:\/\//.test(sliceText) && !/https\/\//.test(sliceText);
+    const canSave = hasUrl && !hasPlaceholder && !hasRequiredErr;
+    return { canSave, hasUrl, hasPlaceholder, hasRequiredErr };
+  }
 
-  if (canSave) {
+  const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
+  const check = assertCanSaveOpenUrl(lines);
+  nodeRepl.write(JSON.stringify({ step: "openurl-C", ...check }));
+
+  if (!check.canSave) {
+    nodeRepl.write(JSON.stringify({
+      step: "save-blocked",
+      reason: "网址必填项未填完，禁止点保存",
+      action: "回到 Step B 补填弹框「网址」后再 assertCanSaveOpenUrl"
+    }));
+  } else {
     const saveIdx = axButtonIdx(lines, "保存");
     await sky.click({ app: "com.google.Chrome", element_index: saveIdx });
+    const lines2 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
+    const saved = !lines2.some(l => axHasLabel(l, "保存") && l.includes("按钮"));
+    nodeRepl.write(JSON.stringify({ step: "openurl-C-verify", saved }));
   }
 }
 ```

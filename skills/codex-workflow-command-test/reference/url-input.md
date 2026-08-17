@@ -177,6 +177,31 @@ echo -n "https://www.baidu.com" | pbcopy
 3. 「网址」输入框**无红色边框**
 4. 无「该字段是必填字段」提示
 5. Chrome 地址栏**未**因误操作变成工作流目标 URL（如 sogou/baidu/bilibili）
+6. **不能**仍为占位符「输入'/'插入上游节点变量」——仍显示占位符 = 必填未填，**禁止点保存**
+
+### Step 2：保存前门控（canSave 为 true 才允许点「保存」）
+
+```js
+{
+  const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
+  const labelIdx = lines.findIndex(l => /text\s+\*\s+网址/.test(l));
+  const sliceText = labelIdx >= 0 ? lines.slice(labelIdx, labelIdx + 15).join("\n") : "";
+  const hasPlaceholder = /输入.*插入上游节点变量/.test(sliceText);
+  const hasRequiredErr = lines.some(l => l.includes("该字段是必填字段"));
+  const hasUrl = /https?:\/\//.test(sliceText) && !/https\/\//.test(sliceText);
+  const canSave = hasUrl && !hasPlaceholder && !hasRequiredErr;
+
+  nodeRepl.write(JSON.stringify({ step: "url-save-gate", canSave, hasUrl, hasPlaceholder, hasRequiredErr }));
+
+  if (!canSave) {
+    nodeRepl.write(JSON.stringify({ step: "save-blocked", reason: "网址未填完，禁止点保存" }));
+    // 回到 Step 1 补填，禁止 click 保存按钮
+  }
+  // canSave === true → 再执行 platform-ops.md §2.4 assertCanSave → click「保存」
+}
+```
+
+完整通用 helper 见 `ax-verify.md` §`assertCanSaveOpenUrl`、`platform-ops.md` §2.4 sky 自动化。
 
 ## 误填地址栏后的修复
 
@@ -184,7 +209,7 @@ echo -n "https://www.baidu.com" | pbcopy
 1. 禁止按 Return（避免离开工作流编辑页）
 2. Escape 一次 → 全量 AX：弹框仍在则继续；弹框关闭则 platform-ops.md §2.2 双击节点重开
 3. pbcopy 目标 URL → 按本页 Step 0–1 scoped 重填弹框「网址」
-4. AX 验证 urlInModal === true 后再点「保存」
+4. AX 验证 urlInModal === true → **assertCanSaveOpenUrl(canSave===true)** 后再点「保存」
 ```
 
 ## 适用指令
