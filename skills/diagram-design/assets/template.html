@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagram Title</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f5f5f0;
+      --paper-2: #ffffff;
+      --ink: #0a0a0a;
+      --muted: #6b7280;
+      --accent: #eb6c36;
+      --hairline: #d1d5db;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 32px;
+    }
+    .diagram-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 28px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .node rect {
+      fill: var(--paper-2);
+      stroke: var(--hairline);
+      stroke-width: 1;
+    }
+    .node.focal rect {
+      stroke: var(--accent);
+      stroke-width: 2;
+    }
+    .node text.title {
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      fill: var(--ink);
+    }
+    .node text.sub {
+      font-family: ui-monospace, monospace;
+      font-size: 10px;
+      fill: var(--muted);
+    }
+    .edge {
+      fill: none;
+      stroke: var(--hairline);
+      stroke-width: 1;
+    }
+    .edge-label {
+      font-size: 10px;
+      fill: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram-wrap">
+    <h1>Diagram Title</h1>
+    <p class="subtitle">Optional subtitle or context</p>
+    <!-- Replace viewBox and inner content per diagram type -->
+    <svg role="img" aria-labelledby="diagram-title diagram-desc" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+      <title id="diagram-title">Diagram Title</title>
+      <desc id="diagram-desc">Brief accessible description of the diagram.</desc>
+      <!-- Example node -->
+      <g class="node focal" transform="translate(320, 160)">
+        <rect x="0" y="0" width="160" height="64" rx="8" />
+        <text class="title" x="80" y="28" text-anchor="middle">Node A</text>
+        <text class="sub" x="80" y="48" text-anchor="middle">:8080</text>
+      </g>
+    </svg>
+  </div>
+</body>
+</html>
