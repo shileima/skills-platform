@@ -1,6 +1,6 @@
 {
   "name": "codex-jd-taobao-price-compare",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "京东 × 淘宝/天猫同款商品比价与采购建议：Chrome 桌面自动化打开两个平台搜索并进入官方旗舰店/自营详情页，抓取价格、国补、销量、售后、发货，输出对比表 + 推荐购买链接；登录敏感场景每 10s 轮询检测或用户主动告知。",
   "author": "mashilei",
   "license": "MIT",

@@ -45,6 +45,86 @@ url_encode() {
   python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$1"
 }
 
+parse_target_sku() {
+  # 从 query 解析 SKU 维度，输出 JSON 对象（供 Agent 直接使用）
+  python3 -c '
+import json, re, sys
+
+query = sys.argv[1]
+
+COLOR_ALIASES = {
+    "黑色": ["黑色", "疾影黑", "碳晶黑", "黑色钛金属", "深空黑", "曜石黑"],
+    "白色": ["白色", "陶瓷白", "白色钛金属", "星光色", "雪域白"],
+    "蓝色": ["蓝色", "远峰蓝", "海蓝色", "冰晶蓝"],
+    "紫色": ["紫色", "暗紫色", "丁香紫"],
+    "金色": ["金色", "沙漠色钛金属", "原色钛金属"],
+    "绿色": ["绿色", "苍岭绿", "原野绿"],
+    "粉色": ["粉色", "樱花粉"],
+    "银色": ["银色", "原色钛金属"],
+}
+
+def normalize_storage(s):
+    m = re.search(r"(\d+)\s*(GB|TB|G|T)\b", s, re.I)
+    if not m:
+        return None
+    n, u = m.group(1), m.group(2).upper()
+    unit = "TB" if u.startswith("T") else "GB"
+    return f"{n}{unit}"
+
+storage = normalize_storage(query)
+color = None
+color_aliases = []
+for canonical, aliases in COLOR_ALIASES.items():
+    for a in aliases:
+        if a in query:
+            color = canonical
+            color_aliases = aliases
+            break
+    if color:
+        break
+
+variant = None
+for v in ["Ultra", "Max", "Plus", "Pro", "SE", "mini"]:
+    if re.search(rf"\b{v}\b", query, re.I):
+        variant = v
+        break
+
+network = None
+if re.search(r"WiFi|WIFI|无线局域网", query, re.I):
+    network = "WiFi"
+elif re.search(r"5G|蜂窝", query):
+    network = "蜂窝" if "蜂窝" in query else "5G"
+
+edition = None
+for e in ["全新未激活", "国行", "港版", "美版"]:
+    if e in query:
+        edition = e
+        break
+
+# 提取型号：去掉 storage / color 别名 / edition，保留 Pro/Max 等 variant
+model = query
+if storage:
+    model = re.sub(re.escape(storage) + r"|" + re.escape(storage.replace("GB", "G").replace("TB", "T")), " ", model, flags=re.I)
+if color_aliases:
+    for a in color_aliases:
+        model = model.replace(a, " ")
+if edition:
+    model = model.replace(edition, " ")
+model = re.sub(r"\s+", " ", model).strip()
+
+out = {
+    "storage": storage,
+    "color": color,
+    "colorAliases": color_aliases,
+    "model": model if model else query,
+    "variant": variant,
+    "network": network,
+    "edition": edition,
+}
+print(json.dumps(out, ensure_ascii=False))
+' "$1"
+}
+
 check_chrome_a11y() {
   # 检查 Chrome 是否带 --force-renderer-accessibility 启动
   # 如果没有，且允许自动重启，则重启；否则只提示由 Agent 引导用户
@@ -79,6 +159,7 @@ bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
 CHROME_A11Y_STATE="$(check_chrome_a11y || true)"
 
 ENCODED="$(url_encode "$QUERY")"
+TARGET_SKU="$(parse_target_sku "$QUERY")"
 JD_URL="https://search.jd.com/Search?keyword=${ENCODED}&enc=utf-8"
 TB_URL="https://s.taobao.com/search?q=${ENCODED}"
 # 天猫商城模式 URL（仅在 tab=mall 下搜第三方新机专营店）
@@ -89,6 +170,7 @@ cat <<EOF
   "ok": true,
   "skillRoot": "$SKILL_ROOT",
   "query": "$QUERY",
+  "targetSku": $TARGET_SKU,
   "includeUsed": ${INCLUDE_USED:-0},
   "chromeA11yState": "${CHROME_A11Y_STATE}",
   "urls": {
@@ -104,6 +186,6 @@ cat <<EOF
     "excludeAccessoriesRegex": "(表带|保护壳|保护套|钢化膜|贴膜|支架|充电线|数据线|手机壳|MagSafe.*保护)",
     "keepBrandNewRegex": "(全新未激活|全新原封|全新原装|未激活国行|官方标配|京东自营|Apple\u4ea7\u54c1\u4eac\u4e1c\u81ea\u8425\u65d7\u8230\u5e97|\u5b98\u65b9\u65d7\u8230\u5e97)"
   },
-  "hint": "Agent 现在可以调用 exec.sh 内联 JS 采集。默认仅对比全新（excludeUsedRegex 命中的卡片一律剔除，除非 INCLUDE_USED=1）。购买链接必须落到 item.jd.com/{sku}.html 或 detail.tmall.com/item.htm?id=xx&skuId=yy；禁止搜索页 URL。Apple 官方旗舰店无货时用 taobaoMall + 全新未激活国行 关键词兜底。若 chromeA11yState=off，先引导用户重启或让用户执行 FORCE_A11Y_RESTART=1 bash scripts/compare.sh <query>。"
+  "hint": "Agent 现在可以调用 exec.sh 内联 JS 采集。必须先按 targetSku 在两侧详情页点选规格并 verifySelectedSku 通过，再抓价；禁止用天猫默认 SKU 直接比价。默认仅对比全新（excludeUsedRegex 命中的卡片一律剔除，除非 INCLUDE_USED=1）。购买链接必须落到 item.jd.com/{sku}.html 或 detail.tmall.com/item.htm?id=xx&skuId=yy；禁止搜索页 URL。Apple 官方旗舰店无货时用 taobaoMall + 全新未激活国行 关键词兜底。若 chromeA11yState=off，先引导用户重启或让用户执行 FORCE_A11Y_RESTART=1 bash scripts/compare.sh <query>。"
 }
 EOF
