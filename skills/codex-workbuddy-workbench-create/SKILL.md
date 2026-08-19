@@ -51,17 +51,13 @@ description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打�
    - 粘贴后必须刷新 AX tree，校验输入区文本包含 `工作台需求`。
    - 默认需求是 `个人财物助手工作台`。
 
-7. 按录制动作打开模型选择下拉。
-   - 定位当前模型选择框，例如 `Auto` 或 `Deepseek-V4-Flash`。
-   - 点击打开一次模型下拉；不强制修改模型。
-   - 这一步来自录制事件，应保留。
-
-8. 点击发送 / 执行按钮。
+7. 点击发送 / 执行按钮。
    - 粘贴需求后重新定位输入区右侧的发送按钮。
    - 优先查找「发送」「执行」「提交」等语义按钮；如果按钮无文案，则使用输入区右侧相邻无名按钮。
    - 不要用 Return 代替发送。
 
-9. 校验进入执行状态。
+8. 校验进入执行状态。
+   - 先确认出现执行态文案，再确认输入内容已提交、输入框已清空或发送按钮已不可点击。
    - 成功信号包括出现「正在准备执行」「Agent 正在接手并进入工作状态」「内容由 AI 生成，请核实重要信息」或任务卡片进入生成状态。
    - 如果未进入执行状态，检查按钮是否不可用、需求是否未填入、是否未登录或网络异常。
 
@@ -74,7 +70,7 @@ SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-ag
 bash "$SKILL_ROOT/scripts/daemon.sh" start
 bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
 
-REQUEST="${1:-个人财物助手工作台}"
+export REQUEST="${1:-个人财物助手工作台}"
 open -a WorkBuddy
 printf '%s' "$REQUEST" | /usr/bin/pbcopy
 
@@ -113,13 +109,8 @@ await sky.press_key({ app, key: "Command+v" });
 await wait(800);
 s = await ax.get(app, { refresh: true });
 
-let modelIdx = ax.findIdx(s.text, "Auto");
-if (modelIdx == null) modelIdx = ax.findIdx(s.text, "Deepseek-V4-Flash");
-if (modelIdx != null) {
-  await sky.click({ app, element_index: modelIdx });
-  await wait(500);
-  s = await ax.get(app, { refresh: true });
-}
+const request = process.env.REQUEST;
+if (!s.text.includes(request)) throw new Error("需求未成功填入");
 
 let sendIdx = ax.findIdx(s.text, "发送");
 if (sendIdx == null) sendIdx = ax.findIdx(s.text, "执行");
@@ -132,8 +123,10 @@ await sky.click({ app, element_index: sendIdx });
 await wait(2500);
 
 s = await ax.get(app, { refresh: true });
-const ok = /正在准备执行|Agent 正在接手|进入工作状态|内容由 AI 生成/.test(s.text);
-nodeRepl.write(JSON.stringify({ ok }));
+const hasRunningState = /正在准备执行|Agent 正在接手|进入工作状态|内容由 AI 生成/.test(s.text);
+const requestStillInInput = s.text.includes(request);
+const ok = hasRunningState && !requestStillInInput;
+nodeRepl.write(JSON.stringify({ ok, hasRunningState, requestStillInInput }));
 '
 ```
 
