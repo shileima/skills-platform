@@ -100,17 +100,17 @@ description: >
 
 sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前配置终检、`debug.md` §配置校验 sky 脚本。
 
-## 元素 XPath 批量采集（含元素选择器的任意 UI 指令——强制前置）
+## 元素选择器配置（含任意 UI 指令——LLM 默认首选）
 
-> 🚫 **强制前置**：任务含元素选择器的**任意** UI 指令（含 FillText、点击、断言类、等待类等所有需「元素选择器」字段的指令），**必须**在配表单之前完成批量采集。
+> 🚫 **强制规则**：任务含元素选择器的**任意** UI 指令（含 FillText、点击、断言类、等待类等所有需「元素选择器」字段的指令），默认先走 **新建 LLM / LLM动态定位**，失败或运行报错后再降级 XPath。
 
-1. Read `scenarios/<场景>.md` → 列出全部待采元素
-2. 按 **`element-selector.md` §批量采集（新建 Tab · 强制前置）**：**Cmd+T 新建 Tab** → 打开目标页 → DevTools **一次性采齐**本任务 XPath → 切回工作流 Tab
-3. 再进入编排区逐条填表、保存
+1. Read `scenarios/<场景>.md` → 列出全部待定位元素，并为每个元素准备自然语言描述（元素位置 + 操作意图）
+2. 按 **`element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM（默认首选）**：点击「新建 LLM」→ 在「LLM动态定位」输入自然语言描述 → **先点「确认」** → 验证描述 + `LLM` 已落库
+3. 补齐其它必填项并保存；若 LLM 定位保存后仍显示 `selectorId`、或调试报元素不存在，再按 `element-selector.md` §批量采集（新建 Tab）采 XPath 并降级处理
 
-**XPath 写入策略优先级**：**方式 C（pbcopy + Cmd+V 粘贴 XPath + Enter，默认）** → **方式 B（平台捕获，退而求其次）**。配置弹框出现「该字段是必填字段」时，务必在 Cmd+V 后立即按 Enter；两种方式**都不生效**时刷新页面重开配置弹框重试，**禁止**其他手工写入方式（如点击「以…为定位器」下拉、DevTools React setter、type_text、set_value 直写、CSS 属性定义）。
+**元素选择器写入策略优先级**：**方式 A（新建 LLM / LLM动态定位，默认）** → **方式 C（XPath：pbcopy + Cmd+V + Enter）** → **方式 B（平台捕获）**。使用 LLM 时必须点击「确认」后再保存；使用 XPath 时必须在 Cmd+V 后立即按 Enter；禁止其他手工写入方式（如点击「以…为定位器」下拉、DevTools React setter、type_text、set_value 直写、CSS 属性定义）。
 
-> ⚠️ **禁止**在工作流 Tab 地址栏导航探测；**禁止**配一条指令采一条——应预先批量采集。
+> ⚠️ **禁止**在工作流 Tab 地址栏导航探测；XPath 仅作为 LLM 失败/运行报错后的降级方案。
 
 ## 用户意图最高优先级（必读 · 先于默认场景）
 
@@ -144,8 +144,8 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 2. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
 3. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
 4. reference/scenarios/<场景>.md    ← 站点 URL、XPath；指令链以 user-intent 为准
-5. reference/element-selector.md  ← 需 XPath 时：§批量采集（新建 Tab）采齐全部元素
-6. reference/locators/<site>.*      ← 元素 XPath 缓存（可选，优先 Read）
+5. reference/element-selector.md  ← 需元素选择器时：默认新建 LLM / LLM动态定位；失败后降级 XPath 批量采集
+6. reference/locators/<site>.*      ← XPath 降级缓存（可选，仅 LLM 失败/运行报错后优先 Read）
 7. reference/commands/<指令>.md     ← 单条指令参数（来自 instructionPlan）
 8. reference/url-input.md           ← 填 URL 字段时必读（网址 / 导航到的网址）
 9. reference/debug.md               ← 报错修复与重插策略
@@ -167,7 +167,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | 指令目录（98 条 UI 指令） | [reference/commands/index.md](reference/commands/index.md) | 查找/确认任意 UI 指令参数 |
 | 单条指令 | `reference/commands/<slug>.md` | 配置具体指令节点时按需 Read |
 | **捕获元素** | [reference/capture-element.md](reference/capture-element.md) | **需通过平台「捕获」按钮采集元素时**：6 步捕获流程、多信号判据 |
-| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **需 XPath 时**：§批量采集（新建 Tab）一次性采齐；**首选**方式 C（pbcopy + Cmd+V + Enter）；连续失败转方式 B（Read `capture-element.md`） |
+| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **默认首选**新建 LLM / LLM动态定位（填自然语言描述 → 点「确认」→ 保存）；LLM 失败或运行报错后才降级 XPath（方式 C），再失败转捕获（方式 B） |
 | **URL 输入规范** | [reference/url-input.md](reference/url-input.md) | 填「网址」等 URL 字段时**必读**（禁止 type_text） |
 | **插入指令** | [reference/insert-command.md](reference/insert-command.md) | **需在编排区 canvas 中追加指令时**：插入位置约束、光标定位、搜索+双击、右键菜单调序、插入后强制核对 |
 | 调试修复 | [reference/debug.md](reference/debug.md) | 保存后调试、报错修复 |

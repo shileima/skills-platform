@@ -278,9 +278,9 @@ sleep 2
 
 | 错误类型 | 原因 | 修复方式 |
 |---------|------|---------|
-| FillText / 页面元素不存在 | XPath 与真实 DOM 不符 | `element-selector.md` §批量采集（新建 Tab）重采全部相关 XPath，或更新 locators |
+| FillText / 页面元素不存在 | LLM 动态定位未稳定或 XPath 与真实 DOM 不符 | 先重试 `element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM；仍失败再按 §批量采集（新建 Tab）重采全部相关 XPath，或更新 locators |
 | FillText 10120036 | 选择器指向容器 div 而非 input | 精确 XPath：`//textarea[@id="xxx"]` |
-| 元素未找到 | selector 不精确或页面改版 | 重新采集，勿沿用旧 XPath |
+| 元素未找到 | selector 不精确、LLM 未确认落库或页面改版 | 先检查 LLM 是否已点击「确认」并落库；否则重新采集，勿沿用旧 XPath |
 | 导航失败 | URL 格式错误 | pbcopy+paste 重填 |
 | 网址显示 `https//`（缺冒号） | 用了 `type_text` 填 URL | 见 `url-input.md`：`pbcopy` + 粘贴或 `set_value`，禁止 type_text |
 | Chrome 地址栏出现目标 URL，弹框「网址」仍空/红框 | 误填地址栏或未 scoped 定位 | 见 `url-input.md` §误填地址栏后的修复；**canSave 为 false 时禁止保存** |

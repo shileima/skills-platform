@@ -17,20 +17,21 @@
 
 ## 元素选择器
 
-B 站首页 DOM 会随版本变化，执行前 **必须** 按 `reference/element-selector.md` **§批量采集（新建 Tab）** 一次性采集搜索框与搜索按钮 XPath。
+B 站首页 DOM 会随版本变化，执行时 **默认先使用 `reference/element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM** 进行语义定位；只有 LLM 保存后仍显示 `selectorId`、或调试报元素不存在时，才降级到 XPath 批量采集。
 
-| 元素 | 采集提示 | XPath 示例（仅供参考，以实测为准） |
-|------|---------|--------------------------------|
-| 顶部搜索框 | 找 `INPUT`/`TEXTAREA`，通常在导航栏 | `//input[contains(@class,"nav-search-input")]` |
-| 搜索按钮 | 找搜索框旁的 `BUTTON` 或提交控件 | 以 DevTools 输出中的 `id`/`class` 构造 |
+| 元素 | LLM 自然语言描述示例 | XPath 降级示例（仅供参考，以实测为准） |
+|------|----------------------|--------------------------------|
+| 顶部搜索框 | `定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词` | `//input[contains(@class,"nav-search-input")]` |
+| 搜索按钮 | `定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索` | 以 DevTools 输出中的 `id`/`class` 构造 |
 
-> ⚠️ 上表 XPath 仅为常见结构参考。**保存前必须用 DevTools 验证**，或在云浏览器中捕获确认。
+> ⚠️ LLM 动态定位流程必须是：点击「新建 LLM」→ 填自然语言描述 → **点击「确认」** → 补其它必填项 → 保存。禁止填完描述后直接保存。
+> XPath 仅作为降级方案；降级时需按 `element-selector.md` §批量采集（新建 Tab）一次性采集搜索框与搜索按钮 XPath。
 
 ## 执行步骤
 
 1. `reference/platform-ops.md` §2.1 新建编排模式工作流
 2. **按序插入指令**（`insert-command.md`）：**首条**选中**开始节点 → Enter**；之后每条选中**上一条/锚点指令 → Enter** 创建空行 → 右侧搜索框分别搜「打开网页」「输入文本」「点击元素」「刷新网页」→ 双击 (web) 结果 → 插入后校验顺序
-3. **批量采集选择器**（配置表单前）：`element-selector.md` §批量采集 → **Cmd+T 新建 Tab** 打开 bilibili.com → DevTools **一次性**采集搜索框 + 搜索按钮 XPath → 切回工作流 Tab
+3. **配置元素选择器**（默认首选）：对「输入文本」「点击元素」分别使用 `element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM；保存后若 canvas 仍显示 `selectorId` 或调试报元素不存在，再按 §批量采集降级 XPath
 4. 逐条配置并保存表单（保存前确认必填项无红色边框）
 5. **调试前场景顺序终检**（`test-workflow.md` §调试前场景顺序终检）：对照本文件「指令节点」表，确认 canvas 顺序为 `开始 → 打开网页 → 输入文本 → 点击 → 刷新网页 → 结束`
 6. 终检与「检查」均无报错 → **直接** `reference/debug.md` 调试运行（禁止询问用户），直到 4 条业务指令全部 ✅

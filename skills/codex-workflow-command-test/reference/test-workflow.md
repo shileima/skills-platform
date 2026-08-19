@@ -100,17 +100,17 @@
 
 ## 第 3 步：完善表单并保存
 
-> **前置（需 XPath 时）**：配置任何「元素选择器」之前，先按 `element-selector.md` **§批量采集（新建 Tab）**——**Cmd+T 新建 Tab** 打开目标页，DevTools **一次性采齐本任务全部 XPath**，切回工作流 Tab 后再填表。禁止在工作流 Tab 地址栏导航探测。
+> **前置（需元素选择器时）**：配置任何「元素选择器」字段，默认先按 `element-selector.md` **§方式 A：LLM 动态定位 / 新建 LLM（默认首选）**——填写自然语言描述后必须先点「确认」，确认落库后再保存。只有 LLM 定位保存后仍显示 `selectorId`、或调试报元素不存在时，才按 `element-selector.md` §批量采集（新建 Tab）降级采 XPath。禁止在工作流 Tab 地址栏导航探测。
 
 1. **双击**指令节点打开配置弹框（见 `platform-ops.md` §2.2 双击规范）
 2. 在「**常规**」Tab 按 `reference/commands/<指令>.md` 填写参数
-3. 需要元素选择器时：优先用 §批量采集 得到的 XPath 清单；或 Read `reference/locators/<site>.elements.json`
+3. 需要元素选择器时：先按 `element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM（默认首选）处理；若 LLM 定位保存后仍显示 `selectorId`、或调试报元素不存在，再 Read `reference/locators/<site>.elements.json` 或按 §批量采集（新建 Tab）降级到 XPath
 4. **保存前校验**（见 `platform-ops.md` §2.4，**必做、不可跳过**）：
    - Read `commands/<指令>.md`，对照弹框「输入参数」区 **label 前的红色 `*`** 识别必填项
    - **条件必填**（规则 3）：对照 `commands/<指令>.md` 参数表「说明」列——当某 Enum（如「设置方式」）取特定值时，另一字段变为必填（如 SetCookie：`根据指定Domain和path设置Cookie` → **Domain 必填**；`根据URL设置Cookie` → **URL 必填**）。**禁止**把 Domain 的值误填进 Path 等相邻字段
    - 所有带 `*` 的必填项已填写且**不为空**
    - 弹框内**无任何必填输入框仍带红色边框**
-   - 元素选择器：**首选** `pbcopy` + `Cmd+V` 粘贴 XPath → **Enter**（`element-selector.md` §方式 C）；连续失败 3 次转 **方式 B（捕获）**——**禁止**其他方式
+   - 元素选择器：**默认首选**「新建 LLM / LLM动态定位」→ 输入自然语言描述（元素位置 + 操作意图）→ **点击「确认」** → 验证描述 + `LLM` 已落库；若 LLM 失败或调试报元素不存在，再降级 XPath：`pbcopy` + `Cmd+V` 粘贴 XPath → **Enter**（`element-selector.md` §方式 C）；连续失败 3 次转 **方式 B（捕获）**——**禁止**其他方式
    - **任一必填项未填 → 禁止点「保存」**，先补全再保存
    - sky 自动化：**必须先** `assertCanSave(...)`，`canSave === true` **才允许** click「保存」；`canSave === false` 时输出 `save-blocked` 并补填，见 `platform-ops.md` §2.4、`ax-verify.md` §assertCanSave
 5. **`assertCanSave` 通过后**，点弹框右下角「**保存**」
@@ -121,8 +121,8 @@
 
 | 现象 | 处理 |
 |------|------|
-| 必填项输入框红色边框 / 「该字段是必填字段」 | 补全字段；元素选择器 XPath：Cmd+V 粘贴后 **按 Enter**（`element-selector.md` §方式 C） |
-| 元素选择器为空 | 按 `element-selector.md` §批量采集（新建 Tab）重采，或从 locators 缓存复制 |
+| 必填项输入框红色边框 / 「该字段是必填字段」 | 补全字段；元素选择器：优先按 `element-selector.md` §方式 A 先落 LLM，LLM 失败后再按方式 C（Cmd+V 粘贴 XPath 后**按 Enter**） |
+| 元素选择器为空 | 先按 `element-selector.md` §方式 A 新建 LLM；若仍为空或报错，再按 §批量采集（新建 Tab）重采，或从 locators 缓存复制 |
 | URL 未生效 / 显示 `https//` | 用 pbcopy + cmd+v 粘贴或 set_value，**禁止** type_text（见 `url-input.md`） |
 | 「检查」下拉出现「节点配置不完整」 | 双击该节点重开弹框，按 `commands/<slug>.md` 补全**条件必填**（如 SetCookie 的 Domain），保存后再点「检查」 |
 
