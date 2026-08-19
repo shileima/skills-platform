@@ -126,7 +126,7 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
 
 配置指令参数时，**读取对应 `reference/commands/<指令>.md`**。
 
-> ⚠️ 配置「打开网页」的「网址」时，**禁止** `type_text`（会丢冒号）。须 `pbcopy+paste` 或 `set_value`，见 **`url-input.md`**。
+> ⚠️ 配置「打开网页」的「网址」时，**禁止** `type_text`（会丢冒号）。**默认** scoped 定位 + 剪贴板 + 弹框内 paste，见 **`url-input.md` §执行顺序铁律**（**禁止** pbcopy 失败就改 set_value）。
 >
 > 🚫 **弹框打开时禁止操作 Chrome 地址栏**：「网址」是弹框内「输入参数」字段，不是窗口顶部地址栏。误填地址栏时弹框仍空/仍红框——须 scoped 重填弹框字段，见 `url-input.md` §弹框网址 vs Chrome 地址栏。
 >

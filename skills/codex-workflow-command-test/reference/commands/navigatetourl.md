@@ -2,9 +2,12 @@
 
 - **指令标识**：`NavigateToUrl`
 - **指令类型**：网页指令
+- **平台搜索名称**：`导航到URL`
 - **官方文档**：https://document.waimai.st.sankuai.com/commands/ui-commands/navigatetourl/
 - **说明**：在当前浏览器实例中导航到指定的网址，如果当前没有页面则会新建一个页面
 - **必填输入参数**：`导航到的网址`
+
+> ⚠️ **与「打开网页」不同**：用户明确说「导航到url」时必须搜 **`导航到URL`**，禁止用「打开网页」代替。见 `user-intent.md`。
 
 ## 输入参数
 
@@ -16,8 +19,9 @@
 
 ## 配置要点
 
-- **必填**：`导航到的网址`
-- 填写 URL 时**禁止** `type_text`，用 `pbcopy+paste` 或 `set_value`，见 [url-input.md](../url-input.md)
+- **必填**：`导航到的网址`（标签旁有红色 `*`，未填时输入框红色边框）
+- 填写 URL 时**禁止** `type_text`；用 `pbcopy+paste` 或 `set_value`，scoped 定位弹框内 `* 导航到的网址` 字段，见 [url-input.md](../url-input.md)
+- **保存前** `assertCanSave`，确认 slice 含 `https://` 且无占位符，再点「保存」
 
 ## XML 示例
 

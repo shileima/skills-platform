@@ -45,14 +45,14 @@
 **场景顺序依赖**（Web 自动化通用，不可违反）：
 
 ```
-打开网页 → 输入文本 → 点击元素
+打开网页 / 导航到URL → 输入文本 → 点击元素
 ```
 
 | 待插入指令 | canvas 中必须已存在的前置指令 |
 |-----------|------------------------------|
-| 打开网页 | （无，通常是第一条业务指令） |
-| 输入文本 | **打开网页**（必须先有页面才能填元素） |
-| 点击元素 | **打开网页**；搜索类场景建议已有**输入文本** |
+| 打开网页 / **导航到URL** | （无，通常是第一条业务指令） |
+| 输入文本 | **打开网页** 或 **导航到URL**（必须先有页面才能填元素） |
+| 点击元素 | **打开网页** 或 **导航到URL**；搜索类场景建议已有**输入文本** |
 
 > 如图常见错误：「输入文本」排在「打开网页」之前 → **顺序非法**，调试必然失败。**首选**用 **§右键菜单调整指令顺序** 移到正确位置（保留已填配置）；剪切失败或节点异常时再删后重插。
 
@@ -93,12 +93,15 @@
 | 平台指令名 | 搜索框输入（中文） | 分组 | reference |
 |---------|----------------|------|---------|
 | 打开网页 | `打开网页` | 网页自动化 | `commands/openurl.md` |
+| **导航到URL** | **`导航到URL`** | 网页自动化 | `commands/navigatetourl.md` |
 | 输入文本 | `输入文本` | 网页自动化 | `commands/filltext.md` |
 | 点击元素（推荐） | `点击` 或 `点击元素` | 网页自动化 | `commands/clickelementmixed.md` |
 | 验证元素存在 | `验证元素存在` | 网页自动化 | `commands/verifyelementpresent.md` |
 | 验证元素可见 | `验证元素可见` | 网页自动化 | `commands/verifyelementvisible.md` |
 
 完整指令列表见 `reference/commands/index.md`。
+
+> 🚫 **搜索词来源**：`set_value` 到搜索框的中文名必须来自 **`user-intent.md` 解析的 `instructionPlan[i].searchName`**。用户明确说「导航到url」→ 搜 **`导航到URL`**，**禁止**因场景默认是「打开网页」就搜「打开网页」。见 `user-intent.md` §优先级。
 
 > ⚠️ 搜索结果常有同名多条：`(web)` vs `（mobile）`（Web 场景选 `(web)`），以及「我的收藏」分组 vs「网页自动化」分组（**只选后者**，前者行为不稳定）。
 
@@ -139,8 +142,13 @@
 
   const orderOk = (() => {
     const texts = summaries.map(s => s.desc).join("|");
-    if (texts.includes("输入文本") && !texts.includes("打开网页")) return false;
-    if (texts.includes("输入文本") && texts.indexOf("输入文本") < texts.indexOf("打开网页")) return false;
+    const hasPageOpen = /打开网页|导航到URL/.test(texts);
+    if (texts.includes("输入文本") && !hasPageOpen) return false;
+    const pageIdx = Math.min(
+      texts.includes("打开网页") ? texts.indexOf("打开网页") : Infinity,
+      texts.includes("导航到URL") ? texts.indexOf("导航到URL") : Infinity
+    );
+    if (texts.includes("输入文本") && pageIdx !== Infinity && texts.indexOf("输入文本") < pageIdx) return false;
     return true;
   })();
 
@@ -235,11 +243,16 @@
 
 **第 2 步**：搜索框稳定粘贴中文指令名
 
+> `query` **必须**取自 `user-intent.md` → `instructionPlan[i].searchName`，**禁止**写死 `"打开网页"`。
+
 ```js
 {
   const { execFileSync } = await import("node:child_process");
   const app = "com.google.Chrome";
-  const query = "打开网页";
+  // 来自 user-intent.md 解析；示例：用户说「导航到url」→ query = "导航到URL"
+  const instructionPlan = [{ searchName: "导航到URL", platformName: "导航到URL" }];
+  const i = 0;
+  const query = instructionPlan[i].searchName;
   const s = await sky.get_app_state({ app, disableDiff: true });
   const searchLine = s.text.split("\n").find(l =>
     /settable, string/.test(l) && /Placeholder: 请输入/.test(l)
@@ -252,8 +265,9 @@
   await sky.press_key({ app, key: "Command+v" });
   await new Promise(r => setTimeout(r, 1200));
   const s1 = await sky.get_app_state({ app, disableDiff: true });
-  const hasResult = /打开网页\s*\(web\)/.test(s1.text);
-  nodeRepl.write(JSON.stringify({ step: "search", searchIdx, pasted: s1.text.includes(query), hasResult }));
+  const platformName = instructionPlan[i].platformName;
+  const hasResult = new RegExp(`${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(web\\)`).test(s1.text);
+  nodeRepl.write(JSON.stringify({ step: "search", query, searchIdx, pasted: s1.text.includes(query), hasResult }));
 }
 ```
 
@@ -261,11 +275,14 @@
 
 ```js
 {
+  const instructionPlan = [{ searchName: "导航到URL", platformName: "导航到URL" }];
+  const platformName = instructionPlan[0].platformName;
   const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const lines = s.text.split("\n");
   let resultIdx = null;
+  const nameRe = new RegExp(`text\\s+${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(web\\)`);
   for (let i = 0; i < lines.length; i++) {
-    if (/text\s+打开网页\s*\(web\)/.test(lines[i])) {
+    if (nameRe.test(lines[i])) {
       const above = lines.slice(Math.max(0, i - 5), i).join("\n");
       if (/网页自动化/.test(above) && !/我的收藏/.test(above)) {
         resultIdx = parseInt(lines[i].match(/^\s*(\d+)/)[1]);
@@ -277,22 +294,8 @@
   await new Promise(r => setTimeout(r, 1500));
 
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  // 双击后弹出配置弹框 —— canvas 已在其下，需从头部 header 判断
-  const dialogOpened = /打开网页\(web\).*复制.*帮助/.test(s1.text);
-  // 关闭弹框（若只追加不配置）：header 里「帮助」link 之后紧邻的空文本 `\d+ 文本 ` 单独一行
-  const headerIdx = s1.text.split("\n").findIndex(l => /container.*打开网页\(web\).*复制.*帮助/.test(l));
-  let closeIdx = null;
-  if (headerIdx >= 0) {
-    for (let i = headerIdx; i < headerIdx + 30 && i < s1.text.split("\n").length; i++) {
-      const line = s1.text.split("\n")[i];
-      if (/^\s*\d+\s+文本\s*$/.test(line) && i > headerIdx + 5) {
-        closeIdx = parseInt(line.match(/^\s*(\d+)/)[1]);
-        break;
-      }
-    }
-  }
-  nodeRepl.write(JSON.stringify({ step: "dblclick", resultIdx, dialogOpened, closeIdx }));
-  // 如需继续追加下一条：await sky.click({ app: "com.google.Chrome", element_index: closeIdx });
+  const dialogOpened = new RegExp(`${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\(web\\)`).test(s1.text);
+  nodeRepl.write(JSON.stringify({ step: "dblclick", platformName, resultIdx, dialogOpened }));
 }
 ```
 

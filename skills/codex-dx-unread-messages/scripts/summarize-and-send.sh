@@ -870,33 +870,65 @@ await (async () => {
     return reasons.length ? reasons.join("；") : "无";
   }
 
+  // 渲染单条原始未读消息：群聊消息把发送人加粗，单聊无发送人时直出正文
+  function renderRawMessage(message) {
+    const sender = extractSender(message);
+    const body = shorten(messageBody(message), 120);
+    if (!body) return "";
+    if (sender) return `- **${sender}**：${body}`;
+    return `- ${body}`;
+  }
+
   function buildIntelligentSummary(items) {
     const convs = parseConversationItems(items);
-    const categoryMap = new Map();
+    const sections = [];
 
     for (const conv of convs) {
+      const entries = [];
+      const rawLines = [];
+      const seenRaw = new Set();
       for (const msg of conv.messages) {
-        const { category, tag, summary, relatedToMe } = classifyMessage(msg, conv.source);
-        if (!summary || shouldIgnore(summary)) continue;
-        if (!categoryMap.has(category)) categoryMap.set(category, []);
-        const list = categoryMap.get(category);
-        const key = `${tag}|${summary}`;
-        if (!list.some(entry => `${entry.tag}|${entry.summary}` === key)) {
-          list.push({ tag, summary, relatedToMe });
+        const { tag, summary, relatedToMe } = classifyMessage(msg, conv.source);
+        if (summary && !shouldIgnore(summary)) {
+          const key = `${tag}|${summary}`;
+          if (!entries.some(entry => `${entry.tag}|${entry.summary}` === key)) {
+            entries.push({ tag, summary, relatedToMe });
+          }
+        }
+        const raw = renderRawMessage(msg);
+        if (raw && !seenRaw.has(raw)) {
+          seenRaw.add(raw);
+          rawLines.push(raw);
         }
       }
+      if (!entries.length && !rawLines.length) continue;
+      sections.push({
+        source: conv.source,
+        unread: conv.unread || rawLines.length,
+        entries,
+        rawLines
+      });
     }
 
-    if (categoryMap.size === 0) return "";
+    if (!sections.length) return "";
 
+    const separator = "------------------------------------------------";
     const lines = ["✨ 智能概括", ""];
     let sectionNo = 1;
-    for (const [category, entries] of categoryMap) {
-      lines.push(`${sectionNo}. ${category}`);
-      for (const { tag, summary } of entries) {
+    for (const section of sections) {
+      if (sectionNo > 1) {
+        lines.push(separator);
+        lines.push("");
+      }
+      // 主题标题直接标注未读条数：`N. 会话名 X条未读`
+      lines.push(`${sectionNo}. ${section.source} ${section.unread}条未读`);
+      for (const { tag, summary } of section.entries) {
         lines.push(`- **[${tag}]** ${summary}`);
       }
-      lines.push(`- 与我有关：${mergeRelatedToMe(entries)}`);
+      for (const raw of section.rawLines) {
+        lines.push(raw);
+      }
+      lines.push(`- 与我有关：${mergeRelatedToMe(section.entries)}`);
       lines.push("");
       sectionNo += 1;
     }
@@ -904,19 +936,12 @@ await (async () => {
   }
 
   function buildSummary(items) {
-    const separator = "------------------------------------------------";
+    // 仅保留「✨ 智能概括」一个区块，不再输出「未读概览」及各会话未读明细，避免同一条消息重复
     let body = `【大象消息汇总｜${timeLabel}】\n`;
     const intelligent = buildIntelligentSummary(items);
     if (intelligent) {
-      body += `\n${intelligent}\n\n${separator}\n`;
+      body += `\n${intelligent}`;
     }
-    body += `\n未读概览：${unreadOverview(items)}\n`;
-    if (!items.length) return body.trim();
-
-    const rows = dedupeBySource(items).map(x => formatConversationBlock(x));
-    if (!rows.length) return body.trim();
-
-    body += `\n\n${rows.join(`\n\n${separator}\n\n`)}`;
     return body.trim();
   }
 
@@ -963,4 +988,4 @@ python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok"
 SUMMARY="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["summary"])' <<< "$LAST_LINE")"
 
 printf '%s' "$SUMMARY" | bash "$DX_MODULE_DIR/scripts/send-markdown.sh" \
-  "$RECEIVER" --all-tab --marker "大象消息汇总|未读概览|智能概括"
+  "$RECEIVER" --all-tab --marker "大象消息汇总|智能概括"

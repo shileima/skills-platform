@@ -218,7 +218,7 @@
 
 ```js
 {
-  const scenario = ["打开网页", "输入文本", "点击"]; // 按当前场景 scenarios/*.md 填写
+  const scenario = ["导航到URL", "输入文本", "点击"]; // 来自 user-intent.md instructionPlan，禁止硬编码「打开网页」
   const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const canvasStart = lines.findIndex(l => l.includes("编辑器容器"));
   const canvasText = lines.slice(canvasStart, canvasStart + 120).join("\n");

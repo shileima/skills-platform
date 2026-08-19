@@ -3,7 +3,7 @@ name: codex-workflow-command-test
 description: >
   Bots 平台编排模式工作流指令配置与调试技能。当用户在对话中表达以下意图时激活：
   「在 bots 上新建编排模式工作流」「bots 工作流加指令」「配置 bots 自动化流程」
-  「bots 编排模式添加打开网页/输入文本/点击指令」「bots 工作流调试」「bots 调试报错修复」
+  「bots 编排模式添加打开网页/导航到URL/输入文本/点击指令」「bots 工作流调试」「bots 调试报错修复」
   「RPA 工作流测试」「rpa.sankuai.com 工作流」「bots.sankuai.com 工作流」「bots 指令配置」「bots 元素选择器」
   「bots 捕获元素」「bots 云浏览器采集」「bots 调试运行」「编排模式指令测试」
   「百度场景测试」「bilibili 场景测试」「B站工作流测试」
@@ -112,6 +112,21 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 
 > ⚠️ **禁止**在工作流 Tab 地址栏导航探测；**禁止**配一条指令采一条——应预先批量采集。
 
+## 用户意图最高优先级（必读 · 先于默认场景）
+
+> 用户消息中**明确指定的指令名**，优先级**高于**场景文件默认值与示例脚本硬编码。
+
+**执行第一步**：Read **[reference/user-intent.md](reference/user-intent.md)** → 解析 `instructionPlan`（搜索名、reference、URL 字段）→ **再** Read 场景/locators/insert-command。
+
+| 用户说了 | 必须做 | 禁止做 |
+|---------|--------|--------|
+| 「导航到url / 导航到URL」 | 搜索框输入 **`导航到URL`**；Read `navigatetourl.md`；填 `导航到的网址` | ❌ 搜「打开网页」 |
+| 「打开网页」 | 搜索 **`打开网页`**；Read `openurl.md` | ❌ 换成导航到URL |
+| 显式列出 N 条指令 | **只插这 N 条** | ❌ 擅自加场景默认的「刷新网页」等 |
+| 仅「搜狗/sogou 场景」未列指令 | 用 `scenarios/sogou.md` **默认四步** | — |
+
+示例：`以 sogou.com 测试导航到url、输入文本、点击元素` → 3 步：**导航到URL → 输入文本 → 点击**（不含刷新）。详见 `user-intent.md` §示例 A。
+
 ## 默认场景（无用户输入时）
 
 用户仅激活本技能、**未指定测试场景或测试指令**时：
@@ -124,14 +139,15 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 ## 执行流程
 
 ```
+0. reference/user-intent.md          ← 解析用户显式指令（最高优先级）；有则覆盖场景默认指令名
 1. reference/prerequisites.md       ← cua-router-basic 安装验证
 2. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
 3. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
-4. reference/scenarios/<场景>.md    ← 测试场景与指令顺序（未指定 → bilibili.md）
+4. reference/scenarios/<场景>.md    ← 站点 URL、XPath；指令链以 user-intent 为准
 5. reference/element-selector.md  ← 需 XPath 时：§批量采集（新建 Tab）采齐全部元素
 6. reference/locators/<site>.*      ← 元素 XPath 缓存（可选，优先 Read）
-7. reference/commands/<指令>.md     ← 单条指令参数
-8. reference/url-input.md           ← 填「网址」等 URL 字段时必读
+7. reference/commands/<指令>.md     ← 单条指令参数（来自 instructionPlan）
+8. reference/url-input.md           ← 填 URL 字段时必读（网址 / 导航到的网址）
 9. reference/debug.md               ← 报错修复与重插策略
 ```
 
@@ -143,7 +159,8 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 
 | 模块 | 文件 | 何时 Read |
 |------|------|----------|
-| 前置依赖 | [reference/prerequisites.md](reference/prerequisites.md) | **每次执行最先** |
+| **用户意图解析** | [reference/user-intent.md](reference/user-intent.md) | **每次执行最先**（用户消息含显式指令名时必读） |
+| 前置依赖 | [reference/prerequisites.md](reference/prerequisites.md) | **每次执行**（cua-router 验证） |
 | **AX 步骤验证** | [reference/ax-verify.md](reference/ax-verify.md) | **每次 sky 操作必遵** |
 | **测试标准流程** | [reference/test-workflow.md](reference/test-workflow.md) | **每次测试必读** |
 | 平台操作 | [reference/platform-ops.md](reference/platform-ops.md) | 新建工作流、canvas 双击、保存前校验 |
@@ -195,16 +212,17 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - **「上传文件指令测试 / UploadFileFromS3 / 图片上传组件 / input[type=file]」→ Read `reference/scenarios/upload-file.md`**
 - **「循环遍历元素 / LoopElements / 小红书循环 / outputList / @{toolId.index} / 批量抓取标题」→ Read `reference/scenarios/loop-elements-xhs.md` + `reference/commands/loopelements.md`**
 - 「bilibili / B站场景」→ Read `reference/scenarios/bilibili.md`
-- 「sogou / 搜狗场景」→ Read `reference/scenarios/sogou.md`（打开网页 → 输入文本 → 点击 → 刷新网页）
+- 「sogou / 搜狗场景」→ Read `reference/scenarios/sogou.md`；**若用户同时指定指令名**（如「导航到url」）→ **`user-intent.md` 优先**，不得用场景默认「打开网页」替代
 - **不适用于**：bots 对话流/知识库、普通网页操作、代码编写
 
 ## 边界
 
 - 不负责工作流发布上线，只做指令配置与调试验证
 - 元素采集依赖云浏览器连接，断线时需重新连接
-- **URL 含 `://` 时禁止 `type_text`**（macOS 会丢冒号 → `https//`）；用 `pbcopy+paste` 或 `set_value`，见 `reference/url-input.md`
+- **URL 含 `://` 时禁止 `type_text`**；弹框填 URL **默认 scoped + 剪贴板 + paste**（`url-input.md` §执行顺序铁律）；**禁止** pbcopy 失败就改 set_value
 - **点「保存」前必须 assertCanSave**：任一 label 前带 `*` 的字段仍空、仍占位符、仍红框、或 AX 有「该字段是必填字段」→ `canSave === false`，**禁止 click 保存**（见 `platform-ops.md` §2.4、`ax-verify.md` §assertCanSave）
-- **配置「打开网页」时禁止误填 Chrome 地址栏**：弹框打开后 URL 只能写入弹框内「* 网址」字段（scoped 定位）；地址栏仅用于平台导航/XPath 采集 Tab，见 `reference/url-input.md` §弹框网址 vs Chrome 地址栏
+- **用户显式指令名优先于场景默认**：说「导航到url」必须搜 `导航到URL`，禁止偷换「打开网页」（见 `user-intent.md`）
+- **配置 URL 弹框字段时禁止误填 Chrome 地址栏**（`网址` / `导航到的网址`）：见 `reference/url-input.md` §弹框网址 vs Chrome 地址栏
 - `type_text` 仅适合纯 ASCII 且无 Shift 修饰符的短文本；中文用 pbcopy+paste
 - **每次 sky 动作后必须全量抓 AX Tree 验证**，禁止连点不验证（见 `ax-verify.md`）
 - 指令语义以官方文档为准；与平台 UI 不一致时以文档为准

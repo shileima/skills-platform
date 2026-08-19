@@ -174,9 +174,9 @@ function assertCanSaveOpenUrl(lines) {
 
 1. **追加位置**：新节点必须排在**锚点指令（插入前最后一条已保存指令）之后**、「结束节点」之前
 2. **依赖顺序**（Web 场景）：
-   - 插入「输入文本」前，canvas 中已有「打开网页」且在其**上方**（编号更小）
-   - 插入「点击」前，canvas 中已有「打开网页」
-   - 插入「验证元素存在/可见」等断言类指令前，canvas 中已有「打开网页」（通常还需已有目标元素所在页面的前置指令）
+   - 插入「输入文本」前，canvas 中已有 **页面类指令**（`打开网页` 或 `导航到URL`）且在其**上方**
+   - 插入「点击」前，canvas 中已有 **页面类指令**
+   - 插入「验证元素存在/可见」等断言类指令前，canvas 中已有 **页面类指令**
 3. **非法示例**：`开始 → 验证元素存在 → 打开网页 → 结束`（新指令误插到锚点指令前面）→ 选中「验证元素存在」→ 右击 **剪切** → 选中「打开网页」→ **Enter** 创建空行 → **粘贴**（`insert-command.md` §右键菜单调整指令顺序，**不必先删除**）
 4. **发现顺序错误 → 立即停止**：**禁止**在错误顺序下继续为新节点配置表单参数，先修正顺序再配置
 
@@ -189,28 +189,30 @@ function assertCanSaveOpenUrl(lines) {
   const canvasText = lines.slice(canvasStart, canvasStart + 150).join("\n");
 
   const idxOf = (k) => canvasText.indexOf(k);
-  const hasOpenUrl = canvasText.includes("打开网页");
+  const pageOpenKeys = ["打开网页", "导航到URL"];
+  const hasPageOpen = pageOpenKeys.some(k => canvasText.includes(k));
+  const pageOpenIdx = Math.min(...pageOpenKeys.map(k => canvasText.includes(k) ? canvasText.indexOf(k) : Infinity));
   const hasFillText = canvasText.includes("输入文本");
   const hasClick = canvasText.includes("点击");
   const hasVerifyExist = canvasText.includes("验证元素存在");
   const hasVerifyVisible = canvasText.includes("验证元素可见");
 
-  // 「打开网页」必须是最先出现的业务指令（若存在）；其余指令一律排在其后
-  const openUrlFirst = !hasOpenUrl || [hasFillText, hasClick, hasVerifyExist, hasVerifyVisible]
+  const pageOpenFirst = !hasPageOpen || [hasFillText, hasClick, hasVerifyExist, hasVerifyVisible]
     .every((present, i) => {
       const k = ["输入文本", "点击", "验证元素存在", "验证元素可见"][i];
-      return !present || idxOf("打开网页") < idxOf(k);
+      return !present || (pageOpenIdx !== Infinity && pageOpenIdx < canvasText.indexOf(k));
     });
 
   const orderOk =
-    openUrlFirst &&
-    (!hasFillText || (hasOpenUrl && idxOf("打开网页") < idxOf("输入文本"))) &&
-    (!hasClick || hasOpenUrl);
+    pageOpenFirst &&
+    (!hasFillText || (hasPageOpen && pageOpenIdx < canvasText.indexOf("输入文本"))) &&
+    (!hasClick || hasPageOpen);
 
   nodeRepl.write(JSON.stringify({
     step: "order-verify",
     orderOk,
-    hasOpenUrl, hasFillText, hasClick, hasVerifyExist, hasVerifyVisible,
+    hasPageOpen, pageOpenKeys: pageOpenKeys.filter(k => canvasText.includes(k)),
+    hasFillText, hasClick, hasVerifyExist, hasVerifyVisible,
     action: orderOk ? "continue-config" : "STOP-cut-node-and-paste-at-correct-position-via-2.3a"
   }));
   // orderOk === false → 立即停止配表单，走 insert-command.md §右键菜单调整指令顺序 剪切→粘贴 修正后再校验
@@ -227,8 +229,8 @@ function assertCanSaveOpenUrl(lines) {
 □ 已 Read 当前场景文件，明确应有 N 条业务指令及顺序
 □ canvas 中「开始节点」在最上、「结束节点」在最下
 □ 中间业务指令条数 = 场景表行数
-□ 每条指令类型与场景表对应序号一致（如 1=打开网页、2=输入文本、3=点击）
-□ 通用依赖仍成立：「打开网页」在「输入文本」之前（若有）
+□ 每条指令类型与 **instructionPlan** / 场景表对应序号一致
+□ 通用依赖仍成立：**页面类指令**（打开网页 / 导航到URL）在「输入文本」之前（若有）
 □ 终检通过 → 才点「调试」；未通过 → 修正顺序后重新终检
 ```
 
@@ -253,7 +255,7 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 
 以下每一步都是：**动作 → 全量 AX → 判断 → 才进入下一步**。
 
-> 配置「**打开网页(web)**」的「网址」字段时，**禁止** `type_text`，须用 `pbcopy+paste` 或 `set_value`。完整示例见 **`url-input.md`**。
+> 配置弹框 URL 字段时，**禁止** `type_text`，**默认** scoped + 剪贴板 + paste（见 **`url-input.md` §执行顺序铁律**）。set_value 仅 paste 重试 2 次仍失败后的最后手段。
 
 ### Step A：确认配置弹框已打开
 
