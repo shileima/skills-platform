@@ -92,6 +92,9 @@ await (async () => {
   const app = "cn.neixin.pc";
   const { sky } = await import("@oai/sky");
   const { execFileSync } = await import("node:child_process");
+  const fs = await import("node:fs");
+  const os = await import("node:os");
+  const path = await import("node:path");
 
   function parseIdx(line) {
     const m = String(line || "").match(/^\s*(\d+)/);
@@ -102,8 +105,86 @@ await (async () => {
     return sky.get_app_state({ app, disableDiff: true });
   }
 
+  function readClipboardText() {
+    try {
+      return execFileSync("/usr/bin/pbpaste", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // 将文本写入剪贴板：优先 pbcopy；失败时通过临时文件走 osascript，避免把文本作为
+  // argv 传给 AppleScript（会触发 -10006「不能将 clipboard 设置为 …」）。
+  // 返回值统一为结构化对象，不抛异常，方便上层把失败原因带回最终 payload。
+  function writeClipboardOnce(payload) {
+    try {
+      execFileSync("/usr/bin/pbcopy", { input: payload, stdio: ["pipe", "ignore", "ignore"] });
+      return { ok: true, method: "pbcopy" };
+    } catch (pbErr) {
+      const pbcopyError = String((pbErr && pbErr.message) || pbErr);
+      const tmp = path.join(os.tmpdir(), `dx-clipboard-${process.pid}-${Date.now()}.txt`);
+      try {
+        fs.writeFileSync(tmp, payload, { encoding: "utf8" });
+        // 用 POSIX file + «class utf8» 读回，AppleScript 端不再依赖 argv 解析
+        const script = [
+          'on run argv',
+          '  set p to POSIX file (item 1 of argv)',
+          '  set fh to open for access p',
+          '  try',
+          '    set t to (read fh as «class utf8»)',
+          '  on error errMsg number errNum',
+          '    close access fh',
+          '    error errMsg number errNum',
+          '  end try',
+          '  close access fh',
+          '  set the clipboard to t',
+          'end run',
+        ].join('\n');
+        execFileSync("/usr/bin/osascript", ["-e", script, tmp], { stdio: ["ignore", "ignore", "pipe"] });
+        return { ok: true, method: "osascript_file", pbcopyError };
+      } catch (asErr) {
+        return {
+          ok: false,
+          method: "none",
+          pbcopyError,
+          osascriptError: String((asErr && asErr.message) || asErr),
+        };
+      } finally {
+        try { fs.unlinkSync(tmp); } catch (_) {}
+      }
+    }
+  }
+
+  // 写入 + pbpaste 校验，不一致就重试一次
+  function writeClipboard(text) {
+    const payload = String(text ?? "");
+    const attempts = [];
+    for (let i = 0; i < 2; i++) {
+      const w = writeClipboardOnce(payload);
+      attempts.push(w);
+      if (!w.ok) continue;
+      const readBack = readClipboardText();
+      if (readBack !== null && readBack === payload) {
+        return { ok: true, method: w.method, attempts, verified: true };
+      }
+      attempts[attempts.length - 1] = { ...w, verified: false, readBackLen: readBack === null ? null : readBack.length };
+    }
+    const last = attempts[attempts.length - 1] || {};
+    return {
+      ok: last.ok === true, // 写入成功但未 pbpaste 校验通过，仍视为可尝试粘贴
+      method: last.method || "none",
+      attempts,
+      verified: false,
+      pbcopyError: last.pbcopyError,
+      osascriptError: last.osascriptError,
+    };
+  }
+
   async function stablePaste(elementIndex, text, verify) {
-    execFileSync("/usr/bin/pbcopy", { input: text });
+    const clipboard = writeClipboard(text);
+    if (!clipboard.ok) {
+      return { state: null, ok: false, error: "clipboard_write_failed", clipboard };
+    }
     await sky.click({ app, element_index: elementIndex });
     await new Promise(r => setTimeout(r, 300));
     await sky.press_key({ app, key: "Command+a" });
@@ -111,7 +192,7 @@ await (async () => {
     await sky.press_key({ app, key: "Command+v" });
     await new Promise(r => setTimeout(r, 700));
     const state = await freshState();
-    return { state, ok: verify(state.text) };
+    return { state, ok: verify(state.text), clipboard };
   }
 
   async function clickAllTab(stateText) {
@@ -281,7 +362,13 @@ await (async () => {
 
   let pasted = await stablePaste(searchIdx, receiver, text => text.includes(receiver));
   if (!pasted.ok) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "receiver_search_input_failed", receiver, preview: pasted.state.text.slice(0, 1200) }));
+    nodeRepl.write(JSON.stringify({
+      ok: false,
+      error: pasted.error || "receiver_search_input_failed",
+      receiver,
+      clipboard: pasted.clipboard,
+      preview: pasted.state ? pasted.state.text.slice(0, 1200) : null,
+    }));
     return;
   }
   state = pasted.state;
@@ -313,9 +400,20 @@ await (async () => {
     return;
   }
 
+  const markdownInputIdx = parseIdx(markdownInputLine);
   let filled = await stablePaste(markdownInputIdx, summary, contentOk);
   if (!filled.ok) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_input_failed", receiver, receiverIdx, maximize, editorOpen, markdownInputIdx, editorPreview: filled.state.text.slice(0, 1000) }));
+    nodeRepl.write(JSON.stringify({
+      ok: false,
+      error: filled.error || "markdown_input_failed",
+      receiver,
+      receiverIdx,
+      maximize,
+      editorOpen,
+      markdownInputIdx,
+      clipboard: filled.clipboard,
+      editorPreview: filled.state ? filled.state.text.slice(0, 1000) : null,
+    }));
     return;
   }
 
@@ -360,6 +458,7 @@ await (async () => {
     sendIdx,
     sentLikely,
     editorStillOpen: isMarkdownEditorOpen(after.text),
+    clipboard: filled.clipboard,
     summaryPreview: summary.slice(0, 200)
   }));
 })()
