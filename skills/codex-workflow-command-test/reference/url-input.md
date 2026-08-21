@@ -29,7 +29,17 @@ Chrome 地址栏：  https://www.sogou.com/     ← 错误位置
 弹框「网址」：   （空 / 占位符 / 红色边框）   ← 应填此处
 ```
 
-## 根因
+### 现象 C：保存后 canvas 仍显示 `https//` 或 `rawUrl` 占位符
+
+弹框内用 `type_text` 填 URL 后点保存，canvas 摘要仍显示 `https//example.com`（缺冒号）或 `rawUrl` / `url` 占位符——**表示未真正落库**。
+
+| 现象 | 根因 | 修复 |
+|------|------|------|
+| `https//` | 同现象 A，`type_text` 丢冒号 | 重开弹框 → **pbcopy + scoped click + Cmd+V** |
+| `rawUrl` / `url` | `set_value` 写入未触发保存校验，或保存前未聚焦字段 | 双击 canvas「文本 N」重开 → paste 完整 URL → AX 验证 → 保存 |
+| 脚本报 fixed 但 canvas 未变 | 保存成功信号误判（点了保存但字段仍空） | 保存后**必须**读 canvas 摘要含 `https://` 再视为完成 |
+
+> 配置 URL 的**唯一默认路径**仍是 §执行顺序铁律 的 pbcopy + paste；`type_text` 仅用于非 URL 字段（如标题、索引数字）。
 
 | 问题 | 根因 |
 |------|------|

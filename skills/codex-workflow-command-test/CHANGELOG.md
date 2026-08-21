@@ -3,16 +3,13 @@
 
 ## [0.0.9] - unreleased
 
-### Changed
--
+### 变更
 
-本文件记录每个版本的变更。版本号以 [`.meta.json`](.meta.json) 中的 `version` 为准。
+- **`reference/insert-command.md`**：新增 §平台 UI 实测踩坑（2026-08）——指令 Tab 前置、搜索框 AX 新模式、`pbcopy+Cmd+V` 禁止 `set_value` 搜指令、双击结果 `(web)` 降级匹配、锚点坐标失败降级路径、拆分 exec 建议、已验证最小插入路径；同步更新第 2/3 步代码样例与 AX 验证表
+- **`reference/scenarios/web-navigation-basic.md`**：WF3 网页操作基础场景（百度 / 搜狗 / 新浪真实站点，15 条指令顺序表）
+- **`reference/scenarios/index.md`**：登记场景 G（网页操作基础）
 
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
-
-## [Unreleased]
-
-### 新增
+<!-- 下次发版前在此累积变更，发版时移到新版本标题下并清空本节 -->
 
 - **循环遍历元素专项文档** [`reference/commands/loopelements.md`](reference/commands/loopelements.md)：`LoopElements` 完整参数表（13 个），官方 XML DSL 示例（含 `outputList`、`@{toolId.index}`、`outKey`），3 类循环体子指令组合（单字段收集 / 多字段收集 / 滚动加载），配置要点，sky 自动化配置示例（关键：**同一次 sky exec 内完成"点+添加 → 填名称 → 填值"**，跨 exec idx 失效），常见踩坑对照表
 - **循环遍历·小红书首页场景** [`reference/scenarios/loop-elements-xhs.md`](reference/scenarios/loop-elements-xhs.md)：

@@ -241,6 +241,138 @@
 
 **1c. 向前插入**（在已有指令 B 之前插入）：单击 **B 的上一条指令** → Enter → 空出新行 → 搜索+双击或粘贴。
 
+## 平台 UI 实测踩坑（2026-08 · 必读）
+
+> 以下来自 WF3「网页操作基础」批量插入时的真实失败复盘。**禁止**再依赖旧 AX 模式或「一条 exec 包到底」。
+
+### 0. 必须先激活「指令」Tab，否则没有搜索框
+
+右侧面板默认可能是 **Chat**。只有 AX 中出现 `文本 指令` 且已选中后，才会出现指令搜索框。
+
+```js
+{
+  const app = "com.google.Chrome";
+  const parseIdx = (l) => parseInt((l.match(/^\s*(\d+)/) || [])[1]);
+  let s = await sky.get_app_state({ app, disableDiff: true });
+  const cmdTab = s.text.split("\n").find(l => /\d+\s+文本\s+指令/.test(l));
+  if (cmdTab) {
+    await sky.click({ app, element_index: parseIdx(cmdTab) });
+    await new Promise(r => setTimeout(r, 600));
+  }
+}
+```
+
+**失败信号**：全树找不到 `请输入` 搜索框 → 99% 是未点「指令」Tab 或按了 `Escape` 把面板关掉。
+
+### 1. 搜索框 AX 模式已变（勿再用旧正则）
+
+| 状态 | AX 形态 | 能否命中 |
+|------|---------|----------|
+| ❌ 旧文档（已失效） | `settable, string` + `Placeholder: 请输入` | 2026-08 实测**命不中** |
+| ✅ 当前平台 | `文本栏 (settable) 请输入` 或 `文本栏 (settable) Value: xxx, Placeholder: 请输入` | **用这个** |
+
+```js
+function findInstructionSearchIdx(lines) {
+  const line = lines.find(l =>
+    /文本栏\s+\(settable\)/.test(l) &&
+    (/Placeholder:\s*请输入/.test(l) || /\b请输入\b/.test(l)) &&
+    !/地址和搜索栏/.test(l)
+  );
+  return line ? parseInt(line.match(/^\s*(\d+)/)[1]) : null;
+}
+```
+
+### 2. 搜索必须用 click + pbcopy + Cmd+V，禁止 set_value
+
+`set_value` 写入搜索框后 Value 会变，但**右侧结果列表不出现**，后续无法双击。
+
+```
+Shell: printf '%s' '导航到URL' | pbcopy   ← 在 exec 外或 execFileSync 内设剪贴板
+exec 内: click 搜索框 → Cmd+A → Cmd+V → 等 2s → 再抓 AX 找结果行
+```
+
+### 3. 双击目标：`(web)` 后缀不是必要条件
+
+实测结果行常为 **`293 文本 导航到URL`**，**没有** `(web)`，role 是 `文本` 而非 `text`。
+
+匹配优先级（从高到低）：
+
+1. `text\s+{platformName}\s*\(web\)` 且上方 5 行含 `网页自动化`
+2. `^\s+\d+\s+文本\s+{platformName}\s*$` 且上方含 `网页自动化`
+3. 任意含 `{platformName}` 的 `文本`/`text` 行（在「网页自动化」分组下）
+
+**禁止**仅因找不到 `(web)` 就报 `no result` 并跳过双击——这是 WF3 多轮「看似没双击」的主因。
+
+```js
+function findWebAutomationResultIdx(lines, platformName) {
+  const parseIdx = (l) => parseInt((l.match(/^\s*(\d+)/) || [])[1]);
+  const esc = platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  for (let i = 0; i < lines.length; i++) {
+    const webGroup = lines.slice(Math.max(0, i - 8), i).join("\n");
+    if (!/网页自动化/.test(webGroup) || /我的收藏/.test(webGroup)) continue;
+    if (new RegExp(`text\\s+${esc}\\s*\\(web\\)`).test(lines[i])) return parseIdx(lines[i]);
+    if (new RegExp(`^\\s+\\d+\\s+文本\\s+${esc}\\s*$`).test(lines[i])) return parseIdx(lines[i]);
+  }
+  return null;
+}
+```
+
+### 4. 锚点 Enter 非必须；坐标失败时立即降级
+
+锚点行（如 `text 打开网页 url:`）偶发 `coordinate must include finite x and y coordinates`。**不要**因此放弃整轮插入。
+
+**降级路径（推荐默认）**：
+
+```
+点「指令」Tab → click 搜索框 → pbcopy + Cmd+V → 双击结果 → 配表保存
+```
+
+canvas 会在**当前选中插入点**或**最后一条指令下方**追加；插入后做 §插入后强制核对 即可。
+
+### 5. 拆分 exec，禁止「搜索+双击+配表+保存」一条包到底
+
+任一步失败会导致整段退出，表象像「从未双击」。推荐：
+
+| exec | 内容 |
+|------|------|
+| A | 点指令 Tab → 搜索 → 返回 `resultIdx` |
+| B | 双击 `resultIdx` → 填表 → 保存 |
+| C | §插入后强制核对 |
+
+### 6. 推荐最小路径（单条指令 · 已验证）
+
+```js
+{
+  const { execFileSync } = await import("node:child_process");
+  const app = "com.google.Chrome";
+  const platformName = "导航到URL"; // 来自 instructionPlan[i].platformName
+  const parseIdx = (l) => parseInt((l.match(/^\s*(\d+)/) || [])[1]);
+
+  let s = await sky.get_app_state({ app, disableDiff: true });
+  let lines = s.text.split("\n");
+  const cmdTab = lines.find(l => /\d+\s+文本\s+指令/.test(l));
+  if (cmdTab) { await sky.click({ app, element_index: parseIdx(cmdTab) }); await new Promise(r => setTimeout(r, 600)); }
+
+  s = await sky.get_app_state({ app, disableDiff: true });
+  lines = s.text.split("\n");
+  const searchIdx = findInstructionSearchIdx(lines);
+  execFileSync("/usr/bin/pbcopy", { input: platformName });
+  await sky.click({ app, element_index: searchIdx });
+  await sky.press_key({ app, key: "Command+a" });
+  await sky.press_key({ app, key: "Command+v" });
+  await new Promise(r => setTimeout(r, 2000));
+
+  s = await sky.get_app_state({ app, disableDiff: true });
+  lines = s.text.split("\n");
+  const resultIdx = findWebAutomationResultIdx(lines, platformName);
+  if (!resultIdx) throw new Error("no result after search — check 指令 Tab and pbcopy");
+
+  await sky.click({ app, element_index: resultIdx, click_count: 2 });
+  await new Promise(r => setTimeout(r, 1500));
+  // → 弹框打开后转 platform-ops §2.4 / url-input.md 配表
+}
+```
+
 **第 2 步**：搜索框稳定粘贴中文指令名
 
 > `query` **必须**取自 `user-intent.md` → `instructionPlan[i].searchName`，**禁止**写死 `"打开网页"`。
@@ -254,8 +386,17 @@
   const i = 0;
   const query = instructionPlan[i].searchName;
   const s = await sky.get_app_state({ app, disableDiff: true });
-  const searchLine = s.text.split("\n").find(l =>
-    /settable, string/.test(l) && /Placeholder: 请输入/.test(l)
+  let lines = s.text.split("\n");
+  const cmdTab = lines.find(l => /\d+\s+文本\s+指令/.test(l));
+  if (cmdTab) {
+    await sky.click({ app, element_index: parseInt(cmdTab.match(/^\s*(\d+)/)[1]) });
+    await new Promise(r => setTimeout(r, 600));
+    lines = (await sky.get_app_state({ app, disableDiff: true })).text.split("\n");
+  }
+  const searchLine = lines.find(l =>
+    /文本栏\s+\(settable\)/.test(l) &&
+    (/Placeholder:\s*请输入/.test(l) || /\b请输入\b/.test(l)) &&
+    !/地址和搜索栏/.test(l)
   );
   const searchIdx = searchLine ? parseInt(searchLine.match(/^\s*(\d+)/)[1]) : null;
   execFileSync("/usr/bin/pbcopy", { input: query });
@@ -266,7 +407,8 @@
   await new Promise(r => setTimeout(r, 1200));
   const s1 = await sky.get_app_state({ app, disableDiff: true });
   const platformName = instructionPlan[i].platformName;
-  const hasResult = new RegExp(`${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(web\\)`).test(s1.text);
+  const esc = platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const hasResult = new RegExp(`(${esc}\\s*\\(web\\)|文本\\s+${esc})`).test(s1.text);
   nodeRepl.write(JSON.stringify({ step: "search", query, searchIdx, pasted: s1.text.includes(query), hasResult }));
 }
 ```
@@ -280,14 +422,14 @@
   const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const lines = s.text.split("\n");
   let resultIdx = null;
-  const nameRe = new RegExp(`text\\s+${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(web\\)`);
+  const esc = platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   for (let i = 0; i < lines.length; i++) {
-    if (nameRe.test(lines[i])) {
-      const above = lines.slice(Math.max(0, i - 5), i).join("\n");
-      if (/网页自动化/.test(above) && !/我的收藏/.test(above)) {
-        resultIdx = parseInt(lines[i].match(/^\s*(\d+)/)[1]);
-        break;
-      }
+    const above = lines.slice(Math.max(0, i - 8), i).join("\n");
+    if (!/网页自动化/.test(above) || /我的收藏/.test(above)) continue;
+    if (new RegExp(`text\\s+${esc}\\s*\\(web\\)`).test(lines[i]) ||
+        new RegExp(`^\\s+\\d+\\s+文本\\s+${esc}\\s*$`).test(lines[i])) {
+      resultIdx = parseInt(lines[i].match(/^\s*(\d+)/)[1]);
+      break;
     }
   }
   await sky.click({ app: "com.google.Chrome", element_index: resultIdx, click_count: 2 });
@@ -360,8 +502,9 @@
 |------|---------|---------|--------|
 | 1a 首条：选中开始节点 + Enter | 开始节点**正下方**出现新空行 | 无新行 | 重新单击开始节点再 Enter |
 | 1b 向后追加：选中锚点 + Enter | 锚点**正下方**出现新空行 | 无新行 | 重新单击锚点再 Enter |
-| 2 搜索框 set_value | 右侧「指令」面板出现 `xxx (web)` 结果行；含「网页自动化」分组 | 无结果；仍在旧搜索词 | 重新 set_value |
-| 3 双击结果 | canvas 出现新节点编号；同时弹出配置弹框 | canvas 未变；无弹框 | 重试双击 |
+| 0 点「指令」Tab | AX 出现 `文本栏 (settable) 请输入` 搜索框 | 全树无 `请输入` | 点 `文本 指令` Tab，勿按 Escape |
+| 2 搜索框 pbcopy+Cmd+V | 出现 `文本 {指令名}` 或 `text {指令名} (web)`；上方有「网页自动化」 | Value 变但无结果行 | **禁止 set_value**；改 click+paste |
+| 3 双击结果 | canvas 出现新节点编号；同时弹出配置弹框 | canvas 未变；无弹框 | 用 §3 降级匹配 `文本 导航到URL` 再双击 |
 | **插入后顺序核对** | 新节点在**锚点指令之后**、结束节点之前；依赖顺序满足 | 新指令排在锚点指令**前面** → **立即停止配表单** | §右键菜单调整指令顺序 剪切→粘贴 修正 |
 
 ## 与其他模块的调用关系

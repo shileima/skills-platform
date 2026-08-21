@@ -14,6 +14,9 @@
 | **D：百度首页 9 条网页断言批量测试** | 网页断言、验证元素、断言测试、verify 全量、断言场景 | [baidu-assertions.md](baidu-assertions.md) |
 | **E：上传文件指令测试**（`UploadFileFromS3`） | 上传文件、UploadFileFromS3、图片上传组件测试、`input[type=file]`、附件上传测试 | [upload-file.md](upload-file.md) |
 | **F：循环遍历元素·小红书首页标题**（`LoopElements`） | 循环遍历元素、LoopElements、小红书循环、遍历页面元素、批量抓取标题、`@{toolId.index}`、outputList 测试 | [loop-elements-xhs.md](loop-elements-xhs.md) |
+| **G：网页操作基础·多标签导航**（WF3） | 网页操作基础、刷新后退前进、切换标签、关闭标签、WaitPageState、删除 Cookie、关闭浏览器 | [web-navigation-basic.md](web-navigation-basic.md) |
+
+> **G 场景站点**：`https://www.baidu.com` → `https://www.sogou.com` → `https://www.sina.com.cn`。**禁止** `example.com` / `example.org`。
 
 ## 默认场景（无用户输入时）
 
