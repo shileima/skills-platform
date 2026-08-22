@@ -29,17 +29,7 @@ Chrome 地址栏：  https://www.sogou.com/     ← 错误位置
 弹框「网址」：   （空 / 占位符 / 红色边框）   ← 应填此处
 ```
 
-### 现象 C：保存后 canvas 仍显示 `https//` 或 `rawUrl` 占位符
-
-弹框内用 `type_text` 填 URL 后点保存，canvas 摘要仍显示 `https//example.com`（缺冒号）或 `rawUrl` / `url` 占位符——**表示未真正落库**。
-
-| 现象 | 根因 | 修复 |
-|------|------|------|
-| `https//` | 同现象 A，`type_text` 丢冒号 | 重开弹框 → **pbcopy + scoped click + Cmd+V** |
-| `rawUrl` / `url` | `set_value` 写入未触发保存校验，或保存前未聚焦字段 | 双击 canvas「文本 N」重开 → paste 完整 URL → AX 验证 → 保存 |
-| 脚本报 fixed 但 canvas 未变 | 保存成功信号误判（点了保存但字段仍空） | 保存后**必须**读 canvas 摘要含 `https://` 再视为完成 |
-
-> 配置 URL 的**唯一默认路径**仍是 §执行顺序铁律 的 pbcopy + paste；`type_text` 仅用于非 URL 字段（如标题、索引数字）。
+## 根因
 
 | 问题 | 根因 |
 |------|------|
@@ -74,12 +64,12 @@ Chrome 地址栏：  https://www.sogou.com/     ← 错误位置
   都失败 → 才 paste                  ❌（paste 应一开始就用）
 ```
 
-### 剪贴板怎么设（都是为 paste 服务，不是独立方案）
+| 剪贴板怎么设（都是为 paste 服务，不是独立方案）
 
 | 方式 | 何时用 | 说明 |
 |------|--------|------|
-| **`execFileSync("/usr/bin/pbcopy")` 在 sky.exec 内** | **首选** | 与 Step 1 同一次 exec；不依赖外部 Shell 工具是否可用 |
-| Shell `echo -n "..." \| pbcopy` | 可选前置 | 仅当 sky.exec 外单独跑 Shell 时 |
+| **Shell `printf '%s' '…' \| /usr/bin/pbcopy`** | **首选** | 在 sky.exec **之前**由 Shell 设置；见 `sky-runtime.md` |
+| **`execFileSync("/usr/bin/pbcopy")` 在 sky.exec 内** | 备选 | nodeRepl 沙箱可能失败，**不要作为首选** |
 | ~~`set_value` 直写~~ | **不是默认** | 见 §最后手段 |
 
 > ⚠️ **「pbcopy 在当前环境不可用」≠ 改用 set_value。**  

@@ -146,6 +146,8 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 
 ## 方式 A：LLM 动态定位 / 新建 LLM（**默认首选**）
 
+> ⚡ **准确率**：必须用 **`sky-runtime.md` §configLLMScoped** — 在「LLM动态定位」slice 内找「确 认」。**禁止**用全局第一个 `确 认` 按钮（常误点 idx 61 等，导致 LLM 未落库、待填充文本为空）。
+
 **适用场景**：配置任何含「元素选择器」字段的 UI 指令（FillText、ClickElementMixed、断言、等待、获取文本等）时，默认先走本方式。
 
 ### 操作顺序（不可跳过「确认」）
@@ -158,7 +160,7 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
    示例：
    - 输入文本：定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词
    - 点击元素：定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索
-4. 点击「确认」按钮（AX 可能显示为「确 认」，必须先确认，禁止直接保存）
+4. 点击「确认」按钮（AX 可能显示为「确 认」）——**必须在 LLM动态定位 面板 slice 内定位**，见 `sky-runtime.md` §configLLMScoped；**禁止**全局搜索第一个「确 认」
 5. 全量抓 AX Tree 验证：元素选择器区域出现该自然语言描述 + `LLM`，且「该字段是必填字段」消失
 6. 补齐当前指令其它必填项（如 FillText 的「待填充文本」）
 7. assertCanSave 通过后点击「保存」
@@ -172,7 +174,8 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 | 有 `按钮 确 认` 或 `按钮 确\s*认` | 可确认当前 LLM 描述 | 点击确认 |
 | 元素选择器区域出现 `... LLM` 且无「该字段是必填字段」 | LLM 定位已落库 | 补其它必填项并保存 |
 | 保存后 canvas 不再显示 `selectorId`，而显示自然语言描述 | 保存成功 | 继续后续指令 / 调试 |
-| 保存后仍显示 `selectorId` 或调试报元素不存在 | LLM 未生效或识别失败 | 降级到 §方式 C XPath |
+| 保存后 canvas 显示 `点击 页面 selectorId` 等 | LLM 未确认即保存 | **双击该节点** → `configLLMScoped` → 保存；摘要变为 `点击 页面` 即 OK（见 `sky-runtime.md` §fixClickNodeLLM） |
+| 保存后仍显示 `selectorId` 或双击+LLM 仍失败 | LLM 未生效 | 降级到 §方式 C XPath |
 
 ## 方式 A-2：DevTools Console 采集真实 DOM（XPath 降级准备）
 

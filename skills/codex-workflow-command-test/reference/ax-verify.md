@@ -107,6 +107,93 @@ function assertCanSaveOpenUrl(lines) {
 }
 ```
 
+## 指令 Tab + 搜索框：操作前/后核验（必读）
+
+> 与 `insert-command.md` §指令 Tab + 搜索框、`sky-runtime.md` 配套。
+
+### 四类高危根因（实测）
+
+| # | 根因 | 典型失败表现 | 修复策略 |
+|---|------|-------------|---------|
+| ① | 仅用 `Placeholder: 请输入` 定位搜索框 | `findIdx` 返回 -1；`set_value` 打到错误元素 | `findSearchIdx` 双形态匹配（见下） |
+| ② | 点「指令」Tab 后未 `refresh` | Tab 已切换但 AX 仍是旧树，搜索框不存在 | 点 Tab 后 **`ax.get({ refresh: true })`**，确认含 `请输入` |
+| ③ | canvas Enter 后 Chat 抢焦点 | 右侧无搜索框；误向 Chat 输入 | `waitSearchIdx()` 轮询 + 必要时 **重点** 面板内「指令」Tab |
+| ④ | 硬编码 idx / 点错 Tab | 点到右侧边栏「指令」图标而非面板内 Tab | `findCmdTab` 匹配独立行 `N 文本 指令`；**禁止**跨 exec 复用 idx |
+
+### 共享 helper（每个 `/exec` 块开头复制）
+
+**完整 Helper 包**（含 `insertAfterAnchor`、`configLLMScoped`、`saveDialog`）见 **`sky-runtime.md`**。以下为最小搜索框子集：
+
+```js
+{
+  const app = "com.google.Chrome";
+  const mustIdx = (n, label) => {
+    if (!Number.isInteger(n) || n < 0) throw new Error(`${label} invalid: ${n}`);
+    return n;
+  };
+  const findCmdTab = (text) => mustIdx(
+    ax.findAllIdx(text, "文本 指令").find(m =>
+      /^\s*\d+\s+文本\s+指令\s*$/.test(m.line.replace(/\t/g, " ").trim())
+    )?.idx,
+    "cmdTab"
+  );
+  const findSearchIdx = (text) => {
+    let idx = ax.findIdx(text, "Placeholder: 请输入");
+    if (idx >= 0) return idx;
+    const hit = ax.findAllIdx(text, "文本栏").find(m =>
+      /请输入/.test(m.line) && !/地址|编辑器|环境/.test(m.line)
+    );
+    return hit?.idx ?? -1;
+  };
+  const waitSearchIdx = async () => {
+    for (let i = 0; i < 6; i++) {
+      const s = await ax.get(app, { refresh: i === 0 });
+      const idx = findSearchIdx(s.text);
+      if (idx >= 0) return idx;
+      await sky.click({ app, element_index: findCmdTab(s.text) });
+      await new Promise(r => setTimeout(r, 350));
+    }
+    throw new Error("searchIdx timeout after 指令 Tab");
+  };
+}
+```
+
+### 轮询 vs 盲 sleep
+
+| 场景 | ❌ 禁止 | ✅ 必须 |
+|------|--------|--------|
+| Enter 后等搜索框 | 固定 `sleep(400)` 后直接 `set_value` | `waitSearchIdx()`：350ms × 最多 6 次，每轮 **全量 AX** 查 `请输入` |
+| 点「指令」Tab 后 | 沿用 Enter 前的 AX Tree | 点 Tab → 350ms → **`refresh: true`** → 验证搜索框 idx |
+| set_value 后等结果 | 只 sleep 不查树 | sleep 500ms → `ax.get` → 无 `(web)` 则 **`refresh: true`** 再查 |
+
+### 逐步核验清单（搜索+双击前）
+
+```
+□ canvas Enter 后：AX 确认空行/锚点仍在（300–400ms 后可 refresh）
+□ click 面板内「指令」Tab（findCmdTab，非边栏图标）
+□ ax.get({ refresh: true }) → findSearchIdx ≥ 0（否则 waitSearchIdx）
+□ set_value(searchIdx, searchName) → AX 含「网页自动化」+ `xxx (web)`
+□ 双击 text … (web) → AX 含配置弹框信号或 canvas 新节点
+□ 插入后顺序核对（§插入后顺序校验）
+```
+
+### sky 验证模板：Enter 后搜索框是否就绪
+
+```js
+{
+  const app = "com.google.Chrome";
+  // … 复制上方 findCmdTab / findSearchIdx / waitSearchIdx …
+  const searchIdx = await waitSearchIdx();
+  const s = await ax.get(app);
+  nodeRepl.write(JSON.stringify({
+    step: "verify-search-ready",
+    searchIdx,
+    searchLine: s.text.split("\n")[searchIdx] ?? null,
+    ok: /请输入/.test(s.text.split("\n")[searchIdx] ?? ""),
+  }));
+}
+```
+
 > ⚠️ **按钮标签匹配**：调试弹框内按钮用 `axHasLabel(l, "运行")` / `axButtonIdx(lines, "运行")`，**禁止**仅用 `l.includes("运行")`——弹框内 Ant Design 按钮 AX 标签为「运 行」「重 置」，无空格写法会漏匹配。
 
 ## AX → OCR → 坐标扫描三级定位
@@ -151,7 +238,8 @@ function assertCanSaveOpenUrl(lines) {
 | 光标定位到 canvas（**首条指令**） | **选中开始节点 → Enter**；开始节点**正下方**出现新空行 | 无新行 → 重新单击开始节点再 Enter |
 | **选中锚点指令行**（向后追加，⚠️ 高危步骤） | 该行高亮/获焦 | 点空了或点到其他节点 → 重新按 §插入位置约束 定位 |
 | **按 Enter 空出新行**（**紧接选中锚点/开始节点**） | 锚点行**正下方**出现新空行；canvas 节点行数增加 | 无新行 → 重新单击再 Enter，**禁止**跳过直接搜索 |
-| 搜索框 set_value 指令中文名 | 右侧「指令」面板出现 `xxx (web)` 结果行；含「网页自动化」分组 | 无结果；仍在旧搜索词 |
+| **点面板内「指令」Tab + refresh** | AX 含 `文本栏 … 请输入`（`findSearchIdx ≥ 0`） | 无 `请输入`（Enter 后 Chat 抢焦点）→ `waitSearchIdx()` 重点 Tab；**禁止**盲 sleep 后 set_value |
+| 搜索框 set_value 指令中文名 | 右侧「指令」面板出现 `xxx (web)` 结果行；含「网页自动化」分组 | 无结果；仍在旧搜索词 → refresh 再查；仍失败 → 重新 `waitSearchIdx()` + set_value |
 | 双击「网页自动化」分组下 `xxx (web)` | canvas 出现新节点编号；同时弹出配置弹框 | canvas 未变；无弹框 |
 | **插入后顺序校验**（最后一道保险，不可跳过） | 新节点在**锚点指令之后**、结束节点之前；依赖顺序满足 | 新指令排在锚点指令**前面** → **立即停止配表单**，走 `insert-command.md` §右键菜单调整指令顺序 剪切→粘贴 修正 |
 | 双击开配置弹框 | **结构性多信号**：有「捕获」按钮 `/\d+ 按钮\s+捕\s*获/` **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 | 无弹框；三个信号均无 |
@@ -169,6 +257,10 @@ function assertCanSaveOpenUrl(lines) {
 > 🚫 **插入前铁律**（详见 `insert-command.md` §Enter 空行规则）：**首条**选中开始节点 → Enter；**向后追加**选中锚点指令 → Enter；**向前插入**选中目标上一条 → Enter。**绝不能**无锚点搜索插入或从结束节点上方起建。
 
 每次搜索+双击插入指令到 canvas 后，**必须**全量抓 AX Tree 校验编排区顺序，再打开配置弹框填参数。
+
+> **canvas 节点行 AX 类型**：可能是 `text` 或 `文本`（如 `81 文本 刷新网页`）。匹配时用 `/^\s*\d+\s+(text|文本)/`（见 `sky-runtime.md` §`findCanvasNode`）。
+
+> **锚点关键词**：向后追加时 `findCanvasNode` 应使用 canvas **摘要唯一子串**（如 `bilibili.com`、`元素中输入 bilibili`），禁止泛搜 `点击`/`输入`。
 
 ### 校验规则
 
@@ -247,9 +339,10 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
 
 1. **idx 找不到目标** → 重新全量抓取，换结构性信号/关键词在完整 AX Tree 重搜；仍找不到但截图可见 → 用 OCR 定位中心坐标；OCR 失败 → 坐标扫描候选数组；禁止盲点旧 idx 或单个硬编码坐标
 2. **浮层/弹框状态不对** → `Escape` → 全量抓取确认关闭 → 从该步重来
-3. **canvas 处于编辑态**（双击失败）→ 点调试区失焦 + `Escape` → 再双击
+3. **canvas 处于编辑态**（双击失败）→ 点**编排区** Tab 失焦 + `Escape` → 再双击（**禁止**点「调试」失焦）
 4. **同一动作连续 2 次验证仍失败** → 停止连点，报告当前 AX 关键行，换策略
 5. **插入后顺序校验失败** → 选中错位节点 → 右击 **剪切** → 选中锚点行 → **Enter** 创建空行 → **粘贴**（`insert-command.md` §右键菜单调整指令顺序）→ 再校验；剪切失败时再删后重插
+6. **搜索框 set_value 连续 2 次无 `(web)` 结果** → 停止连点；`waitSearchIdx()` 确认搜索框 idx → 再 set_value；仍失败 → 报告 AX 中「指令」Tab 附近关键行（是否误点边栏图标、是否仅有 `Placeholder` 无 `文本栏`）
 
 ## 示例：配置「输入文本(web)」逐步验证
 

@@ -1,5 +1,30 @@
 # 变更说明
 
+本文件记录每个版本的变更。版本号以 [`skill.json`](skill.json) 中的 `version` 为准。
+
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## [Unreleased]
+
+<!-- 下次发版前在此累积变更，发版时移到新版本标题下并清空本节 -->
+
+## [0.0.10] - 2026-08-22
+
+### 新增
+
+- **`reference/sky-runtime.md`**：Sky 运行时共享模块（helper 包、exec 批次策略、Chrome 前台、`defocusCanvas`、插入/LLM/XPath/保存/调试脚本、B 站四步黄金路径、cgWindowNotFound 恢复）
+
+### 变更
+
+- **`SKILL.md`**：配置 vs 调试阶段强制分离；无报错即调试门控；实测经验摘要（B 站四步）；效率与准确率表；reference 索引加入 `sky-runtime.md`
+- **`reference/test-workflow.md`**：调试前顺序/配置终检；无报错即调试门控；禁止配置阶段点「调试」
+- **`reference/ax-verify.md`**：动作后全量 AX 验证；assertCanSave；插入后顺序校验
+- **`reference/debug.md`**：一次性调试、`debugRunOnce`、断开重试、聊天区历史判读
+- **`reference/insert-command.md`**：剪切调序、`dblclickWebResultLoose`、刷新网页无 `(web)` 后缀
+- **`reference/platform-ops.md`**：canvas 失焦禁止点「调试」；新建工作流 UI 文案「可视化编排」
+- **`reference/scenarios/bilibili.md`**：§实测黄金路径（2026-08-22 验证通过）
+- **`reference/scenarios/index.md`**：默认场景执行约束与 B 站黄金路径引用（保留 G 场景 web-navigation-basic）
+- **`reference/prerequisites.md`** / **`reference/url-input.md`** / **`reference/element-selector.md`**：联动 sky-runtime 与粘贴校验
 
 ## [0.0.9] - unreleased
 
@@ -7,26 +32,16 @@
 
 - **`reference/insert-command.md`**：新增 §平台 UI 实测踩坑（2026-08）——指令 Tab 前置、搜索框 AX 新模式、`pbcopy+Cmd+V` 禁止 `set_value` 搜指令、双击结果 `(web)` 降级匹配、锚点坐标失败降级路径、拆分 exec 建议、已验证最小插入路径；同步更新第 2/3 步代码样例与 AX 验证表
 - **`reference/scenarios/web-navigation-basic.md`**：WF3 网页操作基础场景（百度 / 搜狗 / 新浪真实站点，15 条指令顺序表）
-- **`reference/scenarios/index.md`**：登记场景 G（网页操作基础）
+- **`reference/insert-command.md`**：§9 删除节点 **Safari 实测通过**（2026-08-21）：`图像` 索引 `30+(N-2)*2` + `sky.press_key("BackSpace")`；禁止 `Delete`/`Backspace` 键名
 
-<!-- 下次发版前在此累积变更，发版时移到新版本标题下并清空本节 -->
-
-- **循环遍历元素专项文档** [`reference/commands/loopelements.md`](reference/commands/loopelements.md)：`LoopElements` 完整参数表（13 个），官方 XML DSL 示例（含 `outputList`、`@{toolId.index}`、`outKey`），3 类循环体子指令组合（单字段收集 / 多字段收集 / 滚动加载），配置要点，sky 自动化配置示例（关键：**同一次 sky exec 内完成"点+添加 → 填名称 → 填值"**，跨 exec idx 失效），常见踩坑对照表
-- **循环遍历·小红书首页场景** [`reference/scenarios/loop-elements-xhs.md`](reference/scenarios/loop-elements-xhs.md)：
-  - 目标：用 LoopElements 遍历 `xiaohongshu.com/explore` 首屏 32 条 `<a class="title">` 笔记标题
-  - 4 节点工作流：打开网页 → 循环遍历元素（含 GetText 子指令）→ 打印日志（循环外用 `${loopResult.titles}` 输出数组）
-  - 完整 XML DSL、5 步执行清单、预期结果、场景专属踩坑（GetText 未用 `@{loopResult.index}` → 拿到重复元素 / 子指令未嵌入循环内 / 表格 idx 失效等）
-- **上传文件指令专项场景** [`reference/scenarios/upload-file.md`](reference/scenarios/upload-file.md)：`UploadFileFromS3` 端到端测试（云浏览器网络限制清单、s3plus 静态 HTML 通路、rpa 自身「新建工作流→自定义上传」5 节点通路、失败 URL/XPath 表）
-- 场景索引 [`scenarios/index.md`](reference/scenarios/index.md) 加入场景 D 与场景 E 入口
-- 指令目录 [`commands/index.md`](reference/commands/index.md) 加入「循环遍历元素」行
-- 指令 [`commands/uploadfilefroms3.md`](reference/commands/uploadfilefroms3.md) 追加「适用性预判清单」「推荐通路」「已知失败案例」三节
-- SKILL.md description 与 reference 索引登记「上传文件」「循环遍历元素」两条触发关键词与场景文件；边界条款各补 1 条铁律
+- **循环遍历元素专项文档** [`reference/commands/loopelements.md`](reference/commands/loopelements.md)
+- **循环遍历·小红书首页场景** [`reference/scenarios/loop-elements-xhs.md`](reference/scenarios/loop-elements-xhs.md)
+- **上传文件指令专项场景** [`reference/scenarios/upload-file.md`](reference/scenarios/upload-file.md)
+- 场景索引、指令目录、SKILL.md 登记上传/循环遍历触发词
 
 ### 变更
 
-- `pnpm run pack` 改为白名单打包，zip 内不再包含 `package.json`、`pnpm-lock.yaml`、`scripts/install.js`、`scripts/pack.js` 等开发文件
-
-<!-- 下次发版前在此累积变更，发版时移到新版本标题下并清空本节 -->
+- `pnpm run pack` 改为白名单打包，zip 内不再包含开发文件
 
 ## [0.0.1] - 2026-07-31
 
@@ -38,19 +53,5 @@
 - 96 条 UI 指令参数 reference（`reference/commands/`，可 `scrape-commands.py` 同步官方文档）
 - 元素 XPath 批量采集与 locators 缓存机制
 - 平台操作规范：追加式插入、保存前必填校验、剪切→粘贴调序、URL 输入规范
-- **配置校验三条硬规则**：
-  1. 每条保存后点「检查」读下拉面板
-  2. 调试前扫描编排区**右侧**配置警示（非仅左侧执行 icon）
-  3. 保存前按 `commands/<slug>.md` 核对条件必填（如 SetCookie Domain）
-- 调试前后 sky 自动化脚本（`config-check-panel`、`pre-debug-config-check`、`post-debug-four-way-check` 等）
-- 开发脚本：
-  - `pnpm run install` — 从 `.meta.json` 安装依赖并校验 cua-router-basic
-  - `pnpm run pack` — 打包 `dist/{name}_{version}.zip`（白名单，仅技能运行文件）
-- `.meta.json` 作为技能元数据权威来源；`package.json` 仅保留 dev scripts
-
-### 依赖
-
-- `cua-router-basic`（sky.* API 操作 Chrome）
-
-[Unreleased]: https://github.com/shileima/codex-workflow-command-test/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/shileima/codex-workflow-command-test/releases/tag/v0.0.1
+- 配置校验三条硬规则与调试前后 sky 自动化脚本
+- 开发脚本：`pnpm run install`、`pnpm run pack`、`update-locators.sh`、`collect-locators.py`

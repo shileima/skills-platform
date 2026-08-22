@@ -34,13 +34,25 @@ description: >
 
 1. 打开 **rpa.sankuai.com 首页** → 左侧点击「**工作流**」→ 新建**空**编排模式工作流
 2. 在编排区**按顺序**添加待测指令（`insert-command.md`）：**首条**选中**开始节点 → Enter** 在开始节点下方空行插入；**向后追加**选中锚点指令（通常为上一条/最后一条）→ Enter 空行 → 搜索+双击；**禁止**从结束节点上方起建、禁止拖拽提示行、禁止无锚点插入；插入后**必须**校验新节点在锚点**之后**（见 `insert-command.md` §插入后强制核对）
-3. 逐条**完善表单并保存**（保存前**必须** `assertCanSave`：`canSave === true` 才允许点「保存」；弹框 label 前红色 `*` 为必填；**条件必填**须对照 `commands/<slug>.md`，见 `test-workflow.md` §3、`platform-ops.md` §2.4、`ax-verify.md` §assertCanSave），保存报错当场修复
-4. **每条保存后**：点顶部「**检查**」→ 下拉无「配置异常节点 / 节点配置不完整」、按钮无红色数字 badge（见 `test-workflow.md` §保存后配置校验）
-5. **调试前**：场景顺序终检 + 编排区每条指令**右侧**无配置警示 icon（见 `test-workflow.md` §调试前配置终检、`debug.md` §调试前置）
-6. **调试** → 弹框**直接运行**（无需配置弹框，默认「随机设备」）
-7. 执行后检查：**聊天区调试日志** + 编排区**左侧**执行 icon + **右侧**配置 icon + 「检查」面板（见 `test-workflow.md` §第 5 步）
-8. 根据报错修复；同一指令多次失败 → **删除并在原位置重插、重配表单**
-9. 直到聊天区无报错、编排区无配置/执行警示、且「检查」无异常
+3. 逐条**完善表单并保存**（保存前**必须** `assertCanSave`：`canSave === true` 才允许点「保存」）；每条保存后仅做 **canvas 摘要验证**（节点文案正确即可），**禁止点「调试」**
+4. **全部指令保存完成后**点一次「**检查**」→ 无配置异常 badge（中间步骤**跳过**「检查」与「调试」，见 `test-workflow.md`、`sky-runtime.md`）
+5. **调试前终检**：场景顺序终检 + 编排区右侧无配置警示 icon
+6. **一次性调试** → 弹框**直接运行**（全场景仅 **1 次**「调试 → 运行」，禁止每条指令插入后调试）
+7. 执行后检查四处报错来源（聊天区 / 执行 icon / 配置 icon / 「检查」面板）
+8. 根据报错修复；修复后**再**一次性调试，禁止边插边调
+9. 直到无报错且「检查」无异常
+
+## 配置阶段 vs 调试阶段（强制分离）
+
+> 🚫🚫🚫 **禁止每条指令插入/保存后点「调试」**。调试是**全链路配置完成**后的唯一动作，不是插入过程中的验证手段。
+
+| 阶段 | 允许 | 禁止 |
+|------|------|------|
+| **配置阶段**（逐条插入 + 配表 + 保存） | canvas 摘要验证、弹框内 assertCanSave、AX 动作-验证循环 | 点「调试」、点「运行」、等云浏览器执行结果 |
+| **终检阶段**（全部指令已保存） | 点一次「检查」、顺序终检、配置 icon 终检 | 调试 |
+| **调试阶段**（终检全部通过） | **一次性**「调试 → 运行」→ 四处扫描 | 再插入新指令（除非修复失败需删重插） |
+
+插入失败时用 **删除节点 / 重插 / 剪切粘贴** 修复，**不得**用「先调试看看」代替配置验证。
 
 ## 无报错即调试（强制 · 禁止询问）
 
@@ -136,19 +148,54 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 - 工作流名称可用 `Bilibili搜索测试-YYYYMMDD`；仅当用户显式给出名称时才改用用户名称
 - 验证依赖就绪后**立即**进入 platform-ops / test-workflow，不要等待用户确认
 
+## 执行效率与准确率（强制）
+
+> 完整 helper、批次策略、等待表见 **`reference/sky-runtime.md`**（每次 sky 自动化前 Read）。
+
+| 原则 | 要求 | 禁止 |
+|------|------|------|
+| **Chrome 前台** | 每个 exec **批次**前 Shell 激活 Chrome；`-10005 cgWindowNotFound` → 按 `sky-runtime.md` 恢复 | 未恢复时连发 exec |
+| **Exec 批次** | 一条指令 = 一次 exec；4 步场景 ≤ 6 次 exec | 每条指令拆 5+ exec；配置未完成就运行 |
+| **禁止盲 sleep** | 搜索框用 `waitSearchIdx()` 轮询 | 固定 2s 盲等 |
+| **剪贴板** | URL/XPath/中文：**Shell** `pbcopy` | nodeRepl 内 `execFileSync('pbcopy')` |
+| **钉住工作流 Tab** | XPath 采集仅 **Cmd+T 新 Tab** | 工作流 Tab 地址栏打开目标站 |
+| **LLM 确认** | 只用 `LLM动态定位` slice 内「确 认」 | 全局第一个确认按钮 |
+| **ASCII 待填充** | `bilibili` 等纯 ASCII 用 `type_text` | 对 ASCII 用 paste |
+| **禁止点「调试」** | 配置阶段不点「调试」；失焦用「编排区」Tab + Escape | 用「调试」失焦；每条指令后调试 |
+| **锚点关键词** | canvas 摘要作锚点（`bilibili.com`、`元素中输入 bilibili`） | 泛搜 `点击`/`输入` |
+| **顺序错乱** | `Cmd+X` → 锚点 Enter → `Cmd+V` | 带错顺序继续配表/调试 |
+| **刷新网页插入** | `dblclickWebResultLoose("刷新网页")` | 死等 `(web)` 正则 |
+| **canvas 验证** | 每条保存后读摘要行；失败 2 次删节点或新建工作流 | 堆脏节点 |
+| **新建工作流 UI** | 平台为「**可视化编排**」 | 旧文案「编排模式」 |
+
+## 实测经验摘要（B 站四步 · 2026-08-22 验证通过）
+
+> 完整锚点、LLM 文案、exec 批次见 **`reference/scenarios/bilibili.md` §实测黄金路径** 与 **`reference/sky-runtime.md` §B 站四步黄金路径**。
+
+| 要点 | 实测结论 |
+|------|---------|
+| 配置 vs 调试 | 4 条指令全部保存 + canvas 验证 → **只点 1 次**「检查」→ **只点 1 次**「调试 → 运行」 |
+| canvas 失焦 | **编排区 Tab + Escape**；曾误用「调试」按钮失焦 → 用户看到反复点调试、聊天区堆失败日志 |
+| 插入锚点 | 每条向后追加必须选中**上一条已保存指令**再 Enter；锚点用摘要行关键词，插入后立刻核对顺序 |
+| 点击未落库 | canvas 显示 `selectorId` → **双击该节点**开弹框 → `configLLMScoped` → 保存；摘要变为 `点击 页面` 即 OK |
+| 刷新网页 | 右侧面板结果为 `文本 刷新网页`（网页自动化分组下），**不必**匹配 `(web)` |
+| 调试按钮灰 | 若「调试」「运行」disabled 且 AX 含「调试中」→ **等执行结束**或先点「断开」再重试 |
+| 聊天区历史 | 早先误触调试的失败日志会残留；以**最新一轮** `check-circle` 时间戳为准判 PASS |
+
 ## 执行流程
 
 ```
 0. reference/user-intent.md          ← 解析用户显式指令（最高优先级）；有则覆盖场景默认指令名
 1. reference/prerequisites.md       ← cua-router-basic 安装验证
-2. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
-3. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
-4. reference/scenarios/<场景>.md    ← 站点 URL、XPath；指令链以 user-intent 为准
-5. reference/element-selector.md  ← 需元素选择器时：默认新建 LLM / LLM动态定位；失败后降级 XPath 批量采集
-6. reference/locators/<site>.*      ← XPath 降级缓存（可选，仅 LLM 失败/运行报错后优先 Read）
-7. reference/commands/<指令>.md     ← 单条指令参数（来自 instructionPlan）
-8. reference/url-input.md           ← 填 URL 字段时必读（网址 / 导航到的网址）
-9. reference/debug.md               ← 报错修复与重插策略
+2. reference/sky-runtime.md         ← 共享 helper、exec 批次、Chrome 前台、等待表（sky 自动化必读）
+3. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
+4. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
+5. reference/scenarios/<场景>.md    ← 站点 URL、XPath；指令链以 user-intent 为准
+6. reference/element-selector.md  ← 需元素选择器时：默认新建 LLM / LLM动态定位；失败后降级 XPath 批量采集
+7. reference/locators/<site>.*      ← XPath 降级缓存（可选，仅 LLM 失败/运行报错后优先 Read）
+8. reference/commands/<指令>.md     ← 单条指令参数（来自 instructionPlan）
+9. reference/url-input.md           ← 填 URL 字段时必读（网址 / 导航到的网址）
+10. reference/debug.md               ← 报错修复与重插策略
 ```
 
 > ⚠️ **硬性前置**：未完成 `prerequisites.md` 且验证输出 `ok` 前，**不得**调用 `sky.*` 或操作 bots 平台。
@@ -161,6 +208,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 |------|------|----------|
 | **用户意图解析** | [reference/user-intent.md](reference/user-intent.md) | **每次执行最先**（用户消息含显式指令名时必读） |
 | 前置依赖 | [reference/prerequisites.md](reference/prerequisites.md) | **每次执行**（cua-router 验证） |
+| **Sky 运行时** | [reference/sky-runtime.md](reference/sky-runtime.md) | **每次 sky 自动化必读**（helper、批次、前台、等待表） |
 | **AX 步骤验证** | [reference/ax-verify.md](reference/ax-verify.md) | **每次 sky 操作必遵** |
 | **测试标准流程** | [reference/test-workflow.md](reference/test-workflow.md) | **每次测试必读** |
 | 平台操作 | [reference/platform-ops.md](reference/platform-ops.md) | 新建工作流、canvas 双击、保存前校验 |
@@ -229,7 +277,7 @@ python3 scripts/collect-locators.py --site baidu --page search --via-search "你
 - **AntD Select 元素选择器模拟键盘 Cmd+V 不触发 React onChange**（原因：受控组件的 `_valueTracker` 判定值未变）→ 粘贴后**立即按 Enter**，AntD Select 内部的 confirm-input 逻辑会把粘贴文本作为 tag 提交给 React state，红字消失；见 `element-selector.md` §方式 C
 - **AntD Select 已有 tag 无法用 Backspace 删除**：改用 click 组合框 → `Cmd+A` → `Cmd+V` 新 XPath → Enter（新 tag 替换旧 tag）；见 `element-selector.md` §失败排查
 - **保存关闭后 canvas 节点显示 `selectorId 元素的...`**：XPath 未真正落库，需双击重开弹框方式 C 重填；判定与修复见 `debug.md` §常见环境级异常
-- **Chrome `cgWindowNotFound` 或 sky 长 timeout**：Chrome 不是最前台，用 `osascript -e 'tell application "System Events" to set frontmost of application process "Google Chrome" to true'` + `sleep 2` 恢复；见 `debug.md` §常见环境级异常
+- **Chrome `cgWindowNotFound` 或 sky 长 timeout**：按 **`sky-runtime.md` §cgWindowNotFound 恢复顺序**；见 `debug.md` §常见环境级异常
 - **"网页断言"分组中"验证文本存在/不存在"平台指令名不含 `(web)` 后缀**：AX 匹配格式是 `文本 验证文本存在` 而非 `text 验证文本存在 (web)`；见 `commands/index.md` §"网页断言"分组、`scenarios/baidu-assertions.md`
 - **"文本输入区（Monaco 类）"字段中文粘贴常失败**：优先 `type_text` + ASCII；必须中文时先 pbcopy → Chrome 强制前台 → Cmd+V；见 `debug.md` §「文本输入区（Monaco 类）」中文粘贴
 - **`UploadFileFromS3` 指令**：底层 Playwright `setInputFiles()` 只吃**原生 `<input type=file>`**；S3 路径只支持 **`https://` 前缀**（不支持 `s3://`）；外网站点云浏览器 tunnel 不通（`ant-design.antgroup.com`、`file.io` 等超时）；`data:` URL 被 rpa 前置校验拒。首选**通路 A**：把静态 HTML 上传到 `s3plus.sankuai.com` 让工作流只需 2 节点；详见 `scenarios/upload-file.md`

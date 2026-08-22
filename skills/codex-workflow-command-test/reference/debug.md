@@ -37,9 +37,13 @@
 
 ### 操作步骤（无需配置弹框）
 
-1. 点页面顶部「**调试**」按钮（打开右侧调试面板）
-2. 弹框中**直接**点橙色「**运行**」——**无需修改弹框内任何表单项**
-3. 等待云浏览器执行完毕
+1. **确认配置阶段已结束**——此前**从未**为失焦或验证而点过「调试」（失焦用「编排区」Tab + Escape，见 `sky-runtime.md` §defocusCanvas）
+2. 若「调试」「运行」按钮 **disabled** 且 AX 含「**调试中**」→ 轮询等待结束，或先点「**断开**」再重新调试
+3. 点页面顶部「**调试**」按钮（打开右侧调试面板）
+4. 弹框中**直接**点橙色「**运行**」——**无需修改弹框内任何表单项**
+5. 等待云浏览器执行完毕（B 站四步实测 ~48s）
+
+> ⚠️ **聊天区历史**：早先误触调试的失败日志（如 `selectorId`、元素选择器为空）会残留在 Chat 区。判 PASS 以**最新一轮**各步骤 `check-circle` 与时间戳为准，勿被历史条目误导。
 
 > ⚠️ **调试弹框无需配置**：「选择我的浏览器环境」默认已是「**随机设备**」，「是否开启自动断开设备」等开关保持默认即可。**禁止**在弹框里改设备、改环境或点「重置」后再运行，除非用户明确要求指定设备。
 
@@ -61,9 +65,21 @@
     return line ? parseInt(line.match(/^\s*(\d+)/)?.[1]) : null;
   }
 
+  const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  let lines = s0.text.split("\n");
+  let debugIdx = axButtonIdx(lines, "调试");
+  if (debugIdx == null) {
+    // 按钮 disabled：可能仍在「调试中」，先尝试「断开」
+    const disc = lines.find(l => /断开/.test(l) && l.includes("按钮") && !/disabled/.test(l));
+    if (disc) {
+      await sky.click({ app: "com.google.Chrome", element_index: parseInt(disc.match(/^\s*(\d+)/)[1]) });
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
   const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const lines = s.text.split("\n");
-  const debugIdx = axButtonIdx(lines, "调试");
+  lines = s.text.split("\n");
+  debugIdx = axButtonIdx(lines, "调试");
+  if (debugIdx == null) throw new Error("debug btn still disabled");
   await sky.click({ app: "com.google.Chrome", element_index: debugIdx });
   const s2 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const lines2 = s2.text.split("\n");
@@ -221,19 +237,37 @@
 
 ### Chrome 报 `cgWindowNotFound` / 长时间 timeout
 
-**现象**：`sky.get_app_state` 或 `sky.click` 返回 `Computer Use server error -10005: cgWindowNotFound`；或 `/exec` 长时间 timeout。表现为 Chrome 窗口"看得见但拿不到"。
+**现象**：`sky.get_app_state` 或 `sky.click` 返回 `Computer Use server error -10005: cgWindowNotFound`；或 `/exec` 长时间 timeout。
 
-**原因**：Chrome 不是最前台进程（哪怕 Cmd+Tab 显示它可见，`System Events` 的 `frontmost` 属性可能仍是别的 App，例如 IDE、Automan Desktop）。
+**原因**：Chrome 不是最前台；或 daemon 重启后首 exec 时窗口未就绪；Cursor/IDE 抢焦点。
 
-**修复**：
+**修复（按序，勿跳步）**：
 
 ```bash
-osascript -e 'tell application "Google Chrome" to activate'
-osascript -e 'tell application "System Events" to set frontmost of application process "Google Chrome" to true'
+# 1. 标准前台
+osascript <<'AS'
+tell application "Google Chrome"
+  activate
+  if (count of windows) = 0 then make new window
+end tell
+delay 1
+tell application "System Events" to set frontmost of process "Google Chrome" to true
+delay 2
+AS
+
+# 2. 仍失败：钉回工作流 URL（替换 workflowId）
+osascript -e 'tell application "Google Chrome" to set URL of active tab of front window to "https://rpa.sankuai.com/space/.../workflow/.../config?subType=2"'
+sleep 5
+osascript -e 'tell application "System Events" to set frontmost of process "Google Chrome" to true'
 sleep 2
+
+# 3. 仍失败：重启 daemon
+bash "$SKILL_ROOT/scripts/daemon.sh" stop
+bash "$SKILL_ROOT/scripts/daemon.sh" start
+bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
 ```
 
-之后再重试 sky 调用即可。**不要**因为 timeout 就 `daemon.sh restart`——重启 daemon 会丢掉 sky bootstrap 状态（首次 `/exec` 后会自动重 bootstrap，但期间脚本会 timeout）。只有 `nodeRepl.write("ok")` 也返回失败时才考虑 restart。
+**禁止**：`-10005` 后立即连发多个 exec；未恢复前台就 restart daemon 多次。完整策略见 **`sky-runtime.md` §cgWindowNotFound 恢复顺序**。
 
 ### canvas 节点显示 `selectorId 元素的...`（XPath 未落库判定）
 

@@ -56,10 +56,49 @@
 }
 ```
 
-### 2.1c 新建编排模式空工作流
+### 2.1c 新建编排画布工作流
 
-1. 点击「**+ 新建工作流**」→ 选择「**编排模式**」→ 命名（如 `指令测试-YYYYMMDD`）并保存
+> ⚠️ **UI 文案变更（2025+）**：新建弹框中实现方式为「**可视化编排**」（拖拽节点），**不是**旧文档里的「编排模式」单选项。二者等价——均进入 canvas 编排区。
+
+**手动步骤**：
+
+1. 点击「**+ 新建工作流**」→ 点选「**可视化编排**」→ 填写名称 → 点「**创建工作流**」
 2. 确认编排区**仅有开始节点 + 结束节点**，中间无指令
+
+**sky 自动化（推荐 · 一次 exec）**：
+
+```js
+{
+  const app = "com.google.Chrome";
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const s0 = await sky.get_app_state({ app, disableDiff: true });
+  const lines0 = s0.text.split("\n");
+  const newBtn = lines0.find(l => /新建工作流/.test(l) && /按钮|链接/.test(l));
+  await sky.click({ app, element_index: parseInt(newBtn.match(/^\s*(\d+)/)[1]) });
+  await sleep(1200);
+  const s1 = await sky.get_app_state({ app, disableDiff: true });
+  const visBtn = s1.text.split("\n").find(l => /可视化编排/.test(l) && l.includes("按钮"));
+  await sky.click({ app, element_index: parseInt(visBtn.match(/^\s*(\d+)/)[1]) });
+  await sleep(400);
+  const nameField = s1.text.split("\n").find(l => /文本栏 \(settable\)/.test(l) && /例如：自动登录/.test(l));
+  const nameIdx = parseInt(nameField.match(/^\s*(\d+)/)[1]);
+  const wfName = "指令测试-YYYYMMDD"; // 替换
+  await sky.set_value({ app, element_index: nameIdx, value: wfName });
+  await sleep(600);
+  const s2 = await sky.get_app_state({ app, disableDiff: true });
+  const createBtn = s2.text.split("\n").find(l => /创建工作流/.test(l) && l.includes("按钮") && !/disabled/.test(l));
+  await sky.click({ app, element_index: parseInt(createBtn.match(/^\s*(\d+)/)[1]) });
+  await sleep(3500);
+  const s3 = await sky.get_app_state({ app, disableDiff: true });
+  nodeRepl.write(JSON.stringify({
+    step: "create-workflow",
+    hasEditor: /编辑器容器/.test(s3.text),
+    workflowId: s3.text.match(/workflow-[a-f0-9-]+/)?.[0] ?? null
+  }));
+}
+```
+
+> 创建成功后**记录 workflow URL**，后续失焦恢复见 `sky-runtime.md` §执行前。
 
 ### 备选：bots.sankuai.com 入口
 
@@ -68,7 +107,7 @@ echo -n "https://bots.sankuai.com" | pbcopy
 // set_value 地址栏 + Return
 ```
 
-进入空间 →「新建工作流」→「编排模式」→ 命名保存。
+进入空间 →「新建工作流」→「**可视化编排**」→ 命名 →「创建工作流」。
 
 ## 2.2 打开/重新打开节点配置面板（双击）
 
@@ -76,10 +115,15 @@ echo -n "https://bots.sankuai.com" | pbcopy
 
 **正确双击流程（三步缺一不可）：**
 
-**第一步：先使 canvas 失焦**
+**第一步：先使 canvas 失焦**（🚫 **禁止点「调试」按钮**——会打开调试面板；用「编排区」Tab 或 Escape）
+
 ```js
-await sky.click({ app: "com.google.Chrome", element_index: <调试按钮idx> });
-await new Promise(r => setTimeout(r, 300));
+const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+const orchBtn = s.text.split("\n").find(l => /编排区/.test(l) && /按钮/.test(l));
+if (orchBtn) {
+  await sky.click({ app: "com.google.Chrome", element_index: parseInt(orchBtn.match(/^\s*(\d+)/)[1]) });
+  await new Promise(r => setTimeout(r, 200));
+}
 await sky.press_key({ app: "com.google.Chrome", key: "Escape" });
 await new Promise(r => setTimeout(r, 500));
 ```

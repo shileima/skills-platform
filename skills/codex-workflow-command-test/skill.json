@@ -1,6 +1,6 @@
 {
   "name": "codex-workflow-command-test",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "RPA工作流指令测试, 在 bots.sankuai.com 编排模式工作流中添加、配置和调试 web 自动化指令（打开网页、输入文本、点击），含元素捕获与调试循环",
   "author": "mashilei",
   "license": "MIT",
