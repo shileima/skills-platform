@@ -72,9 +72,9 @@ bash ./scripts/create-community-site.sh "new-curor-project" "帮我新建一个�
 1. 启动并验证 `cua-router-basic`：`daemon.sh start` + `nodeRepl.write("ok")`。
 2. 使用 `open -a "Cursor"` 打开本地 Cursor。
 3. 使用 macOS 菜单选择：顶部菜单「文件」→ `New Agents Window`。优先走 AppleScript 菜单项，不通过命令面板搜索；如果菜单项不存在或不可点，但当前已在 `Cursor Agents` 旧会话中，则点击顶部 `New Agent` 按钮进入新建聊天页。
-4. 等待窗口标题变为 `Cursor Agents`，确认聊天输入框出现。新建聊天页通常包含 `Plan, Build, / for skills, @ for context`；旧会话可能只显示 `Send follow-up`，此时必须先点 `New Agent`，不要把需求发到旧会话。
+4. 等待窗口标题变为 `Cursor Agents`，确认聊天输入框出现。新建聊天页通常包含 `Plan, Build, / for skills, @ for context`；旧会话可能只显示 `Send follow-up`，此时必须先点 `New Agent` 或侧栏 **New Chat ⌘N**，不要把需求发到旧会话。
 5. 点击聊天左上角项目下拉（当前项目名，如 `waimai-qa-aie-fe`）。
-6. 在下拉菜单点击 `New Folder`。
+6. 在下拉菜单点击 `New Folder` / **新建文件夹**（Electron 菜单项可能无 AX 文案，需按无标题 `AXGroup` 降级点击，见 `references/recorded-flow-2138913B.md`）。
 7. 在系统保存面板中输入项目名并创建。
 8. 如果出现“项目已存在，是否替换”警告：
    - 必须点击「取消」或按 `Escape`
@@ -96,6 +96,11 @@ bash ./scripts/create-community-site.sh "new-curor-project" "帮我新建一个�
 - `sky.click({ text: "New Agent" })` 可能报 `coordinate must include finite x and y coordinates`，遇到该错误不要反复重试，改用 Swift + Accessibility 读取按钮坐标后 CoreGraphics 点击。
 - 点击 `New Folder`、项目下拉等 Electron/HTML 内元素时，AX index 可能不能直接 `sky.click`；可用 Swift + Accessibility 获取元素坐标后通过 CoreGraphics 点击。
 - 任何已存在目录冲突都要取消并递增后缀，避免覆盖用户已有项目。
+- 脚本 `scripts/create-community-site.sh` 已对齐 2026-08-24 桌面录制回放：New Chat ⌘N、中英文新建文件夹、无标题 `AXGroup` 降级、每次 `press_key` 前 `get_app_state({ disableDiff: true })`。
+
+## 录制参考
+
+- `references/recorded-flow-2138913B.md` — session `2138913B` 标准链路（Dock → Agents → New Chat → 项目下拉 → 保存面板 → 发送需求）。
 
 ## 边界
 

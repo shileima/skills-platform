@@ -47,12 +47,100 @@ run_exec() {
 }
 
 apple_click_menu_new_agents_window() {
+  local file_menu=""
+  for candidate in "File" "文件"; do
+    if osascript -e "tell application \"System Events\" to tell process \"Cursor\" to exists menu bar item \"$candidate\" of menu bar 1" 2>/dev/null | grep -q true; then
+      file_menu="$candidate"
+      break
+    fi
+  done
+  if [ -z "$file_menu" ]; then
+    return 1
+  fi
   osascript \
     -e 'tell application "Cursor" to activate' \
     -e 'delay 0.3' \
+    -e "tell application \"System Events\" to tell process \"Cursor\"" \
+    -e "set fm to menu bar item \"$file_menu\" of menu bar 1" \
+    -e 'set tried to false' \
+    -e 'repeat with itemName in {"New Agents Window", "New Agent"}' \
+    -e 'try' \
+    -e 'click menu item itemName of menu 1 of fm' \
+    -e 'set tried to true' \
+    -e 'exit repeat' \
+    -e 'end try' \
+    -e 'end repeat' \
+    -e 'if not tried then error "no new agent menu"' \
+    -e 'end tell' 2>/dev/null && return 0
+  osascript \
+    -e 'tell application "Cursor" to activate' \
+    -e 'delay 0.2' \
     -e 'tell application "System Events" to tell process "Cursor"' \
-    -e 'click menu item "New Agents Window" of menu 1 of menu bar item "文件" of menu bar 1' \
-    -e 'end tell'
+    -e 'try' \
+    -e 'click menu item "Cursor Agents" of menu 1 of menu bar item "Window" of menu bar 1' \
+    -e 'end try' \
+    -e 'end tell' 2>/dev/null || return 1
+}
+
+focus_agents_window() {
+  osascript \
+    -e 'tell application "Cursor" to activate' \
+    -e 'delay 0.2' \
+    -e 'tell application "System Events" to tell process "Cursor"' \
+    -e 'try' \
+    -e 'click menu item "Cursor Agents" of menu 1 of menu bar item "Window" of menu bar 1' \
+    -e 'end try' \
+    -e 'repeat with w in windows' \
+    -e 'set wn to name of w as text' \
+    -e 'if wn contains "Agent" then' \
+    -e 'perform action "AXRaise" of w' \
+    -e 'exit repeat' \
+    -e 'end if' \
+    -e 'end repeat' \
+    -e 'end tell' 2>/dev/null || true
+}
+
+ensure_new_agent_chat() {
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    focus_agents_window
+    sleep 0.5
+    if agents_window_ready >/dev/null 2>&1; then
+      return 0
+    fi
+    apple_click_menu_new_agents_window >/dev/null 2>&1 || true
+    sleep 1
+    focus_agents_window
+    click_new_chat_sidebar >/dev/null 2>&1 || true
+    click_new_agent_button >/dev/null 2>&1 || true
+    sleep 2
+  done
+  focus_agents_window
+  agents_window_ready >/dev/null || {
+    echo "无法进入 Agents 新建聊天页：请手动打开 Agents 窗口并点击 New Agent 后重试" >&2
+    exit 1
+  }
+}
+
+agents_window_ready() {
+  run_exec '{
+    const app = "'"$CURSOR_APP"'";
+    const s = await sky.get_app_state({ app, disableDiff: true });
+    const t = s.text || "";
+    const hasAgents = t.includes("Cursor Agents") || t.includes("New Agent") || t.includes("Plan, Build") || t.includes("/ for skills");
+    const hasNewChat = t.includes("Plan, Build") || t.includes("/ for skills") || t.includes("@ for context");
+    if (!hasAgents && !hasNewChat) {
+      throw new Error("未检测到 Agents 聊天界面");
+    }
+    if (!hasNewChat && t.includes("Send follow-up")) {
+      throw new Error("当前不是新建聊天输入框，可能停在旧会话");
+    }
+    nodeRepl.write("ready");
+  }'
+}
+
+click_new_chat_sidebar() {
+  swift -e 'import AppKit; import ApplicationServices; guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.localizedName == "Cursor" }) else { print("NO_CURSOR"); exit(1) }; let ax = AXUIElementCreateApplication(app.processIdentifier); func attr(_ el: AXUIElement,_ a:String)->CFTypeRef?{var v:CFTypeRef?; AXUIElementCopyAttributeValue(el,a as CFString,&v); return v}; func s(_ el:AXUIElement,_ a:String)->String{attr(el,a).map{String(describing:$0)} ?? ""}; func val(_ el:AXUIElement,_ a:String)->String{attr(el,a).map{String(describing:$0)} ?? ""}; func children(_ el:AXUIElement)->[AXUIElement]{attr(el,kAXChildrenAttribute as String) as? [AXUIElement] ?? []}; func pt(_ el:AXUIElement)->CGPoint?{guard let v=attr(el,kAXPositionAttribute as String), CFGetTypeID(v)==AXValueGetTypeID() else{return nil}; var p=CGPoint.zero; AXValueGetValue(v as! AXValue,.cgPoint,&p); return p}; func sz(_ el:AXUIElement)->CGSize?{guard let v=attr(el,kAXSizeAttribute as String), CFGetTypeID(v)==AXValueGetTypeID() else{return nil}; var z=CGSize.zero; AXValueGetValue(v as! AXValue,.cgSize,&z); return z}; func matchesNewChat(_ el:AXUIElement)->Bool{ let title=s(el,kAXTitleAttribute); let desc=s(el,kAXDescriptionAttribute); let valText=val(el,kAXValueAttribute); return title == "New Chat" || desc == "New Chat" || title.contains("New Chat") || desc.contains("New Chat") || valText.contains("New Chat") || title.contains("New Chat ⌘N") || desc.contains("New Chat ⌘N") || title.contains("New Chat ⌘N") || desc.contains("New Chat ⌘N") }; var found:AXUIElement?=nil; func walk(_ el:AXUIElement){ if found != nil { return }; if matchesNewChat(el) { found=el; return }; for c in children(el){ walk(c) } }; walk(ax); guard let el=found, let p=pt(el), let z=sz(el) else { print("NO_NEW_CHAT"); exit(2) }; let q=CGPoint(x:p.x+z.width/2,y:p.y+z.height/2); let src=CGEventSource(stateID:.hidSystemState); CGEvent(mouseEventSource:src, mouseType:.leftMouseDown, mouseCursorPosition:q, mouseButton:.left)?.post(tap:.cghidEventTap); CGEvent(mouseEventSource:src, mouseType:.leftMouseUp, mouseCursorPosition:q, mouseButton:.left)?.post(tap:.cghidEventTap); print("DONE")'
 }
 
 click_new_agent_button() {
@@ -60,7 +148,7 @@ click_new_agent_button() {
 }
 
 click_project_dropdown_and_new_folder() {
-  swift -e 'import AppKit; import ApplicationServices; guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.localizedName == "Cursor" }) else { print("NO_CURSOR"); exit(1) }; let ax = AXUIElementCreateApplication(app.processIdentifier); func attr(_ el: AXUIElement,_ a:String)->CFTypeRef?{var v:CFTypeRef?; AXUIElementCopyAttributeValue(el,a as CFString,&v); return v}; func s(_ el:AXUIElement,_ a:String)->String{attr(el,a).map{String(describing:$0)} ?? ""}; func children(_ el:AXUIElement)->[AXUIElement]{attr(el,kAXChildrenAttribute as String) as? [AXUIElement] ?? []}; func pt(_ el:AXUIElement)->CGPoint?{guard let v=attr(el,kAXPositionAttribute as String), CFGetTypeID(v)==AXValueGetTypeID() else{return nil}; var p=CGPoint.zero; AXValueGetValue(v as! AXValue,.cgPoint,&p); return p}; func sz(_ el:AXUIElement)->CGSize?{guard let v=attr(el,kAXSizeAttribute as String), CFGetTypeID(v)==AXValueGetTypeID() else{return nil}; var z=CGSize.zero; AXValueGetValue(v as! AXValue,.cgSize,&z); return z}; func click(_ el:AXUIElement){let p=pt(el)!; let z=sz(el)!; let q=CGPoint(x:p.x+z.width/2,y:p.y+z.height/2); let src=CGEventSource(stateID:.hidSystemState); CGEvent(mouseEventSource:src, mouseType:.leftMouseDown, mouseCursorPosition:q, mouseButton:.left)?.post(tap:.cghidEventTap); CGEvent(mouseEventSource:src, mouseType:.leftMouseUp, mouseCursorPosition:q, mouseButton:.left)?.post(tap:.cghidEventTap)}; var found:AXUIElement?=nil; func walk(_ el:AXUIElement,_ pred:(AXUIElement)->Bool){ if found != nil { return }; if pred(el){found=el; return}; for c in children(el){walk(c,pred)} }; walk(ax){ e in let role=s(e,kAXRoleAttribute); let title=s(e,kAXTitleAttribute); let desc=s(e,kAXDescriptionAttribute); return role.contains("AXPopUpButton") && !title.contains("Chat actions") && !desc.contains("Chat actions") && !title.contains("main") && !desc.contains("main") && !title.contains("This Mac") && !desc.contains("This Mac") && !title.contains("Composer") && !desc.contains("Composer") }; guard let dropdown=found else { print("NO_DROPDOWN"); exit(2)}; click(dropdown); Thread.sleep(forTimeInterval:0.8); found=nil; walk(ax){ e in s(e,kAXTitleAttribute) == "New Folder" || s(e,kAXDescriptionAttribute) == "New Folder" }; guard let nf=found else { print("NO_NEW_FOLDER"); exit(3)}; click(nf); Thread.sleep(forTimeInterval:1.0); print("DONE")'
+  swift -e 'import AppKit; import ApplicationServices; guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.localizedName == "Cursor" }) else { print("NO_CURSOR"); exit(1) }; let ax = AXUIElementCreateApplication(app.processIdentifier); func attr(_ el: AXUIElement,_ a:String)->CFTypeRef?{var v:CFTypeRef?; AXUIElementCopyAttributeValue(el,a as CFString,&v); return v}; func s(_ el:AXUIElement,_ a:String)->String{attr(el,a).map{String(describing:$0)} ?? ""}; func children(_ el:AXUIElement)->[AXUIElement]{attr(el,kAXChildrenAttribute as String) as? [AXUIElement] ?? []}; func pt(_ el:AXUIElement)->CGPoint?{guard let v=attr(el,kAXPositionAttribute as String), CFGetTypeID(v)==AXValueGetTypeID() else{return nil}; var p=CGPoint.zero; AXValueGetValue(v as! AXValue,.cgPoint,&p); return p}; func sz(_ el:AXUIElement)->CGSize?{guard let v=attr(el,kAXSizeAttribute as String), CFGetTypeID(v)==AXValueGetTypeID() else{return nil}; var z=CGSize.zero; AXValueGetValue(v as! AXValue,.cgSize,&z); return z}; func click(_ el:AXUIElement){let p=pt(el)!; let z=sz(el)!; let q=CGPoint(x:p.x+z.width/2,y:p.y+z.height/2); let src=CGEventSource(stateID:.hidSystemState); CGEvent(mouseEventSource:src, mouseType:.leftMouseDown, mouseCursorPosition:q, mouseButton:.left)?.post(tap:.cghidEventTap); CGEvent(mouseEventSource:src, mouseType:.leftMouseUp, mouseCursorPosition:q, mouseButton:.left)?.post(tap:.cghidEventTap)}; var found:AXUIElement?=nil; func walk(_ el:AXUIElement,_ pred:(AXUIElement)->Bool){ if found != nil { return }; if pred(el){found=el; return}; for c in children(el){walk(c,pred)} }; walk(ax){ e in let role=s(e,kAXRoleAttribute); let title=s(e,kAXTitleAttribute); let desc=s(e,kAXDescriptionAttribute); return role.contains("AXPopUpButton") && !title.contains("Chat actions") && !desc.contains("Chat actions") && !title.contains("main") && !desc.contains("main") && !title.contains("This Mac") && !desc.contains("This Mac") && !title.contains("Composer") && !desc.contains("Composer") }; guard let dropdown=found else { print("NO_DROPDOWN"); exit(2)}; click(dropdown); Thread.sleep(forTimeInterval:1.5); found=nil; walk(ax){ e in let t=s(e,kAXTitleAttribute); let d=s(e,kAXDescriptionAttribute); return t == "New Folder" || d == "New Folder" || t == "新建文件夹" || d == "新建文件夹" || t.contains("New Folder") || d.contains("New Folder") || t.contains("新建文件夹") || d.contains("新建文件夹") }; if found == nil { func walkGroups(_ el:AXUIElement){ if found != nil { return }; let r=s(el,kAXRoleAttribute); if r=="AXGroup", let z=sz(el), z.height>8, z.height<80, pt(el) != nil { found=el; return }; for c in children(el){ walkGroups(c) } }; walkGroups(ax) }; guard let nf=found else { print("NO_NEW_FOLDER"); exit(3)}; click(nf); Thread.sleep(forTimeInterval:1.0); print("DONE")'
 }
 
 paste_text() {
@@ -69,51 +157,47 @@ paste_text() {
   osascript -e 'tell application "Cursor" to activate' >/dev/null
   run_exec '{
     const app = "'"$CURSOR_APP"'";
-    await new Promise(r => setTimeout(r, 300));
+    await sky.get_app_state({ app, disableDiff: true });
+    await new Promise(r => setTimeout(r, 400));
+    await sky.get_app_state({ app, disableDiff: true });
     await sky.press_key({ app, key: "Command+a" });
     await new Promise(r => setTimeout(r, 100));
+    await sky.get_app_state({ app, disableDiff: true });
     await sky.press_key({ app, key: "Command+v" });
     await new Promise(r => setTimeout(r, 500));
     nodeRepl.write("pasted");
   }' >/dev/null
 }
 
+wait_cua_ready() {
+  local i out
+  for i in $(seq 1 30); do
+    out="$(bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' 2>/dev/null | tail -1 || true)"
+    if [ "$out" = "ok" ]; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "cua-router 未就绪（常见原因 observer_busy），请关闭占用桌面的自动化任务后重试" >&2
+  return 1
+}
+
 SKILL_ROOT="$(resolve_skill_root)"
 bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+wait_cua_ready || exit 1
+bash "$SKILL_ROOT/scripts/exec.sh" -t 20000 "await (await import('$SKILL_ROOT/scripts/computer-use-client.mjs')).setupComputerUseRuntime({ globals: globalThis }); nodeRepl.write('bootstrapped')" >/dev/null
 
 open -a "Cursor"
+sleep 1
 PROJECT_NAME="$(next_available_name "$BASE_NAME")"
-apple_click_menu_new_agents_window >/dev/null || true
-
-if ! run_exec '{
-  const app = "'"$CURSOR_APP"'";
-  await new Promise(r => setTimeout(r, 2500));
-  const s = await sky.get_app_state({ app, disableDiff: true });
-  if (!s.text.includes("Cursor Agents")) {
-    throw new Error("未检测到 Cursor Agents 窗口");
-  }
-  if (!s.text.includes("Plan, Build")) {
-    throw new Error("当前不是新建聊天输入框，可能停在旧会话");
-  }
-  nodeRepl.write("ready");
-}' >/dev/null; then
-  click_new_agent_button >/dev/null
-  run_exec '{
-    const app = "'"$CURSOR_APP"'";
-    await new Promise(r => setTimeout(r, 1800));
-    const s = await sky.get_app_state({ app, disableDiff: true });
-    if (!s.text.includes("Cursor Agents") || !s.text.includes("Plan, Build")) {
-      throw new Error("点击 New Agent 后仍未检测到新建聊天输入框");
-    }
-    nodeRepl.write("ready");
-  }' >/dev/null
-fi
+ensure_new_agent_chat
 
 click_project_dropdown_and_new_folder >/dev/null
 paste_text "$PROJECT_NAME"
 run_exec '{
   const app = "'"$CURSOR_APP"'";
+  await sky.get_app_state({ app, disableDiff: true });
+  await new Promise(r => setTimeout(r, 500));
   await sky.get_app_state({ app, disableDiff: true });
   await sky.press_key({ app, key: "Return" });
   await new Promise(r => setTimeout(r, 3000));
