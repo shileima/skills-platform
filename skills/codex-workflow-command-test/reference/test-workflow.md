@@ -6,7 +6,7 @@
 
 > ⚠️ **sky 自动化硬性规则**：每一次 click / 输入 / 粘贴后，**全量抓取 AX Tree**（`disableDiff: true`），验证上一步成功再执行下一步。详见 **`reference/ax-verify.md`**。
 
-> ⚡ **速度与准确率**：Read **`reference/sky-runtime.md`** — exec 批次、Chrome 前台、共享 helper、等待表。4 步场景目标 **≤6 次 exec**。
+> ⚡ **速度与准确率**：Read **`reference/sky-runtime.md`** — `/exec` 步骤批次、Chrome 前台、共享 helper、等待表。4 步场景目标 **≤6 次 exec**。
 
 ## 测试前提
 
@@ -62,7 +62,7 @@
   const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const line = s.text.split("\n").find(l => l.includes("工作流") && /链接|按钮|link|button/i.test(l));
   const wfIdx = parseInt((line || "").match(/^\s*(\d+)/)?.[1]);
-  nodeRepl.write("工作流 idx: " + wfIdx);
+  emitResult("工作流 idx: " + wfIdx);
   await sky.click({ app: "com.google.Chrome", element_index: wfIdx });
   await new Promise(r => setTimeout(r, 1500));
 }
@@ -118,7 +118,7 @@
    - **条件必填**（规则 3）：对照 `commands/<指令>.md` 参数表「说明」列——当某 Enum（如「设置方式」）取特定值时，另一字段变为必填（如 SetCookie：`根据指定Domain和path设置Cookie` → **Domain 必填**；`根据URL设置Cookie` → **URL 必填**）。**禁止**把 Domain 的值误填进 Path 等相邻字段
    - 所有带 `*` 的必填项已填写且**不为空**
    - 弹框内**无任何必填输入框仍带红色边框**
-   - 元素选择器：**默认首选**「新建 LLM / LLM动态定位」→ 输入自然语言描述（元素位置 + 操作意图）→ **点击「确认」** → 验证描述 + `LLM` 已落库；若 LLM 失败或调试报元素不存在，再降级 XPath：`pbcopy` + `Cmd+V` 粘贴 XPath → **Enter**（`element-selector.md` §方式 C）；连续失败 3 次转 **方式 B（捕获）**——**禁止**其他方式
+   - 元素选择器：**默认首选**「新建 LLM / LLM动态定位」→ 按 `element-selector.md` §LLM 自然语言描述写法 填写（**位置 + 目标元素 + 操作意图**，如「定位 XX 页面 XX 位置的 XX 元素，用于 XX 操作」）→ **点击「确认」** → 验证描述 + `LLM` 已落库；若 LLM 失败或调试报元素不存在，再降级 XPath：`pbcopy` + `Cmd+V` 粘贴 XPath → **Enter**（`element-selector.md` §方式 C）；连续失败 3 次转 **方式 B（捕获）**——**禁止**其他方式
    - **任一必填项未填 → 禁止点「保存」**，先补全再保存
    - sky 自动化：**必须先** `assertCanSave(...)`，`canSave === true` **才允许** click「保存」；`canSave === false` 时输出 `save-blocked` 并补填，见 `platform-ops.md` §2.4、`ax-verify.md` §assertCanSave
 5. **`assertCanSave` 通过后**，点弹框右下角「**保存**」
@@ -169,7 +169,7 @@
   const lines0 = s0.text.split("\n");
   const checkIdx = axButtonIdx(lines0, "检查");
   if (!checkIdx) {
-    nodeRepl.write(JSON.stringify({ step: "config-check-panel", error: "未找到「检查」按钮" }));
+    emitResult({ step: "config-check-panel", error: "未找到「检查」按钮" });
   } else {
     await sky.click({ app: "com.google.Chrome", element_index: checkIdx });
     await new Promise(r => setTimeout(r, 600));
@@ -183,13 +183,13 @@
       lines1[lines1.indexOf(l) + 1]?.includes("节点配置不完整")
     );
 
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "config-check-panel",
       panelOpen,
       configOk: incompleteLines.length === 0 && !panelOpen,
       incompleteLines: incompleteLines.slice(0, 10),
       action: incompleteLines.length === 0 ? "continue" : "fix-node-and-recheck"
-    }));
+    });
   }
 }
 ```
@@ -251,14 +251,14 @@
   });
   const countOk = scenario.every(k => canvasText.includes(k));
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "pre-debug-order-check",
     scenario,
     countOk,
     orderOk,
     readyForDebug: countOk && orderOk,
     action: countOk && orderOk ? "click-debug" : "fix-order-first"
-  }));
+  });
 }
 ```
 
@@ -322,14 +322,14 @@
 
   const readyForDebug = configIncomplete.length === 0 && checkPanelOk;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "pre-debug-config-check",
     configIncomplete: configIncomplete.slice(0, 10),
     incompleteFromPanel: incompleteFromPanel.slice(0, 10),
     execErrors: execErrors.slice(0, 10),
     readyForDebug,
     action: readyForDebug ? "click-debug-immediately" : "fix-config-first"
-  }));
+  });
 
   // readyForDebug === true → 禁止询问用户，同一 exec 内立即进入 §第 4 步调试运行
 }
@@ -455,7 +455,7 @@ sky 自动化：顺序终检 + 配置终检通过后，**同一代码块**内接
     incompleteFromPanel.length === 0 &&
     !/error|失败|异常/i.test(fullText.split("编辑器容器")[0] || ""); // 聊天区粗检，失败则目视补查
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "post-debug-four-way-check",
     execErrors: execErrors.slice(0, 10),
     configIncomplete: configIncomplete.slice(0, 10),
@@ -463,7 +463,7 @@ sky 自动化：顺序终检 + 配置终检通过后，**同一代码块**内接
     chatErrorHints: chatErrors.slice(0, 10),
     allOk,
     action: allOk ? "test-pass" : "fix-and-rerun"
-  }));
+  });
 }
 ```
 

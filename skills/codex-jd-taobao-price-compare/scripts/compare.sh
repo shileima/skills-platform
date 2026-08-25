@@ -34,7 +34,7 @@ resolve_cua_root() {
   fi
   if [ ! -f "$root/SKILL.md" ]; then
     echo "找不到 cua-router-basic 技能，请先安装。参考：" >&2
-    echo "  curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash" >&2
+    echo "  curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash -s -- --version 0.4.18 --force" >&2
     exit 1
   fi
   printf '%s\n' "$root"
@@ -154,8 +154,7 @@ check_chrome_a11y() {
 SKILL_ROOT="$(resolve_cua_root)"
 export CUA_ROUTER_CHROME_PREFLIGHT="${CUA_ROUTER_CHROME_PREFLIGHT:-auto}"
 
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 CHROME_A11Y_STATE="$(check_chrome_a11y || true)"
 
 ENCODED="$(url_encode "$QUERY")"

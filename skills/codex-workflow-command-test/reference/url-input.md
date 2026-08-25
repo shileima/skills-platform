@@ -68,12 +68,12 @@ Chrome 地址栏：  https://www.sogou.com/     ← 错误位置
 
 | 方式 | 何时用 | 说明 |
 |------|--------|------|
-| **Shell `printf '%s' '…' \| /usr/bin/pbcopy`** | **首选** | 在 sky.exec **之前**由 Shell 设置；见 `sky-runtime.md` |
-| **`execFileSync("/usr/bin/pbcopy")` 在 sky.exec 内** | 备选 | nodeRepl 沙箱可能失败，**不要作为首选** |
+| **Shell `printf '%s' '…' \| /usr/bin/pbcopy`** | **首选** | 在 `/exec` 步骤**之前**由 Shell 设置；见 `sky-runtime.md` |
+| **`execFileSync("/usr/bin/pbcopy")` 在 `/exec` 步骤内** | 备选 | `/exec` 步骤可能失败，**不要作为首选** |
 | ~~`set_value` 直写~~ | **不是默认** | 见 §最后手段 |
 
 > ⚠️ **「pbcopy 在当前环境不可用」≠ 改用 set_value。**  
-> 应改为在 **sky.exec / nodeRepl 内** `execFileSync("/usr/bin/pbcopy", { input: TARGET })`，然后**仍走 scoped click + cmd+v**。  
+> 应改为在 **`/exec` 步骤内** `execFileSync("/usr/bin/pbcopy", { input: TARGET })`，然后**仍走 scoped click + cmd+v**。
 > 第 4 步日志「剪贴板已设置，粘贴到弹框字段」才是正确路径——它本应是**第 1 次尝试**，不是失败 3 次后的兜底。
 
 ### `set_value`：最后手段（非默认、非 pbcopy 失败后的跳转）
@@ -91,7 +91,7 @@ Chrome 地址栏：  https://www.sogou.com/     ← 错误位置
 ### 辅助：scoped 定位弹框内「网址」字段（禁止全局 find）
 
 ```js
-// 在 nodeRepl / sky.exec 内复用
+// 在 run-workflow-hosted.sh 步骤内复用（helper 已注入 sky / linesOf 等）
 function findChromeAddressBarIdx(lines) {
   const line = lines.find(l => /settable, string/.test(l) && /地址/.test(l) && !/网址/.test(l));
   return line ? parseInt(line.match(/^\s*(\d+)/)[1]) : null;
@@ -128,7 +128,7 @@ function verifyUrlInModal(lines, targetUrl, labelIdx) {
 
 ### Shell / sky.exec 侧（先设剪贴板，再 paste）
 
-**推荐：与 Step 1 写在同一次 sky.exec 内**（避免「外部 Shell pbcopy 不可用」误触发 set_value 降级）：
+**推荐：与 Step 1 写在同一次 `/exec` 步骤内**（避免「外部 Shell pbcopy 不可用」误触发 set_value 降级）：
 
 ```js
 const { execFileSync } = await import("node:child_process");
@@ -149,7 +149,7 @@ echo -n "https://www.baidu.com" | pbcopy
   const hasSaveBtn = lines.some(l => /\d+\s+按钮\s+保\s*存/.test(l));
   const hasUrlLabel = lines.some(l => /text\s+\*\s+网址/.test(l));
   const panelOpen = hasSaveBtn && hasUrlLabel;
-  nodeRepl.write(JSON.stringify({ step: "url-step0", panelOpen, hasSaveBtn, hasUrlLabel }));
+  emitResult({ step: "url-step0", panelOpen, hasSaveBtn, hasUrlLabel });
   // panelOpen === false → 回到 platform-ops.md §2.2 双击节点重开弹框；禁止在此状态下操作地址栏
 }
 ```
@@ -163,7 +163,7 @@ echo -n "https://www.baidu.com" | pbcopy
   const { execFileSync } = await import("node:child_process");
   const TARGET = "https://www.baidu.com";
 
-  // 剪贴板：sky.exec 内 pbcopy（不依赖外部 Shell 工具）
+  // 剪贴板：`/exec` 步骤内 pbcopy（不依赖外部 Shell 工具）
   execFileSync("/usr/bin/pbcopy", { input: TARGET });
 
   const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
@@ -171,7 +171,7 @@ echo -n "https://www.baidu.com" | pbcopy
 
   const { urlIdx, labelIdx, addrIdx, reason } = findModalUrlFieldIdx(lines0);
   if (urlIdx == null) {
-    nodeRepl.write(JSON.stringify({ step: "url-step1", ok: false, reason }));
+    emitResult({ step: "url-step1", ok: false, reason });
     throw new Error("modal-url-field-not-found: " + reason);
   }
 
@@ -189,7 +189,7 @@ echo -n "https://www.baidu.com" | pbcopy
   const hostFragment = TARGET.replace(/^https?:\/\//, "").split("/")[0];
   const addrPolluted = addrLine && hostFragment && addrLine.includes(hostFragment) && !urlInModal;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "url-step1-paste",
     method: "clipboard+paste",
     urlIdx,
@@ -199,7 +199,7 @@ echo -n "https://www.baidu.com" | pbcopy
     colonMissing,
     addrPolluted,
     ok: urlInModal && !colonMissing && !addrPolluted
-  }));
+  });
   // ok === false → 重 execFileSync pbcopy + scoped 重 paste（最多 2 次）；仍失败才见 §最后手段 set_value
 }
 ```
@@ -214,7 +214,7 @@ echo -n "https://www.baidu.com" | pbcopy
   const lines0 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const { urlIdx, labelIdx, reason } = findModalUrlFieldIdx(lines0);
   if (urlIdx == null) {
-    nodeRepl.write(JSON.stringify({ step: "url-set_value", ok: false, reason }));
+    emitResult({ step: "url-set_value", ok: false, reason });
     throw new Error("modal-url-field-not-found");
   }
 
@@ -222,7 +222,7 @@ echo -n "https://www.baidu.com" | pbcopy
 
   const lines1 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const urlInModal = verifyUrlInModal(lines1, TARGET, labelIdx);
-  nodeRepl.write(JSON.stringify({ step: "url-set_value", urlIdx, urlInModal, ok: urlInModal }));
+  emitResult({ step: "url-set_value", urlIdx, urlInModal, ok: urlInModal });
 }
 ```
 
@@ -249,10 +249,10 @@ echo -n "https://www.baidu.com" | pbcopy
   const hasUrl = /https?:\/\//.test(sliceText) && !/https\/\//.test(sliceText);
   const canSave = hasUrl && !hasPlaceholder && !hasRequiredErr;
 
-  nodeRepl.write(JSON.stringify({ step: "url-save-gate", canSave, hasUrl, hasPlaceholder, hasRequiredErr }));
+  emitResult({ step: "url-save-gate", canSave, hasUrl, hasPlaceholder, hasRequiredErr });
 
   if (!canSave) {
-    nodeRepl.write(JSON.stringify({ step: "save-blocked", reason: "网址未填完，禁止点保存" }));
+    emitResult({ step: "save-blocked", reason: "网址未填完，禁止点保存" });
     // 回到 Step 1 补填，禁止 click 保存按钮
   }
   // canSave === true → 再执行 platform-ops.md §2.4 assertCanSave → click「保存」
@@ -285,7 +285,7 @@ echo -n "https://www.baidu.com" | pbcopy
 
 | 现象 | 原因 | 修复 |
 |------|------|------|
-| pbcopy Shell 不可用就改 set_value | 错误降级 | sky.exec 内 `execFileSync pbcopy` → 仍 paste |
+| pbcopy Shell 不可用就改 set_value | 错误降级 | `/exec` 步骤内 `execFileSync pbcopy` → 仍 paste |
 | 前 3 种都试完才 paste | 顺序反了 | **第一次就用** scoped + paste |
 | Chrome 地址栏出现目标 URL，弹框「网址」仍空 | 误用 set_value 或未 scoped 定位 | Step 0 → scoped paste；禁止 Return |
 | 输入框显示 `https//...` | 用了 `type_text` | `pbcopy` + 重粘贴到**弹框内**字段 |

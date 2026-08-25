@@ -13,7 +13,7 @@ description: >
   「sogou场景」「搜狗工作流测试」
   「workflow command test」「bots workflow debug」「add instruction to bots workflow」。
   未指定场景/指令时默认 B站四步（打开网页→输入文本→点击→刷新网页），直接开始、禁止询问。内置场景含百度/B站/断言/上传/LoopElements。指令文档 https://document.waimai.st.sankuai.com/
-  底层工具：cua-router-basic skill（sky.* API 操作 Chrome）。执行前必须先确认 cua-router-basic 已安装就绪。
+  底层工具：cua-router-basic（通过 `/exec` 隔离作用域调用运行时注入的 `sky.*`）。执行前必须先 bash scripts/ensure-ready.sh 验证就绪。
   详细步骤在 reference/ 目录，按模块按需 Read，不要一次性加载全部 reference。
   不要把"查 bots 平台文档""普通网页浏览""代码 review"误进入；本技能只负责在
   bots.sankuai.com 编排模式工作流中添加、配置、调试 web 自动化指令这一件事。
@@ -24,7 +24,10 @@ description: >
 
 在 rpa.sankuai.com（或 bots 空间）**空编排工作流**中，按顺序添加待测指令、完善表单配置、调试运行，并根据**聊天区日志**、**编排区执行/配置警示** 修复，直到全部通过。
 
-- **底层工具**：cua-router-basic（`sky.*` API）
+> **硬性禁令——禁止使用「搭建助手」**：不得调用、切换到、委派给或建议用户使用搭建助手（包括 `codex-workbuddy-workbench-create` 等相关技能/入口）。本技能的所有平台操作必须通过 `cua-router-basic` 注入的 `sky.*` 完成；即使认为搭建助手更快、更稳定或可作为降级方案，也不得使用。
+
+- **底层工具**：cua-router-basic（`/exec` 注入 `sky.*`，见 `scripts/run-workflow-hosted.sh`）
+- **就绪探针**：`bash scripts/ensure-ready.sh`（输出 `ok`）
 - **指令官方文档**：https://document.waimai.st.sankuai.com/
 - **详细模块**：本目录 `reference/` 下，**按需 Read，勿全量加载**
 
@@ -110,14 +113,14 @@ description: >
 | 2 | **点「调试」前** | 编排区每条指令**右侧** | 无红色 ⓘ /「节点配置不完整」类配置警示（与左侧 ✅/❌ 执行结果无关） |
 | 3 | **保存前（条件必填）** | Read `commands/<slug>.md` | 按「设置方式」等枚举值核对**条件必填**（如 SetCookie 的 Domain/URL）；不能只看弹框 `*` 与红框 |
 
-sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前配置终检、`debug.md` §配置校验 sky 脚本。
+sky `/exec` 步骤脚本见 `test-workflow.md` §保存后配置校验、§调试前配置终检、`debug.md` §配置校验 sky 脚本。
 
 ## 元素选择器配置（含任意 UI 指令——LLM 默认首选）
 
 > 🚫 **强制规则**：任务含元素选择器的**任意** UI 指令（含 FillText、点击、断言类、等待类等所有需「元素选择器」字段的指令），默认先走 **新建 LLM / LLM动态定位**，失败或运行报错后再降级 XPath。
 
-1. Read `scenarios/<场景>.md` → 列出全部待定位元素，并为每个元素准备自然语言描述（元素位置 + 操作意图）
-2. 按 **`element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM（默认首选）**：点击「新建 LLM」→ 在「LLM动态定位」输入自然语言描述 → **先点「确认」** → 验证描述 + `LLM` 已落库
+1. Read `scenarios/<场景>.md` → 列出全部待定位元素，并为每个元素准备 LLM 自然语言描述（**位置 + 目标元素 + 操作意图**，句式：`定位 XX 页面 XX 位置的 XX 元素，用于 XX 操作`；详见 `element-selector.md` §LLM 自然语言描述写法）
+2. 按 **`element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM（默认首选）**：Shell pbcopy 描述 → 点击「新建 LLM」→ 在「LLM动态定位」粘贴自然语言 → **先点「确认」** → 验证描述 + `LLM` 已落库
 3. 补齐其它必填项并保存；若 LLM 定位保存后仍显示 `selectorId`、或调试报元素不存在，再按 `element-selector.md` §批量采集（新建 Tab）采 XPath 并降级处理
 
 **元素选择器写入策略优先级**：**方式 A（新建 LLM / LLM动态定位，默认）** → **方式 C（XPath：pbcopy + Cmd+V + Enter）** → **方式 B（平台捕获）**。使用 LLM 时必须点击「确认」后再保存；使用 XPath 时必须在 Cmd+V 后立即按 Enter；禁止其他手工写入方式（如点击「以…为定位器」下拉、DevTools React setter、type_text、set_value 直写、CSS 属性定义）。
@@ -150,14 +153,14 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 
 ## 执行效率与准确率（强制）
 
-> 完整 helper、批次策略、等待表见 **`reference/sky-runtime.md`**（每次 sky 自动化前 Read）。
+> 完整 helper、批次策略、等待表见 **`reference/sky-runtime.md`**（每次 sky 自动化前 Read；步骤经 `scripts/run-workflow-hosted.sh` 执行）。
 
 | 原则 | 要求 | 禁止 |
 |------|------|------|
-| **Chrome 前台** | 每个 exec **批次**前 Shell 激活 Chrome；`-10005 cgWindowNotFound` → 按 `sky-runtime.md` 恢复 | 未恢复时连发 exec |
-| **Exec 批次** | 一条指令 = 一次 exec；4 步场景 ≤ 6 次 exec | 每条指令拆 5+ exec；配置未完成就运行 |
+| **Chrome 前台** | `run-workflow-hosted.sh` 默认激活 Chrome；`-10005 cgWindowNotFound` → 按 `sky-runtime.md` 恢复 | 未恢复时连发自动化步骤 |
+| **批次步骤** | 一条指令 = 一次 `/exec` 步骤；4 步场景 ≤ 6 次步骤 | 每条指令拆 5+ 步骤；配置未完成就运行 |
 | **禁止盲 sleep** | 搜索框用 `waitSearchIdx()` 轮询 | 固定 2s 盲等 |
-| **剪贴板** | URL/XPath/中文：**Shell** `pbcopy` | nodeRepl 内 `execFileSync('pbcopy')` |
+| **剪贴板** | URL/XPath/中文：**Shell** `pbcopy` | `/exec` 步骤内 `execFileSync('pbcopy')` |
 | **钉住工作流 Tab** | XPath 采集仅 **Cmd+T 新 Tab** | 工作流 Tab 地址栏打开目标站 |
 | **LLM 确认** | 只用 `LLM动态定位` slice 内「确 认」 | 全局第一个确认按钮 |
 | **ASCII 待填充** | `bilibili` 等纯 ASCII 用 `type_text` | 对 ASCII 用 paste |
@@ -170,7 +173,7 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 
 ## 实测经验摘要（B 站四步 · 2026-08-22 验证通过）
 
-> 完整锚点、LLM 文案、exec 批次见 **`reference/scenarios/bilibili.md` §实测黄金路径** 与 **`reference/sky-runtime.md` §B 站四步黄金路径**。
+> 完整锚点、LLM 文案、`/exec` 步骤批次见 **`reference/scenarios/bilibili.md` §实测黄金路径** 与 **`reference/sky-runtime.md` §B 站四步黄金路径**。
 
 | 要点 | 实测结论 |
 |------|---------|
@@ -186,8 +189,8 @@ sky 自动化脚本见 `test-workflow.md` §保存后配置校验、§调试前�
 
 ```
 0. reference/user-intent.md          ← 解析用户显式指令（最高优先级）；有则覆盖场景默认指令名
-1. reference/prerequisites.md       ← cua-router-basic 安装验证
-2. reference/sky-runtime.md         ← 共享 helper、exec 批次、Chrome 前台、等待表（sky 自动化必读）
+1. reference/prerequisites.md       ← cua-router-basic 安装验证（bash scripts/ensure-ready.sh）
+2. reference/sky-runtime.md         ← 共享 helper、`/exec` 步骤批次（scripts/run-workflow-hosted.sh）
 3. reference/ax-verify.md         ← 动作后全量 AX 验证；AX → OCR → 坐标扫描三级定位（sky 操作必遵）
 4. reference/test-workflow.md       ← 测试标准流程（新建→加指令→调试→修复）
 5. reference/scenarios/<场景>.md    ← 站点 URL、XPath；指令链以 user-intent 为准
@@ -215,7 +218,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | 指令目录（98 条 UI 指令） | [reference/commands/index.md](reference/commands/index.md) | 查找/确认任意 UI 指令参数 |
 | 单条指令 | `reference/commands/<slug>.md` | 配置具体指令节点时按需 Read |
 | **捕获元素** | [reference/capture-element.md](reference/capture-element.md) | **需通过平台「捕获」按钮采集元素时**：6 步捕获流程、多信号判据 |
-| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **默认首选**新建 LLM / LLM动态定位（填自然语言描述 → 点「确认」→ 保存）；LLM 失败或运行报错后才降级 XPath（方式 C），再失败转捕获（方式 B） |
+| 元素选择器 | [reference/element-selector.md](reference/element-selector.md) | **默认首选**新建 LLM / LLM动态定位（§LLM 自然语言描述写法：**位置 + 目标元素 + 操作意图** → 点「确认」→ 保存）；LLM 失败或运行报错后才降级 XPath（方式 C），再失败转捕获（方式 B） |
 | **URL 输入规范** | [reference/url-input.md](reference/url-input.md) | 填「网址」等 URL 字段时**必读**（禁止 type_text） |
 | **插入指令** | [reference/insert-command.md](reference/insert-command.md) | **需在编排区 canvas 中追加指令时**：插入位置约束、光标定位、搜索+双击、右键菜单调序、插入后强制核对 |
 | 调试修复 | [reference/debug.md](reference/debug.md) | 保存后调试、报错修复 |

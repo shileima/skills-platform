@@ -20,7 +20,7 @@ description: >
 
 ## 依赖
 
-参照 `cua-router-basic` 技能的依赖说明和启动方式。所有桌面自动化通过 `sky.*` API 执行。
+参照 `cua-router-basic` 技能的依赖说明和启动方式。桌面自动化脚本通过 `scripts/exec.sh -f` 在 `/exec` 隔离作用域中执行，直接使用运行时注入的 `sky.*` / `ax.*`；不要直接加载 `@oai/sky`。
 
 执行前必须验证：
 
@@ -29,13 +29,10 @@ SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-ag
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi
-bash "$SKILL_ROOT/scripts/daemon.sh" start
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+bash "$SKILL_ROOT/scripts/ensure-ready.sh"
 ```
 
-输出 `ok` 后才允许继续调用 `sky.*`。
-
-## 触发判定
+输出 `ok` 后才允许继续调用 `sky.*`。## 触发判定
 
 用户表达以下意图时使用：
 
@@ -75,7 +72,7 @@ bash "./scripts/summarize-and-send.sh" "<接收人姓名>" "2026-08-03 21:55左�
 
 ## 稳定流程
 
-1. 启动并验证 `cua-router-basic`：`daemon.sh start` + `exec.sh 'nodeRepl.write("ok")'`。
+1. 通过 `cua-router-basic/scripts/ensure-ready.sh` 启动并验证运行时；`/exec` 会按需自动注入 `sky` / `ax`。
 2. 先将大象 App 窗口放大到可用的大尺寸，再读取任何消息或定位元素：优先通过 `System Events` 设置 `process "大象"` 的 `window 1` 位置为 `{0, 33}`、尺寸为 `{1512, 850}`；如系统权限导致失败，必须明确报错并提示用户放大窗口后重试，不要在小窗口状态下继续发送。
 3. 获取大象 App 状态：`sky.get_app_state({ app: "cn.neixin.pc", disableDiff: true })`。
 4. 确认大象可访问：窗口标题包含 `大象`，左侧导航包含 `消息`。

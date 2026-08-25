@@ -67,8 +67,7 @@ description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打�
 SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 [ -f "$SKILL_ROOT/SKILL.md" ] || SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
 [ -f "$SKILL_ROOT/SKILL.md" ] || SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
-bash "$SKILL_ROOT/scripts/daemon.sh" start
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+bash "$SKILL_ROOT/scripts/ensure-ready.sh"
 
 export REQUEST="${1:-个人财物助手工作台}"
 open -a WorkBuddy

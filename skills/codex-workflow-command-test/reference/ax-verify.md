@@ -18,7 +18,7 @@ const s = await sky.get_app_state({
   disableDiff: true   // 必须 true，拿完整 AX Tree，不用 diff
 });
 const lines = s.text.split("\n");
-nodeRepl.write(JSON.stringify({ lineCount: lines.length, preview: lines.slice(0, 5) }));
+emitResult({ lineCount: lines.length, preview: lines.slice(0, 5) });
 ```
 
 > idx 来自**当前** AX Tree。上一步 UI 变化后 idx 会漂移，**禁止**复用上一步的 element_index。
@@ -120,7 +120,7 @@ function assertCanSaveOpenUrl(lines) {
 | ③ | canvas Enter 后 Chat 抢焦点 | 右侧无搜索框；误向 Chat 输入 | `waitSearchIdx()` 轮询 + 必要时 **重点** 面板内「指令」Tab |
 | ④ | 硬编码 idx / 点错 Tab | 点到右侧边栏「指令」图标而非面板内 Tab | `findCmdTab` 匹配独立行 `N 文本 指令`；**禁止**跨 exec 复用 idx |
 
-### 共享 helper（每个 `/exec` 块开头复制）
+### 共享 helper（每个 `/exec` 步骤开头复制）
 
 **完整 Helper 包**（含 `insertAfterAnchor`、`configLLMScoped`、`saveDialog`）见 **`sky-runtime.md`**。以下为最小搜索框子集：
 
@@ -185,12 +185,12 @@ function assertCanSaveOpenUrl(lines) {
   // … 复制上方 findCmdTab / findSearchIdx / waitSearchIdx …
   const searchIdx = await waitSearchIdx();
   const s = await ax.get(app);
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "verify-search-ready",
     searchIdx,
     searchLine: s.text.split("\n")[searchIdx] ?? null,
     ok: /请输入/.test(s.text.split("\n")[searchIdx] ?? ""),
-  }));
+  });
 }
 ```
 
@@ -300,13 +300,13 @@ function assertCanSaveOpenUrl(lines) {
     (!hasFillText || (hasPageOpen && pageOpenIdx < canvasText.indexOf("输入文本"))) &&
     (!hasClick || hasPageOpen);
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "order-verify",
     orderOk,
     hasPageOpen, pageOpenKeys: pageOpenKeys.filter(k => canvasText.includes(k)),
     hasFillText, hasClick, hasVerifyExist, hasVerifyVisible,
     action: orderOk ? "continue-config" : "STOP-cut-node-and-paste-at-correct-position-via-2.3a"
-  }));
+  });
   // orderOk === false → 立即停止配表单，走 insert-command.md §右键菜单调整指令顺序 剪切→粘贴 修正后再校验
 }
 ```
@@ -364,11 +364,11 @@ sky 自动化示例见 `test-workflow.md` §调试前场景顺序终检。
   const hasSaveBtn = lines.some(l => /\d+\s+按钮\s+保\s*存/.test(l));
   const opened = hasCaptureBtn || hasElementSelector || hasSaveBtn;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "A",
     panelOpen: opened,
     signals: { hasCaptureBtn, hasElementSelector, hasSaveBtn }
-  }));
+  });
   // opened === false → 回到 platform-ops.md §2.2 重新双击
   // 详细的捕获流程判据见 capture-element.md §判据设计原则
 }
@@ -396,7 +396,7 @@ const axSelectStillRequired = (lines) =>
 const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
 if (axSelectStillRequired(lines)) {
   // 只要仍为必填错误 → 按 Enter 再验；连续失败 3 次转方式 B（捕获）
-  nodeRepl.write(JSON.stringify({ step: "antd-select-blocked", action: "press-Enter-again-or-fallback-to-capture" }));
+  emitResult({ step: "antd-select-blocked", action: "press-Enter-again-or-fallback-to-capture" });
 }
 ```
 
@@ -420,7 +420,7 @@ if (axSelectStillRequired(lines)) {
 
   const lines1 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const pasted = lines1.some(l => /组合框.*settable.*\/\/input/.test(l));
-  nodeRepl.write(JSON.stringify({ step: "B", comboIdx, pasted }));
+  emitResult({ step: "B", comboIdx, pasted });
   // pasted === false → 重找 comboIdx 或重粘贴
 }
 ```
@@ -436,7 +436,7 @@ if (axSelectStillRequired(lines)) {
   const hasErr = lines.some(l => l.includes("该字段是必填字段"));
   const hasValue = lines.some(l => /text\s+\/\/input/.test(l) || /组合框.*settable.*\/\/input/.test(l));
   const locatorOk = hasValue && !hasErr;
-  nodeRepl.write(JSON.stringify({ step: "D", hasErr, hasValue, locatorOk }));
+  emitResult({ step: "D", hasErr, hasValue, locatorOk });
   // locatorOk === false → 重新 click 组合框 → Cmd+V → Return（三步紧凑）
 }
 ```
@@ -455,7 +455,7 @@ if (axSelectStillRequired(lines)) {
 
   const lines2 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const filled = lines2.some(l => l.includes("baidu"));
-  nodeRepl.write(JSON.stringify({ step: "E", textIdx, filled }));
+  emitResult({ step: "E", textIdx, filled });
 }
 ```
 
@@ -468,14 +468,14 @@ if (axSelectStillRequired(lines)) {
   const hasSelector = lines.some(l => l.includes('//input[@id="kw"]'));
   const hasText = lines.some(l => l.includes("baidu"));
   const canSave = hasSelector && hasText && !hasRequiredErr;
-  nodeRepl.write(JSON.stringify({ step: "F", canSave, hasRequiredErr }));
+  emitResult({ step: "F", canSave, hasRequiredErr });
 
   if (canSave) {
     const saveIdx = axButtonIdx(lines, "保存");
     await sky.click({ app: "com.google.Chrome", element_index: saveIdx });
     const lines2 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
     const saved = !lines2.some(l => l.includes("输入文本") && l.includes("web") && axHasLabel(l, "保存"));
-    nodeRepl.write(JSON.stringify({ step: "F-verify", saved }));
+    emitResult({ step: "F-verify", saved });
   }
 }
 ```
@@ -495,7 +495,7 @@ if (axSelectStillRequired(lines)) {
   const hasUrlField = lines.some(l => l.includes("网址") && /settable|textfield|文本栏/i.test(l));
   const opened = hasSaveBtn || hasUrlField;
 
-  nodeRepl.write(JSON.stringify({ step: "openurl-A", panelOpen: opened }));
+  emitResult({ step: "openurl-A", panelOpen: opened });
 }
 ```
 
@@ -520,7 +520,7 @@ if (axSelectStillRequired(lines)) {
   const urlIdx = inputLine ? parseInt(inputLine.match(/^\s*(\d+)/)[1]) : null;
 
   if (urlIdx == null) {
-    nodeRepl.write(JSON.stringify({ step: "openurl-B", ok: false, reason: "modal-url-field-not-found" }));
+    emitResult({ step: "openurl-B", ok: false, reason: "modal-url-field-not-found" });
     throw new Error("modal-url-field-not-found");
   }
 
@@ -532,7 +532,7 @@ if (axSelectStillRequired(lines)) {
   const modalSlice = labelIdx >= 0 ? lines1.slice(labelIdx, labelIdx + 15).join("\n") : "";
   const urlInModal = modalSlice.includes(TARGET);
   const colonMissing = lines1.some(l => /https\/\//.test(l));
-  nodeRepl.write(JSON.stringify({ step: "openurl-B", urlIdx, urlInModal, colonMissing }));
+  emitResult({ step: "openurl-B", urlIdx, urlInModal, colonMissing });
   // urlInModal === false → 可能误填地址栏，按 url-input.md §误填地址栏后的修复 重试
 }
 ```
@@ -567,20 +567,20 @@ if (axSelectStillRequired(lines)) {
 
   const lines = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
   const check = assertCanSaveOpenUrl(lines);
-  nodeRepl.write(JSON.stringify({ step: "openurl-C", ...check }));
+  emitResult({ step: "openurl-C", ...check });
 
   if (!check.canSave) {
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "save-blocked",
       reason: "网址必填项未填完，禁止点保存",
       action: "回到 Step B 补填弹框「网址」后再 assertCanSaveOpenUrl"
-    }));
+    });
   } else {
     const saveIdx = axButtonIdx(lines, "保存");
     await sky.click({ app: "com.google.Chrome", element_index: saveIdx });
     const lines2 = (await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true })).text.split("\n");
     const saved = !lines2.some(l => axHasLabel(l, "保存") && l.includes("按钮"));
-    nodeRepl.write(JSON.stringify({ step: "openurl-C-verify", saved }));
+    emitResult({ step: "openurl-C-verify", saved });
   }
 }
 ```

@@ -18,7 +18,7 @@
   "dependencies": [
     {
       "name": "cua-router-basic",
-      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash"
+      "install": "curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash -s -- --version 0.4.18 --force"
     }
   ],
   "pack": {

@@ -74,10 +74,9 @@ resolve_cua_root() {
 }
 
 SKILL_ROOT="$(resolve_cua_root)"
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 
-JS_FILE="$(mktemp -t dx-send-markdown.XXXXXX.js)"
+JS_FILE="${TMPDIR:-/tmp}/dx-send-markdown.$$.$RANDOM.mjs"
 trap 'rm -f "$JS_FILE"' EXIT
 
 python3 - "$RECEIVER" "$SUMMARY" "$CLICK_ALL_TAB" "$CONTENT_MARKER" > "$JS_FILE" <<'PY'
@@ -85,12 +84,24 @@ import json, sys
 receiver, summary, click_all_tab, content_marker = sys.argv[1:5]
 print(r'''
 await (async () => {
+  function emitResult(payload) {
+    const text = typeof payload === "string" ? payload : JSON.stringify(payload);
+    if (globalThis.nodeRepl && typeof globalThis.nodeRepl.write === "function") {
+      globalThis.nodeRepl.write(text);
+    } else {
+      console.log(text);
+    }
+  }
   const receiver = RECEIVER_PLACEHOLDER;
   const summary = SUMMARY_PLACEHOLDER;
   const shouldClickAllTab = CLICK_ALL_TAB_PLACEHOLDER;
   const contentMarker = CONTENT_MARKER_PLACEHOLDER;
   const app = "cn.neixin.pc";
-  const { sky } = await import("@oai/sky");
+  const sky = globalThis.sky;
+
+  function escapeRegExp(text) {
+    return String(text).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+  }
   const { execFileSync } = await import("node:child_process");
   const fs = await import("node:fs");
   const os = await import("node:os");
@@ -208,7 +219,7 @@ await (async () => {
   }
 
   function findContactLine(lines, name, searchIdx) {
-    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = escapeRegExp(name);
     const exact = new RegExp(`\\d+\\s+(container|文本)\\s+${escaped}$`);
     return lines.find(l => {
       const idx = parseIdx(l);
@@ -229,30 +240,30 @@ await (async () => {
       || null;
   }
 
-  function getWindowWidth() {
-    let windowWidth = 1512;
-    const scripts = [
-      'tell application "System Events" to tell (first application process whose bundle identifier is "cn.neixin.pc") to get item 1 of (size of window 1)',
-      'tell application "System Events" to tell process "大象" to get item 1 of (size of window 1)',
-    ];
-    for (const script of scripts) {
-      try {
-        const out = execFileSync("/usr/bin/osascript", ["-e", script], { encoding: "utf8" }).trim();
-        const w = parseInt(out, 10);
-        if (Number.isFinite(w) && w > 100) return w;
-      } catch (_) {}
-    }
-    return windowWidth;
-  }
-
   async function maximizeWindow() {
-    const windowWidth = getWindowWidth();
-    const clickX = Math.round(windowWidth / 2);
-    const clickY = 6;
-    await freshState();
+    const state = await freshState();
+    const screenshotWidth = state.screenshotWidth;
+    const screenshotHeight = state.screenshotHeight;
+    if (!screenshotWidth || !screenshotHeight) {
+      return {
+        ok: false,
+        method: "coordinate_double_click",
+        error: "screenshot_dimensions_unavailable",
+        hasScreenshot: Boolean(state.screenshot),
+      };
+    }
+    const clickX = Math.round(screenshotWidth / 2);
+    const clickY = Math.round(screenshotHeight * 0.02);
     await sky.click({ app, x: clickX, y: clickY, click_count: 2 });
     await new Promise(r => setTimeout(r, 1200));
-    return { windowWidth, clickX, clickY };
+    return {
+      ok: true,
+      method: "coordinate_double_click",
+      screenshotWidth,
+      screenshotHeight,
+      clickX,
+      clickY,
+    };
   }
 
   async function openMarkdownEditor() {
@@ -356,19 +367,19 @@ await (async () => {
   const searchLine = findSearchLine(lines);
   const searchIdx = parseIdx(searchLine);
   if (!searchIdx) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "search_box_not_found", preview: state.text.slice(0, 1200) }));
+    emitResult({ ok: false, error: "search_box_not_found", preview: state.text.slice(0, 1200) });
     return;
   }
 
   let pasted = await stablePaste(searchIdx, receiver, text => text.includes(receiver));
   if (!pasted.ok) {
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       ok: false,
       error: pasted.error || "receiver_search_input_failed",
       receiver,
       clipboard: pasted.clipboard,
       preview: pasted.state ? pasted.state.text.slice(0, 1200) : null,
-    }));
+    });
     return;
   }
   state = pasted.state;
@@ -376,7 +387,7 @@ await (async () => {
 
   const contactLine = findContactLine(lines, receiver, searchIdx);
   if (!contactLine) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "receiver_not_found", receiver, preview: state.text.slice(0, 1200) }));
+    emitResult({ ok: false, error: "receiver_not_found", receiver, preview: state.text.slice(0, 1200) });
     return;
   }
 
@@ -385,10 +396,15 @@ await (async () => {
   await new Promise(r => setTimeout(r, 1000));
 
   const maximize = await maximizeWindow();
+  if (!maximize.ok) {
+    emitResult({ ok: false, error: "maximize_window_failed", receiver, receiverIdx, maximize });
+    return;
+  }
+  await new Promise(r => setTimeout(r, 800));
 
   const editorOpen = await openMarkdownEditor();
   if (!editorOpen.ok) {
-    nodeRepl.write(JSON.stringify({ ok: false, receiver, receiverIdx, maximize, ...editorOpen }));
+    emitResult({ ok: false, receiver, receiverIdx, maximize, ...editorOpen });
     return;
   }
 
@@ -396,14 +412,14 @@ await (async () => {
   lines = state.text.split("\n");
   const markdownInputLine = findMarkdownInputLine(lines);
   if (!markdownInputLine) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_input_not_found", receiver, receiverIdx, maximize, editorOpen, editorPreview: state.text.slice(0, 1000) }));
+    emitResult({ ok: false, error: "markdown_input_not_found", receiver, receiverIdx, maximize, editorOpen, editorPreview: state.text.slice(0, 1000) });
     return;
   }
 
   const markdownInputIdx = parseIdx(markdownInputLine);
   let filled = await stablePaste(markdownInputIdx, summary, contentOk);
   if (!filled.ok) {
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       ok: false,
       error: filled.error || "markdown_input_failed",
       receiver,
@@ -413,7 +429,7 @@ await (async () => {
       markdownInputIdx,
       clipboard: filled.clipboard,
       editorPreview: filled.state ? filled.state.text.slice(0, 1000) : null,
-    }));
+    });
     return;
   }
 
@@ -424,7 +440,7 @@ await (async () => {
   const hasReceiver = filledState.text.includes(receiver);
 
   if (!sendLine || !hasContent) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_editor_not_ready", hasSend: !!sendLine, hasContent, hasReceiver, preview: filledState.text.slice(0, 1000) }));
+    emitResult({ ok: false, error: "markdown_editor_not_ready", hasSend: !!sendLine, hasContent, hasReceiver, preview: filledState.text.slice(0, 1000) });
     return;
   }
 
@@ -447,7 +463,7 @@ await (async () => {
     }
   }
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     ok: sentLikely,
     error: sentLikely ? undefined : "send_button_click_not_confirmed",
     receiver,
@@ -460,7 +476,7 @@ await (async () => {
     editorStillOpen: isMarkdownEditorOpen(after.text),
     clipboard: filled.clipboard,
     summaryPreview: summary.slice(0, 200)
-  }));
+  });
 })()
 '''.replace('RECEIVER_PLACEHOLDER', json.dumps(receiver, ensure_ascii=False))
    .replace('SUMMARY_PLACEHOLDER', json.dumps(summary, ensure_ascii=False))
@@ -468,4 +484,7 @@ await (async () => {
    .replace('CONTENT_MARKER_PLACEHOLDER', json.dumps(content_marker, ensure_ascii=False)))
 PY
 
-bash "$SKILL_ROOT/scripts/exec.sh" -t 90000 -f "$JS_FILE"
+FETCH_RESULT="$(bash "$SKILL_ROOT/scripts/exec.sh" -t 600000 -f "$JS_FILE" 2>&1)"
+echo "$FETCH_RESULT"
+LAST_LINE="$(printf '%s\n' "$FETCH_RESULT" | tail -n 1)"
+python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok") else 1)' "$LAST_LINE"

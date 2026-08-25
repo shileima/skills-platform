@@ -26,8 +26,7 @@ fi
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic"
 fi
-bash "$SKILL_ROOT/scripts/daemon.sh" start
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+bash "$SKILL_ROOT/scripts/ensure-ready.sh"
 ```
 
 输出 `ok` 后才继续操作 Cursor。

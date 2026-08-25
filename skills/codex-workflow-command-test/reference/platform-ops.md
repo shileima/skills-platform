@@ -1,6 +1,6 @@
 # 平台操作
 
-> 进入本模块前，**必须已完成** `reference/prerequisites.md`，且 `exec.sh` 验证输出 `ok`。
+> 进入本模块前，**必须已完成** `reference/prerequisites.md`，且 `ensure-ready.sh` 验证输出 `ok`。
 
 > ⚠️ **步骤衔接**：每一次 click / 输入 / 粘贴后，**必须**全量抓取 AX Tree 验证上一步是否成功，再决定下一步。详见 **`reference/ax-verify.md`**。
 
@@ -35,7 +35,7 @@
 
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const navigated = s1.text.includes("rpa.sankuai.com");
-  nodeRepl.write(JSON.stringify({ step: "1a", navigated }));
+  emitResult({ step: "1a", navigated });
   // navigated === false → 重填地址栏
 }
 ```
@@ -52,7 +52,7 @@
 
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const onWorkflow = s1.text.includes("/rpa/workflow") || s1.text.includes("新建工作流");
-  nodeRepl.write(JSON.stringify({ step: "1b", wfIdx, onWorkflow }));
+  emitResult({ step: "1b", wfIdx, onWorkflow });
 }
 ```
 
@@ -90,11 +90,11 @@
   await sky.click({ app, element_index: parseInt(createBtn.match(/^\s*(\d+)/)[1]) });
   await sleep(3500);
   const s3 = await sky.get_app_state({ app, disableDiff: true });
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "create-workflow",
     hasEditor: /编辑器容器/.test(s3.text),
     workflowId: s3.text.match(/workflow-[a-f0-9-]+/)?.[0] ?? null
-  }));
+  });
 }
 ```
 
@@ -148,7 +148,7 @@ await sky.click({ app: "com.google.Chrome", element_index: targetIdx, click_coun
 await new Promise(r => setTimeout(r, 1500));
 const s2 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
 const opened = s2.text.split("\n").some(l => l.includes("捕获") && l.includes("按钮"));
-nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
+emitResult({ step: "2.2-dblclick", opened });
 // opened === false → Escape 失焦后重试 §2.2 第一步
 ```
 
@@ -279,15 +279,15 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
   const hasPanel = panel.some(l => /打开网页|输入文本|点击元素|延迟/.test(l));
   const { canSave, missing, hasRequiredError } = assertCanSave(panel, requiredLabels, validators);
 
-  nodeRepl.write(JSON.stringify({ step: "save-check", hasPanel, canSave, missing, hasRequiredError }));
+  emitResult({ step: "save-check", hasPanel, canSave, missing, hasRequiredError });
 
   if (!canSave) {
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "save-blocked",
       reason: "必填项未填完，禁止点保存",
       missing,
       action: "补全 missing 所列字段 → 全量 AX → 重新 assertCanSave → canSave 为 true 后再保存"
-    }));
+    });
   } else {
     function axHasLabel(line, label) {
       return new RegExp(label.split("").join("\\s*")).test(line);
@@ -300,7 +300,7 @@ nodeRepl.write(JSON.stringify({ step: "2.2-dblclick", opened }));
     await sky.click({ app: "com.google.Chrome", element_index: saveIdx });
     const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
     const saved = !s1.text.split("\n").some(l => axHasLabel(l, "保存") && l.includes("按钮") && hasPanel);
-    nodeRepl.write(JSON.stringify({ step: "save-verify", saved }));
+    emitResult({ step: "save-verify", saved });
   }
 }
 ```

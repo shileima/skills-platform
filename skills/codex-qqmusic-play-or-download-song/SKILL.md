@@ -116,7 +116,7 @@ bash ./scripts/download-singer-top5.sh "毛阿敏"
 
 ## 操作规范
 
-遵循 `cua-router-basic` 技能的标准操作规范（`nodeRepl.write` 输出、`disableDiff:true`、`click_count` snake_case、块作用域等）。
+遵循 `cua-router-basic` 技能的标准操作规范（`/exec` 中使用 `nodeRepl.write` 输出、`disableDiff:true`、`click_count` snake_case、块作用域等）。
 
 ## 扩展方向（未固化，用到时再补）
 

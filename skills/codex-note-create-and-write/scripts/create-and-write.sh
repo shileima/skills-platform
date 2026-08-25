@@ -87,8 +87,7 @@ create_with_ax_fallback() {
 
   printf '%s' "$CONTENT" | pbcopy
   open -a "Notes"
-  bash "$skill_root/scripts/daemon.sh" start >/dev/null
-  bash "$skill_root/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+  bash "$skill_root/scripts/ensure-ready.sh" >/dev/null
 
   bash "$skill_root/scripts/exec.sh" -t 60000 '{
     function findIdx(axText, ...keywords) {

@@ -12,13 +12,11 @@ if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
-  echo "cua-router-basic not installed. Run its install-remote.sh first." >&2
+  echo "cua-router-basic not installed. Run its update-remote.sh first." >&2
   exit 1
 fi
 
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" -t 20000 "await (await import('$SKILL_ROOT/scripts/computer-use-client.mjs')).setupComputerUseRuntime({ globals: globalThis }); nodeRepl.write('bootstrapped')" >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 
 JS_NAME=$(python3 - <<'PY' "$NAME"
 import json, sys

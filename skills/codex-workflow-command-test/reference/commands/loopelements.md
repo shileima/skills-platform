@@ -192,7 +192,7 @@ echo -n '//a[@class="title"]' | pbcopy
   const saveIdx = parseInt(saveLine.match(/^\s*(\d+)/)[1]);
   await sky.click({ app: "com.google.Chrome", element_index: saveIdx });
   await sleep(2000);
-  nodeRepl.write("loopelements-saved");
+  emitResult("loopelements-saved");
 }
 ```
 

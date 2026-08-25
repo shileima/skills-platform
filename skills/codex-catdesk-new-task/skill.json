@@ -1,10 +1,10 @@
 {
-  "name": "codex-cursor-website-develop",
+  "name": "codex-catdesk-new-task",
+  "description": "CatDesk 桌面客户端新建任务技能：按录制链路打开/激活 CatDesk，点击「新任务」，选择 Max 模型，在聊天输入框输入需求并点击发送。由 record-desk-basic 录制生成，依赖 cua-router-basic / sky Computer Use 逐步回放。",
   "version": "0.0.1",
-  "description": "Cursor 桌面客户端网站开发技能：打开 New Agents Window，新建本地项目文件夹，默认发送简洁功能版社区站点前端工程开发需求。",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["cursor", "website", "frontend", "community-site", "desktop-automation", "cua"],
+  "keywords": ["catdesk", "desktop-automation", "cua", "record-replay"],
   "targets": ["claude", "codex", "automan", "cursor"],
   "dependencies": [
     {
@@ -17,6 +17,6 @@
   },
   "automan": {
     "source": "user",
-    "metaName": "codex-cursor-website-develop"
+    "metaName": "codex-catdesk-new-task"
   }
 }

@@ -34,7 +34,8 @@ RECEIVER="$(resolve_dx_receiver "${RECEIVER:-}")"
 
 ## 依赖
 
-- 已安装并运行的 `cua-router-basic`（`daemon.sh start` + `exec.sh` 输出 `ok`）
+- 已安装并运行的 `cua-router-basic`（通过 `scripts/ensure-ready.sh` 探活）
+- 脚本通过 `cua-router-basic/scripts/exec.sh -f` 在 `/exec` 隔离作用域中执行，直接使用运行时注入的 `sky.*` / `ax.*`
 - 大象桌面客户端已登录
 
 ## 流程
@@ -43,7 +44,7 @@ RECEIVER="$(resolve_dx_receiver "${RECEIVER:-}")"
 2. 可选：点击「全部」Tab（`--all-tab`）
 3. 在左侧搜索框输入接收人姓名过滤列表（**不要按 Enter**，否则会进入全局搜索页）
 4. 点击过滤出的接收人单聊
-5. 读取窗口宽度，`sky.click` 双击顶部居中 `(windowWidth/2, 6)` 放大窗口
+5. 从 `get_app_state` 截图尺寸计算坐标，`sky.click` 双击标题栏 `(width/2, height*0.02)` 放大窗口
 6. 重新 `get_app_state({ disableDiff: true })`，在 AX Tree 中查找并点击「发送 Markdown 消息」
    - 若菜单未出现，降级：点击输入框前方 Markdown 按钮（`U+E124` / `U+E04D`）后再找菜单
 7. 在浮层左侧「请输入内容」区域 `set_value` 写入正文

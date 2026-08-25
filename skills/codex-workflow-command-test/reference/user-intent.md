@@ -119,7 +119,7 @@ URL 填写均走 `url-input.md`（scoped 定位弹框字段，禁止 Chrome 地�
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const escaped = instructionPlan[i].platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const hasResult = new RegExp(`${escaped}\\s*\\(web\\)`).test(s1.text);
-  nodeRepl.write(JSON.stringify({ step: "search-by-intent", query, hasResult, userSpecified: true }));
+  emitResult({ step: "search-by-intent", query, hasResult, userSpecified: true });
 }
 ```
 

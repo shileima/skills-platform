@@ -88,7 +88,7 @@
   await new Promise(r => setTimeout(r, 500));
   const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const onWorkflow = s.text.includes("编辑器容器") || s.text.includes("开始节点");
-  nodeRepl.write(JSON.stringify({ step: "back-to-workflow", onWorkflow }));
+  emitResult({ step: "back-to-workflow", onWorkflow });
 }
 ```
 
@@ -150,13 +150,40 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 
 **适用场景**：配置任何含「元素选择器」字段的 UI 指令（FillText、ClickElementMixed、断言、等待、获取文本等）时，默认先走本方式。
 
+### LLM 自然语言描述写法（必读）
+
+描述须是 **AI 能理解的自然语言**，让运行时模型在真实页面上找到目标元素。核心公式：
+
+```
+位置 + 目标元素 + 操作意图
+```
+
+**句式模板**：`定位 {页面/站点} {相对位置} 的 {目标元素}，用于 {操作意图}`
+
+泛化示例：「定位 XX 页面 XX 位置的 XX 元素，用于 XX 操作」
+
+| 组成部分 | 说明 | 示例 |
+|----------|------|------|
+| **位置** | 元素在页面上的相对/绝对位置 | 页面中央偏上、搜索框右侧、顶部导航栏中间 |
+| **目标元素** | 具体控件类型与可见文案 | 搜索输入框、「搜索」按钮、登录链接 |
+| **操作意图** | 自动化要对该元素做什么 | 输入搜索关键词、点击执行搜索、断言文本存在 |
+
+**正确示例**：
+
+- 输入文本：`定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词`
+- 点击元素：`定位搜狗首页搜索框右侧的「搜索」按钮，用于点击执行搜索`
+
+**禁止**：空描述、仅 XPath/CSS、仅元素 id/class、不含位置或操作意图的短语（如「搜索框」「按钮」「#query」）。
+
+> Shell 前置：`printf '%s' '定位…' | pbcopy` → `configLLMScoped` 内 Cmd+V → slice 内「确认」。
+
 ### 操作顺序（不可跳过「确认」）
 
 ```
 0. 打开目标指令配置弹框，确认有「* 元素选择器」字段
 1. 点击「新建 LLM」按钮（AX 常见为 `按钮  新建 LLM `）
 2. 进入「LLM动态定位」Tab
-3. 在自然语言输入框中描述：要操作的元素位置 + 要进行的操作
+3. 按 §LLM 自然语言描述写法 填写：位置 + 目标元素 + 操作意图（Shell pbcopy 前置 → Cmd+V 粘贴）
    示例：
    - 输入文本：定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词
    - 点击元素：定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索
@@ -268,7 +295,7 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
   const hasErr = /该字段是必填字段/.test(s1.text);
   const hasValue = /text\s+\/\/.*chat-textarea/.test(s1.text) ||
     /text\s+\/\//.test(s1.text);  // 按实际 XPath 模式调整
-  nodeRepl.write(JSON.stringify({ comboIdx, hasErr, hasValue, ok: !hasErr && hasValue }));
+  emitResult({ comboIdx, hasErr, hasValue, ok: !hasErr && hasValue });
 }
 ```
 
@@ -312,7 +339,7 @@ JSON.stringify(['kw','chat-textarea','su','chat-submit-button'].map(id=>{
 | 弹框已打开 | 标题字符串精确匹配 | 有「捕获」按钮 **OR** 有「元素选择器」字段 **OR** 有「保存」按钮 |
 | 捕获按钮 | `l.includes("捕获")` | `/\d+\s+按钮\s+捕\s*获/.test(l)` |
 
-详细判据规范和完整 sky 自动化脚本见 **`capture-element.md`**。
+详细判据规范和完整 sky `/exec` 步骤脚本见 **`capture-element.md`**。
 
 ### 与方式 C 的取舍
 

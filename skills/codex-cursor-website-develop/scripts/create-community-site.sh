@@ -169,23 +169,8 @@ paste_text() {
   }' >/dev/null
 }
 
-wait_cua_ready() {
-  local i out
-  for i in $(seq 1 30); do
-    out="$(bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' 2>/dev/null | tail -1 || true)"
-    if [ "$out" = "ok" ]; then
-      return 0
-    fi
-    sleep 2
-  done
-  echo "cua-router 未就绪（常见原因 observer_busy），请关闭占用桌面的自动化任务后重试" >&2
-  return 1
-}
-
 SKILL_ROOT="$(resolve_skill_root)"
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-wait_cua_ready || exit 1
-bash "$SKILL_ROOT/scripts/exec.sh" -t 20000 "await (await import('$SKILL_ROOT/scripts/computer-use-client.mjs')).setupComputerUseRuntime({ globals: globalThis }); nodeRepl.write('bootstrapped')" >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 
 open -a "Cursor"
 sleep 1

@@ -41,8 +41,7 @@ if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
 fi
 
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 
 # 优先用 .app 路径启动（部分环境下 open -b 无法解析 bundle，但 plist 仍为 cn.neixin.pc）
 DAXIANG_APP="${DAXIANG_APP:-/Applications/大象.app}"
@@ -81,20 +80,32 @@ PY
   exit 1
 fi
 
-JS_FILE="$(mktemp -t daxiang-summary-send.XXXXXX.js)"
+JS_FILE="${TMPDIR:-/tmp}/daxiang-summary-send.$$.$RANDOM.mjs"
 trap 'rm -f "$JS_FILE"' EXIT
 
-python3 - "$RECEIVER" "$TIME_LABEL" > "$JS_FILE" <<'PY'
+python3 - "$RECEIVER" "$TIME_LABEL" "$SKILL_ROOT" > "$JS_FILE" <<'PY'
 import json
 import sys
 receiver = sys.argv[1]
 time_label = sys.argv[2]
 print(r'''
 await (async () => {
+  function emitResult(payload) {
+    const text = typeof payload === "string" ? payload : JSON.stringify(payload);
+    if (globalThis.nodeRepl && typeof globalThis.nodeRepl.write === "function") {
+      globalThis.nodeRepl.write(text);
+    } else {
+      console.log(text);
+    }
+  }
   const receiver = RECEIVER_PLACEHOLDER;
   const timeLabel = TIME_LABEL_PLACEHOLDER;
   const app = "cn.neixin.pc";
-  const { sky } = await import("@oai/sky");
+  const sky = globalThis.sky;
+
+  function escapeRegExp(text) {
+    return String(text).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+  }
 
   // 本人身份标识：用于判断某条消息是否「与我有关」。
   // 由接收人姓名派生（去掉 (英文别名)、去掉尾部 DX 工号），额外补充第一人称提及。
@@ -300,7 +311,7 @@ await (async () => {
     const allLines = axText.split("\n");
     const inputLine = allLines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
     const inputIdx = inputLine ? parseIdx(inputLine) : 99999;
-    const escapedName = conversationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedName = escapeRegExp(conversationName);
     const titleLine = allLines.filter(l => {
       const idx = parseIdx(l);
       return idx !== null && idx < inputIdx && new RegExp(`(文本|text)\\s+${escapedName}\\s*$`).test(l);
@@ -947,18 +958,18 @@ await (async () => {
 
   const s = await sky.get_app_state({ app, disableDiff: true });
   if (/Secondary Actions: Cancel/.test(s.text) && /发送\s*Markdown\s*消息/.test(s.text) && !/文本输入区|消息/.test(s.text)) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "markdown_menu_open", hint: "当前大象停留在发送 Markdown 消息弹层，请先手动点击弹层外区域或选择取消，回到正常聊天窗口后重试" }));
+    emitResult({ ok: false, error: "markdown_menu_open", hint: "当前大象停留在发送 Markdown 消息弹层，请先手动点击弹层外区域或选择取消，回到正常聊天窗口后重试" });
   } else if (!/Window: "大象"|App: 大象|消息/.test(s.text)) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "daxiang_not_ready", hint: "请先打开大象桌面客户端" }));
+    emitResult({ ok: false, error: "daxiang_not_ready", hint: "请先打开大象桌面客户端" });
   } else {
     const collected = await collectUnreadItems(s.text);
     if (!collected.ok) {
-      nodeRepl.write(JSON.stringify({
+      emitResult({
         ok: false,
         error: collected.error,
         hint: "请手动点击消息列表上方的「未读」Tab 后重试",
         itemCount: collected.items.length
-      }));
+      });
       return;
     }
     const items = collected.items;
@@ -966,20 +977,21 @@ await (async () => {
     const unreadConversationCount = collected.unreadConversationCount || 0;
     const summary = buildSummary(items);
 
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       ok: true,
       receiver,
       itemCount: items.length,
       drilledChats,
       unreadConversationCount,
       summary
-    }));
+    });
   }
 })()
-'''.replace('RECEIVER_PLACEHOLDER', json.dumps(receiver, ensure_ascii=False)).replace('TIME_LABEL_PLACEHOLDER', json.dumps(time_label, ensure_ascii=False)))
+'''.replace('RECEIVER_PLACEHOLDER', json.dumps(receiver, ensure_ascii=False))
+   .replace('TIME_LABEL_PLACEHOLDER', json.dumps(time_label, ensure_ascii=False)))
 PY
 
-FETCH_RESULT="$(bash "$SKILL_ROOT/scripts/exec.sh" -t 90000 -f "$JS_FILE")"
+FETCH_RESULT="$(bash "$SKILL_ROOT/scripts/exec.sh" -t 600000 -f "$JS_FILE" 2>&1)"
 echo "$FETCH_RESULT"
 LAST_LINE="$(printf '%s\n' "$FETCH_RESULT" | tail -n 1)"
 

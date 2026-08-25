@@ -38,18 +38,26 @@ resolve_dx_send_script() {
 }
 
 SKILL_ROOT="$(resolve_cua_root)"
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")' >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 
-FETCH_JS="$(mktemp -t gh-trending-fetch.XXXXXX.js)"
+FETCH_JS="${TMPDIR:-/tmp}/gh-trending-fetch.$$.$RANDOM.mjs"
 trap 'rm -f "$FETCH_JS"' EXIT
 
-python3 > "$FETCH_JS" <<'PY'
+python3 - "$SKILL_ROOT" > "$FETCH_JS" <<'PY'
+import json, sys
+from pathlib import Path
+skill_root = Path(sys.argv[1])
 print(r'''
 await (async () => {
+  function emitResult(payload) {
+    nodeRepl.write(typeof payload === "string" ? payload : JSON.stringify(payload));
+  }
   const app = "com.google.Chrome";
-  const { sky } = await import("@oai/sky");
   const { execFileSync } = await import("node:child_process");
+
+  function escapeRegExp(text) {
+    return String(text).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+  }
 
   function parseIdx(line) {
     const m = String(line || "").match(/^\s*(\d+)/);
@@ -81,19 +89,19 @@ await (async () => {
 
   async function navigate(url) {
     await getState();
-    await sky.press_key({ app, key: "l", modifiers: ["command"] });
+    await sky.press_key({ app, key: "Command+l" });
     await new Promise(r => setTimeout(r, 500));
     const s = await getState();
     const addrLine = findAddressBarLine(s.text);
     if (!addrLine) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "address_bar_not_found", preview: s.text.slice(0, 1200) }));
+      emitResult({ ok: false, error: "address_bar_not_found", preview: s.text.slice(0, 1200) });
       return false;
     }
     const addrIdx = parseIdx(addrLine);
     try {
       await sky.set_value({ app, element_index: addrIdx, value: url });
     } catch (err) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "set_value_failed", detail: String(err), preview: s.text.slice(0, 800) }));
+      emitResult({ ok: false, error: "set_value_failed", detail: String(err), preview: s.text.slice(0, 800) });
       return false;
     }
     await new Promise(r => setTimeout(r, 200));
@@ -103,7 +111,7 @@ await (async () => {
   }
 
   function findExploreNavLink(axText, label) {
-    const re = new RegExp(`link\\s+Description:\\s*${label}\\b`, "i");
+    const re = new RegExp(`link\\s+Description:\\s*${escapeRegExp(label)}\\b`, "i");
     return axText.split("\n").find(l => re.test(l)) || null;
   }
 
@@ -134,7 +142,7 @@ await (async () => {
     let s = await getState();
     const menuLine = findLine(s.text, /Open menu|Open global navigation menu|打开菜单/);
     if (!menuLine) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "open_menu_not_found", preview: s.text.slice(0, 1500) }));
+      emitResult({ ok: false, error: "open_menu_not_found", preview: s.text.slice(0, 1500) });
       return false;
     }
     await clickLine(menuLine);
@@ -142,7 +150,7 @@ await (async () => {
 
     const exploreLine = findExploreNavLink(s.text, "Explore");
     if (!exploreLine) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "explore_link_not_found", hint: "请在 GitHub 抽屉菜单中点击 Explore", preview: s.text.slice(0, 1500) }));
+      emitResult({ ok: false, error: "explore_link_not_found", hint: "请在 GitHub 抽屉菜单中点击 Explore", preview: s.text.slice(0, 1500) });
       return false;
     }
     await clickLine(exploreLine);
@@ -151,7 +159,7 @@ await (async () => {
     const trendingLine = await waitForTrendingTab();
     if (!trendingLine) {
       s = await getState();
-      nodeRepl.write(JSON.stringify({ ok: false, error: "trending_tab_not_found", hint: "请点击页面横向 Tab「Trending」，禁止在地址栏输入 trending URL", preview: s.text.slice(0, 2000) }));
+      emitResult({ ok: false, error: "trending_tab_not_found", hint: "请点击页面横向 Tab「Trending」，禁止在地址栏输入 trending URL", preview: s.text.slice(0, 2000) });
       return false;
     }
     await clickLine(trendingLine);
@@ -159,7 +167,7 @@ await (async () => {
     s = await getState();
 
     if (!/Trending repositories|标题\s+.+\s\/\s.+,\s*Value:/.test(s.text)) {
-      nodeRepl.write(JSON.stringify({ ok: false, error: "trending_page_not_ready", preview: s.text.slice(0, 1500) }));
+      emitResult({ ok: false, error: "trending_page_not_ready", preview: s.text.slice(0, 1500) });
       return false;
     }
     return true;
@@ -238,7 +246,7 @@ await (async () => {
   try {
     await getState();
   } catch (err) {
-    nodeRepl.write(JSON.stringify({ ok: false, error: "chrome_not_active", detail: String(err) }));
+    emitResult({ ok: false, error: "chrome_not_active", detail: String(err) });
     return;
   }
 
@@ -255,13 +263,13 @@ await (async () => {
     repos = parseTrendingRepos(s.text, 10);
   }
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     ok: repos.length > 0,
     repoCount: repos.length,
     pageTitle: (s.text.match(/Window: "([^"]+)"/) || [])[1] || "",
     repos,
     hint: repos.length ? null : "未能从 AX Tree 解析仓库，请确认已通过 Tab 进入 Trending 页"
-  }));
+  });
 })()
 ''')
 PY

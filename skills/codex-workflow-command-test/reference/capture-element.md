@@ -50,15 +50,15 @@
   const hasSaveBtn = lines.some(l => /\d+\s+按钮\s+保\s*存/.test(l));
   const dialogOpen = hasCaptureBtn || hasElementSelector || hasSaveBtn;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "capture-step1-verify-dialog",
     dialogOpen,
     signals: { hasCaptureBtn, hasElementSelector, hasSaveBtn }
-  }));
+  });
 
   // dialogOpen === false → 回到 platform-ops.md §2.2 重新双击打开弹框
   if (!dialogOpen) {
-    nodeRepl.write(JSON.stringify({ action: "reopen-dialog-via-platform-ops-2.2" }));
+    emitResult({ action: "reopen-dialog-via-platform-ops-2.2" });
   }
 }
 ```
@@ -74,7 +74,7 @@
   const captureIdx = captureLine ? parseInt(captureLine.match(/^\s*(\d+)/)?.[1]) : null;
 
   if (!captureIdx) {
-    nodeRepl.write(JSON.stringify({ step: "capture-step2", error: "未找到捕获按钮", action: "verify-dialog-open-or-reopen" }));
+    emitResult({ step: "capture-step2", error: "未找到捕获按钮", action: "verify-dialog-open-or-reopen" });
   } else {
     await sky.click({ app: "com.google.Chrome", element_index: captureIdx });
     await new Promise(r => setTimeout(r, 800));
@@ -84,13 +84,13 @@
     const capturing = lines2.some(l => l.includes("采集中") || l.includes("capturing"));
     const selectorHasValue = lines2.some(l => l.includes("元素选择器") && /value.*\/\//.test(l));
 
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "capture-step2-click-capture",
       captureIdx,
       capturing,
       selectorHasValue,
       action: capturing ? "proceed-to-click-element" : "retry-capture-or-check-cloud-browser"
-    }));
+    });
   }
 }
 ```
@@ -124,13 +124,13 @@
   );
   const xpathCaptured = hasXpathValue || selectorFieldFilled;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "capture-step3-verify-xpath",
     xpathCaptured,
     hasXpathValue,
     selectorFieldFilled,
     action: xpathCaptured ? "proceed-to-save" : "wait-and-recheck-or-adjust"
-  }));
+  });
 
   // xpathCaptured === false →
   //   用户可能需要：重选 / 大选区 / 缩小选取 icon 来调整
@@ -159,13 +159,13 @@
   const hasRequiredErr = lines.some(l => l.includes("该字段是必填字段"));
 
   if (!hasSelectorValue || hasRequiredErr) {
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "capture-step4-precheck",
       canSave: false,
       hasSelectorValue,
       hasRequiredErr,
       action: "fix-before-save"
-    }));
+    });
   } else {
     // 找保存按钮（兼容 Ant Design 半角空格「保 存」）
     function axHasLabel(line, label) {
@@ -182,11 +182,11 @@
       // 保存成功 = 弹框关闭（保存按钮消失）
       const saved = !lines2.some(l => axHasLabel(l, "保存") && l.includes("按钮") && lines2.some(l2 => l2.includes("元素选择器")));
 
-      nodeRepl.write(JSON.stringify({
+      emitResult({
         step: "capture-step4-save",
         saved,
         action: saved ? "proceed-to-verify-in-canvas" : "check-required-fields-and-retry"
-      }));
+      });
     }
   }
 }
@@ -216,11 +216,11 @@
   // 检查目标指令节点行是否包含 xpath 或元素选择器信息
   const elementVisible = canvasArea.some(l => /\/\/\//.test(l) || /元素选择器/.test(l));
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "capture-step5-verify-canvas",
     elementVisible,
     action: elementVisible ? "capture-success" : "retry-capture"
-  }));
+  });
 }
 ```
 
@@ -238,10 +238,10 @@
   // 按 platform-ops.md §2.2 执行双击流程
   // 重新从第 1 步开始捕获流程
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "capture-step6-retry",
     action: "refresh-and-restart-capture-from-step1"
-  }));
+  });
 }
 ```
 

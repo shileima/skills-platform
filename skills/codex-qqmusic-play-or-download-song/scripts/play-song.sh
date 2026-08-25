@@ -22,7 +22,7 @@ if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
 fi
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
-  echo "cua-router-basic not installed. Run its install-remote.sh first." >&2
+  echo "cua-router-basic not installed. Run its update-remote.sh first." >&2
   exit 1
 fi
 
@@ -120,7 +120,7 @@ SWIFT
 }
 
 echo "[qqmusic] ensure cua-router..."
-bash "$SKILL_ROOT/scripts/daemon.sh" start >/dev/null
+bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
 
 echo "[qqmusic] launch app..."
 open -b "$QQM_BUNDLE" || {

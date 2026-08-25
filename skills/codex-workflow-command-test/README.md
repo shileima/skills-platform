@@ -66,7 +66,7 @@ skilldev install codex-workflow-command-test --target automan --install-deps
 依赖来自 `skill.json` → `dependencies`。默认**不**自动执行依赖安装脚本（`curl | bash` 属外部动作）；需要时显式加 `--install-deps`，或手动执行下方命令并校验 `sky.*` 就绪：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash -s -- --version 0.4.18 --force
 ```
 
 ## 打包分发（automan zip）

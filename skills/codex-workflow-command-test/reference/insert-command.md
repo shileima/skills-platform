@@ -96,7 +96,7 @@
   await reorderNodeCutPaste("点击 页面", "元素中输入 bilibili");
   const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const seq = listCanvasNodes(s.text).map(l => l.trim());
-  nodeRepl.write(JSON.stringify({ step: "reorder-cut-paste", seq }));
+  emitResult({ step: "reorder-cut-paste", seq });
 }
 ```
 
@@ -193,7 +193,7 @@
 | set_value 搜索词 | 500ms + maxAgeMs 400 | 结果区含 `xxx (web)` |
 | 双击 (web) 结果 | 1200ms + refresh | 配置弹框或 canvas 新节点 |
 
-> `pbcopy` 必须在 **shell** 执行（`printf '…' \| /usr/bin/pbcopy`），禁止在 nodeRepl 内调 `execSync('pbcopy')`（沙箱常失败）。
+> `pbcopy` 必须在 **shell** 执行（`printf '…' \| /usr/bin/pbcopy`），禁止在 hosted 步骤内调 `execSync('pbcopy')`（沙箱常失败）。
 
 ## 定位正确插入点（搜索+双击前必做）
 
@@ -242,14 +242,14 @@
     return true;
   })();
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "insert-point-check",
     nodes: summaries,
     orderOk,
     hint: orderOk
       ? "光标定位后：右侧搜索框 set_value 指令名 → 双击「网页自动化」分组下的 (web) 项"
       : "顺序错误：选中错位节点→剪切→选中锚点行→Enter 空出一行→粘贴（§右键菜单调整指令顺序）"
-  }));
+  });
 }
 ```
 
@@ -269,7 +269,7 @@
   await sky.press_key({ app: "com.google.Chrome", key: "Return" });
   await new Promise(r => setTimeout(r, 400));
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  nodeRepl.write(JSON.stringify({ step: "insert-1a-first-instruction", startIdx, afterStartEnter: /开始节点/.test(s1.text) }));
+  emitResult({ step: "insert-1a-first-instruction", startIdx, afterStartEnter: /开始节点/.test(s1.text) });
 }
 ```
 
@@ -298,7 +298,7 @@
   const anchorIdx = anchorLine ? parseInt(anchorLine.match(/^\s*(\d+)/)[1]) : null;
 
   if (!anchorIdx) {
-    nodeRepl.write(JSON.stringify({ step: "insert-1b-error", error: "未找到锚点指令行，禁止继续插入" }));
+    emitResult({ step: "insert-1b-error", error: "未找到锚点指令行，禁止继续插入" });
   } else {
     // Step 2：单击该锚点行（最后一条已保存指令）
     await sky.click({ app: "com.google.Chrome", element_index: anchorIdx });
@@ -315,13 +315,13 @@
     const canvasArea1 = lines1.slice(canvasStart1, canvasStart1 + 150);
     const newLineCreated = canvasArea1.length >= canvasArea.length; // 粗校验：结构未减少/已扩展
 
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "insert-1b-anchor-enter",
       anchorLine,
       anchorIdx,
       newLineCreated,
       action: newLineCreated ? "proceed-to-search-command" : "retry-click-anchor-and-enter"
-    }));
+    });
     // newLineCreated === false → 重新单击锚点行 → 再按 Return，禁止直接跳到搜索步骤
   }
 }
@@ -381,7 +381,7 @@
   }
   const platformName = instructionPlan[i].platformName;
   const hasResult = new RegExp(`${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(web\\)`).test(s1.text);
-  nodeRepl.write(JSON.stringify({ step: "search", query, searchIdx, pasted: s1.text.includes(query), hasResult }));
+  emitResult({ step: "search", query, searchIdx, pasted: s1.text.includes(query), hasResult });
 }
 ```
 
@@ -409,7 +409,7 @@
 
   const s1 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   const dialogOpened = new RegExp(`${platformName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\(web\\)`).test(s1.text);
-  nodeRepl.write(JSON.stringify({ step: "dblclick", platformName, resultIdx, dialogOpened }));
+  emitResult({ step: "dblclick", platformName, resultIdx, dialogOpened });
 }
 ```
 
@@ -447,7 +447,7 @@
   const anchorIdxInSeq = seq.lastIndexOf(anchorCmd);
   const positionOk = insertedIdxInSeq > anchorIdxInSeq;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "post-insert-order-audit",
     seq,
     justInserted,
@@ -456,7 +456,7 @@
     action: positionOk
       ? "order-correct-continue-config"
       : "ORDER-WRONG-must-fix-via-right-click-cut-paste-before-any-further-config"
-  }));
+  });
   // positionOk === false → 立即停止配置该节点，按 §右键菜单调整指令顺序 剪切→粘贴 修正到锚点指令下方，再继续
 }
 ```

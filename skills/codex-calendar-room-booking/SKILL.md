@@ -27,8 +27,7 @@ description: >
 SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 [ -f "$SKILL_ROOT/SKILL.md" ] || SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
 [ -f "$SKILL_ROOT/SKILL.md" ] || SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
-bash "$SKILL_ROOT/scripts/daemon.sh" start
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+bash "$SKILL_ROOT/scripts/ensure-ready.sh"
 ```
 
 输出 `ok` 后才继续。Chrome 固定使用 `com.google.Chrome`。

@@ -85,7 +85,7 @@
   const lines2 = s2.text.split("\n");
   const panelOpen = lines2.some(l => l.includes("随机设备") || l.includes("选择我的浏览器环境"));
   const runIdx = axButtonIdx(lines2, "运行");
-  nodeRepl.write(JSON.stringify({ step: "debug-run", panelOpen, runIdx }));
+  emitResult({ step: "debug-run", panelOpen, runIdx });
   await sky.click({ app: "com.google.Chrome", element_index: runIdx });
 }
 ```
@@ -112,7 +112,7 @@
   const lines0 = s0.text.split("\n");
   const checkIdx = axButtonIdx(lines0, "检查");
   if (!checkIdx) {
-    nodeRepl.write(JSON.stringify({ step: "config-check-panel", error: "未找到「检查」按钮" }));
+    emitResult({ step: "config-check-panel", error: "未找到「检查」按钮" });
   } else {
     await sky.click({ app: "com.google.Chrome", element_index: checkIdx });
     await new Promise(r => setTimeout(r, 600));
@@ -122,13 +122,13 @@
     const panelOpen = lines1.some(l => l.includes("配置异常节点"));
     const incompleteLines = lines1.filter(l => l.includes("节点配置不完整"));
 
-    nodeRepl.write(JSON.stringify({
+    emitResult({
       step: "config-check-panel",
       panelOpen,
       configOk: incompleteLines.length === 0 && !panelOpen,
       incompleteLines: incompleteLines.slice(0, 10),
       action: incompleteLines.length === 0 ? "continue" : "fix-node-and-recheck"
-    }));
+    });
   }
 }
 ```
@@ -166,14 +166,14 @@
 
   const readyForDebug = configIncomplete.length === 0 && checkPanelOk;
 
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "pre-debug-config-check",
     configIncomplete: configIncomplete.slice(0, 10),
     incompleteFromPanel: incompleteFromPanel.slice(0, 10),
     execErrors: execErrors.slice(0, 10),
     readyForDebug,
     action: readyForDebug ? "click-debug" : "fix-config-first"
-  }));
+  });
 }
 ```
 
@@ -203,14 +203,14 @@
   if (!fieldHasValue("Name") && !fieldHasValue("CookieName")) missing.push("Name");
 
   const canSave = missing.length === 0;
-  nodeRepl.write(JSON.stringify({
+  emitResult({
     step: "conditional-required-check",
     methodUrl,
     methodDomain,
     missing,
     canSave,
     action: canSave ? "click-save" : "fill-conditional-required-first"
-  }));
+  });
 }
 ```
 
@@ -264,10 +264,10 @@ sleep 2
 # 3. 仍失败：重启 daemon
 bash "$SKILL_ROOT/scripts/daemon.sh" stop
 bash "$SKILL_ROOT/scripts/daemon.sh" start
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+bash "$SKILL_DIR/scripts/ensure-ready.sh"
 ```
 
-**禁止**：`-10005` 后立即连发多个 exec；未恢复前台就 restart daemon 多次。完整策略见 **`sky-runtime.md` §cgWindowNotFound 恢复顺序**。
+**禁止**：`-10005` 后立即连发多个 `/exec` 步骤；未恢复前台就 restart daemon 多次。完整策略见 **`sky-runtime.md` §cgWindowNotFound 恢复顺序**。
 
 ### canvas 节点显示 `selectorId 元素的...`（XPath 未落库判定）
 
@@ -286,7 +286,7 @@ bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
     // 兜底：节点末尾行含 selectorId 而非 XPath
     /^\s*\d+\s+text\s.*selectorId.*属性值/.test(l)
   );
-  nodeRepl.write(JSON.stringify({ anyBadPlaceholder, tails: nodeTails.slice(-3) }));
+  emitResult({ anyBadPlaceholder, tails: nodeTails.slice(-3) });
 }
 ```
 
@@ -312,7 +312,7 @@ bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
 
 | 错误类型 | 原因 | 修复方式 |
 |---------|------|---------|
-| FillText / 页面元素不存在 | LLM 动态定位未稳定或 XPath 与真实 DOM 不符 | 先重试 `element-selector.md` §方式 A：LLM 动态定位 / 新建 LLM；仍失败再按 §批量采集（新建 Tab）重采全部相关 XPath，或更新 locators |
+| FillText / 页面元素不存在 | LLM 动态定位未稳定或描述不符合 §LLM 自然语言描述写法（缺位置/目标元素/操作意图）、或 XPath 与真实 DOM 不符 | 先按 `element-selector.md` §方式 A 重写描述（位置 + 目标元素 + 操作意图）并确认落库；仍失败再按 §批量采集（新建 Tab）重采全部相关 XPath，或更新 locators |
 | FillText 10120036 | 选择器指向容器 div 而非 input | 精确 XPath：`//textarea[@id="xxx"]` |
 | 元素未找到 | selector 不精确、LLM 未确认落库或页面改版 | 先检查 LLM 是否已点击「确认」并落库；否则重新采集，勿沿用旧 XPath |
 | 导航失败 | URL 格式错误 | pbcopy+paste 重填 |

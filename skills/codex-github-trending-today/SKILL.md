@@ -13,7 +13,7 @@ description: >
 
 ## 依赖
 
-参照 `cua-router-basic` 的 `references/install.md` 与 `references/runtime-exec.md`。执行 sky 操作前必须验证服务在线：
+参照 `cua-router-basic` 的 `references/install.md` 与 `references/runtime-exec.md`。确定性脚本通过 `scripts/exec.sh -f` 在 `/exec` 隔离作用域内执行，使用运行时注入的 `sky.*`。
 
 ```bash
 SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
@@ -23,11 +23,10 @@ fi
 if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
   SKILL_ROOT="${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic"
 fi
-bash "$SKILL_ROOT/scripts/daemon.sh" start
-bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
+bash "$SKILL_ROOT/scripts/ensure-ready.sh"
 ```
 
-输出 `ok` 后才继续。Chrome 操作遵循 `cua-router-basic` 核心规范：地址栏 `set_value` + `Return`、每次操作后 `get_app_state({ disableDiff: true })`、在完整 `s.text` 上搜索元素。
+探活成功后再继续。Chrome 操作遵循 `cua-router-basic` 核心规范：地址栏 `set_value` + `Return`、每次操作后 `get_app_state({ disableDiff: true })`、在完整 `s.text` 上搜索元素。
 
 ## 触发判定
 
