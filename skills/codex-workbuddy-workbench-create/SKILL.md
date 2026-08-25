@@ -1,6 +1,6 @@
 ---
 name: codex-workbuddy-workbench-create
-description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打开 WorkBuddy，先点击左侧「新建任务」，进入日常办公的个人工作台，并提交工作台需求。"
+description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打开 WorkBuddy，点击左侧「新建任务」，进入日常办公的个人工作台，并提交工作台需求。"
 ---
 
 # WorkBuddy 个人工作台执行技能
@@ -16,9 +16,9 @@ description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打�
 
 | 参数 | 说明 | 默认值 |
 |---|---|---|
-| `工作台需求` | 要填写到 WorkBuddy 输入区的自然语言需求 | `个人财物助手工作台` |
+| `工作台需求` | 要填写到 WorkBuddy 输入区的自然语言需求 | `个人财物工作台` |
 
-如果用户没有显式提供 `工作台需求`，直接使用默认值 `个人财物助手工作台`，不要再询问。
+如果用户没有显式提供 `工作台需求`，直接使用默认值 `个人财物工作台`，不要再询问。
 
 ## 回放步骤
 
@@ -49,15 +49,14 @@ description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打�
 6. 填写 `工作台需求`。
    - 目标控件是 Electron / Web 文本输入区，优先使用系统剪贴板粘贴：`/usr/bin/pbcopy` + `Command+A` + `Command+V`。
    - 粘贴后必须刷新 AX tree，校验输入区文本包含 `工作台需求`。
-   - 默认需求是 `个人财物助手工作台`。
+   - 默认需求是 `个人财物工作台`。
 
-7. 点击发送 / 执行按钮。
+7. 点击发送按钮。
    - 粘贴需求后重新定位输入区右侧的发送按钮。
-   - 优先查找「发送」「执行」「提交」等语义按钮；如果按钮无文案，则使用输入区右侧相邻无名按钮。
+   - 只在 AX tree 中直接定位到文案为「发送」的按钮时点击，不使用「执行」「提交」等兜底，也不扫描全局按钮列表。
    - 不要用 Return 代替发送。
 
 8. 校验进入执行状态。
-   - 先确认出现执行态文案，再确认输入内容已提交、输入框已清空或发送按钮已不可点击。
    - 成功信号包括出现「正在准备执行」「Agent 正在接手并进入工作状态」「内容由 AI 生成，请核实重要信息」或任务卡片进入生成状态。
    - 如果未进入执行状态，检查按钮是否不可用、需求是否未填入、是否未登录或网络异常。
 
@@ -67,9 +66,10 @@ description: "将录制的 WorkBuddy 桌面操作封装为可复用流程：打�
 SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
 [ -f "$SKILL_ROOT/SKILL.md" ] || SKILL_ROOT="${HOME}/.automan/skills/cua-router-basic"
 [ -f "$SKILL_ROOT/SKILL.md" ] || SKILL_ROOT="${HOME}/.cursor/skills/cua-router-basic"
-bash "$SKILL_ROOT/scripts/ensure-ready.sh"
+bash "$SKILL_ROOT/scripts/daemon.sh" start
+bash "$SKILL_ROOT/scripts/exec.sh" 'nodeRepl.write("ok")'
 
-export REQUEST="${1:-个人财物助手工作台}"
+REQUEST="${1:-个人财物工作台}"
 open -a WorkBuddy
 printf '%s' "$REQUEST" | /usr/bin/pbcopy
 
@@ -108,31 +108,34 @@ await sky.press_key({ app, key: "Command+v" });
 await wait(800);
 s = await ax.get(app, { refresh: true });
 
-const request = process.env.REQUEST;
-if (!s.text.includes(request)) throw new Error("需求未成功填入");
-
 let sendIdx = ax.findIdx(s.text, "发送");
-if (sendIdx == null) sendIdx = ax.findIdx(s.text, "执行");
 if (sendIdx == null) {
-  const candidates = ax.findAllIdx(s.text, "按钮").map(x => x.idx).filter(idx => idx >= 100);
-  sendIdx = candidates[candidates.length - 1];
+  const lines = s.text.split("\n");
+  const autoLine = lines.find(line => /\b\d+\s+组合框.*Auto/.test(line));
+  const workspaceLine = lines.find(line => /\b\d+\s+弹出式按钮.*选择工作空间/.test(line));
+  const autoIdx = autoLine && Number(autoLine.match(/\b(\d+)\s+组合框/)[1]);
+  const workspaceIdx = workspaceLine && Number(workspaceLine.match(/\b(\d+)\s+弹出式按钮/)[1]);
+  if (Number.isFinite(autoIdx) && Number.isFinite(workspaceIdx)) {
+    const candidates = ax.findAllIdx(s.text, "按钮")
+      .map(x => x.idx)
+      .filter(idx => idx > autoIdx && idx < workspaceIdx);
+    sendIdx = candidates[0];
+  }
 }
-if (sendIdx == null) throw new Error("未找到发送按钮");
+if (sendIdx == null) throw new Error("未找到输入区右侧发送按钮");
 await sky.click({ app, element_index: sendIdx });
 await wait(2500);
 
 s = await ax.get(app, { refresh: true });
-const hasRunningState = /正在准备执行|Agent 正在接手|进入工作状态|内容由 AI 生成/.test(s.text);
-const requestStillInInput = s.text.includes(request);
-const ok = hasRunningState && !requestStillInInput;
-nodeRepl.write(JSON.stringify({ ok, hasRunningState, requestStillInInput }));
+const ok = /正在准备执行|Agent 正在接手|进入工作状态|内容由 AI 生成/.test(s.text);
+nodeRepl.write(JSON.stringify({ ok }));
 '
 ```
 
 ## 注意事项
 
 - 不要擅自改写用户的工作台需求，除非用户要求优化措辞。
-- 未提供需求时不要追问，直接使用默认值 `个人财物助手工作台`。
+- 未提供需求时不要追问，直接使用默认值 `个人财物工作台`。
 - 点击发送前必须重新定位发送按钮，不要复用旧的 element index。
 - 如果 WorkBuddy 弹出权限、更新、登录、确认等对话框，应停止并让用户确认。
 

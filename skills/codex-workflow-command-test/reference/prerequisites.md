@@ -34,7 +34,7 @@ bash "$SKILL_ROOT/scripts/ensure-ready.sh"
 ## 未安装时：远程一键安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash -s -- --version 0.4.18 --force
+curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force
 ```
 
 > 若技能目录已存在但仅缺 vendor，可改用：

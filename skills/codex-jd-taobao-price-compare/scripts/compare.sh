@@ -34,7 +34,7 @@ resolve_cua_root() {
   fi
   if [ ! -f "$root/SKILL.md" ]; then
     echo "找不到 cua-router-basic 技能，请先安装。参考：" >&2
-    echo "  curl -fsSL https://raw.githubusercontent.com/shileima/cua-router-basic/main/scripts/install-remote.sh | bash -s -- --version 0.4.18 --force" >&2
+    echo "  curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force" >&2
     exit 1
   fi
   printf '%s\n' "$root"
