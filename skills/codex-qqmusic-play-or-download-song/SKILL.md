@@ -7,7 +7,7 @@ description: >
 
 # codex-qqmusic-play-or-download-song — QQ 音乐播放/下载技能
 
-在 QQ 音乐桌面客户端 (`com.tencent.QQMusicMac`) 搜索并播放指定歌曲；也支持在已打开的歌手详情页下载热门歌曲前 5 首。播放歌曲流程已固化，元素定位顺序为 AX Tree → macOS Vision OCR → 固定坐标扫描。
+在 QQ 音乐桌面客户端 (`com.tencent.QQMusicMac`) 搜索并播放指定歌曲；也支持在已打开的歌手详情页下载热门歌曲前 5 首。播放歌曲流程已固化，元素定位顺序为 AX Tree → macOS Vision OCR → 应用级菜单命令 → 固定坐标扫描，最终以播放态校验收口。
 
 ## 依赖
 
@@ -44,8 +44,8 @@ bash ./scripts/play-song.sh "晴天" "周杰伦"
 5. **坐标点击搜索栏 (438, 40)**（AX 里 `文本框 搜索` 不支持 `set_value`；用 idx click 不能真正聚焦）
 6. `Command+a` → `Delete` 清空 → `Command+v` 粘贴中文
 7. `Return` 提交搜索，等待进入完整搜索结果页
-8. 定位并播放结果：优先 AX Tree 找歌曲元素；AX 缺失时用 macOS Vision OCR 定位歌曲名中心坐标；OCR 失败再按候选坐标扫描
-9. 校验：读播放控制栏 `歌曲名：X - 歌手名：Y`，输出到 stdout
+8. 定位并播放结果：优先 AX Tree 找歌曲元素；AX 缺失时用 macOS Vision OCR 定位歌曲名中心坐标；OCR 失败再按候选坐标扫描。命中后先单击匹配结果行；若底部控制条仍为绿色三角 `播放`（暂停/未播放），依次尝试 AX 中心点点击 → OCR/视觉坐标点击 → 应用级菜单命令 `播放控制 → 播放`。
+9. 校验：同时确认播放控制栏 `歌曲名：X - 歌手名：Y` 匹配，且底部播放控制按钮已变为「暂停/暂停播放」；仅歌名匹配但仍是「播放」态不算成功。
 
 成功时最后一行输出 JSON：
 

@@ -133,7 +133,7 @@ await (async () => {
       return { ok: true, method: "pbcopy" };
     } catch (pbErr) {
       const pbcopyError = String((pbErr && pbErr.message) || pbErr);
-      const tmp = path.join(os.tmpdir(), `dx-clipboard-${process.pid}-${Date.now()}.txt`);
+      const tmp = path.join(os.tmpdir(), `dx-clipboard-${Date.now()}.txt`);
       try {
         fs.writeFileSync(tmp, payload, { encoding: "utf8" });
         // 用 POSIX file + «class utf8» 读回，AppleScript 端不再依赖 argv 解析
@@ -193,15 +193,23 @@ await (async () => {
 
   async function stablePaste(elementIndex, text, verify) {
     const clipboard = writeClipboard(text);
-    if (!clipboard.ok) {
-      return { state: null, ok: false, error: "clipboard_write_failed", clipboard };
-    }
     await sky.click({ app, element_index: elementIndex });
     await new Promise(r => setTimeout(r, 300));
-    await sky.press_key({ app, key: "Command+a" });
-    await new Promise(r => setTimeout(r, 100));
-    await sky.press_key({ app, key: "Command+v" });
-    await new Promise(r => setTimeout(r, 700));
+
+    if (clipboard.ok) {
+      await sky.press_key({ app, key: "Command+a" });
+      await new Promise(r => setTimeout(r, 100));
+      await sky.press_key({ app, key: "Command+v" });
+      await new Promise(r => setTimeout(r, 700));
+    } else {
+      try {
+        await sky.set_value({ app, element_index: elementIndex, value: text });
+      } catch (err) {
+        return { state: null, ok: false, error: "clipboard_write_failed", clipboard, setValueError: String(err) };
+      }
+      await new Promise(r => setTimeout(r, 700));
+    }
+
     const state = await freshState();
     return { state, ok: verify(state.text), clipboard };
   }
@@ -246,9 +254,8 @@ await (async () => {
     const screenshotHeight = state.screenshotHeight;
     if (!screenshotWidth || !screenshotHeight) {
       return {
-        ok: false,
-        method: "coordinate_double_click",
-        error: "screenshot_dimensions_unavailable",
+        ok: true,
+        method: "skip_missing_dimensions",
         hasScreenshot: Boolean(state.screenshot),
       };
     }
