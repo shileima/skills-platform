@@ -32,13 +32,19 @@ function axHasLabel(line, label) {
   const re = new RegExp(label.split("").join("\\s*"));
   return re.test(line);
 }
+function axButtonAccessibleName(line) {
+  const m = String(line).replace(/\t/g, " ").match(/^\s*\d+\s+按钮\s*(.*)$/);
+  return (m ? m[1] : "").replace(/\s+/g, "").replace(/,.*$/, "").trim();
+}
 function axFindButton(lines, label) {
-  return lines.find(l => axHasLabel(l, label) && l.includes("按钮"));
+  const target = String(label).replace(/\s+/g, "");
+  return lines.find(l => l.includes("按钮") && !/disabled/.test(l) && axButtonAccessibleName(l) === target);
 }
 function axButtonIdx(lines, label) {
   const line = axFindButton(lines, label);
   return line ? parseInt(line.match(/^\s*(\d+)/)?.[1]) : null;
 }
+// 启动调试：只用 axButtonIdx(lines, "调试")。禁止 axButtonIdx("运行")——会点到工具栏「运行」或其右侧无名「运行配置」齿轮。
 
 function axAnalyze(lines, checks) {
   const text = lines.join("\n");

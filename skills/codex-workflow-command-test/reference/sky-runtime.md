@@ -75,7 +75,8 @@ bash "$SKILL_DIR/scripts/lib/ensure-chrome-front.sh"
 |--------|------|
 | `sky`, `app`, `sleep`, `emitResult` | 基础 |
 | `findIdx` / `findAllIdx` / `linesOf` | AX 行解析 |
-| `axHasLabel` / `axButtonIdx` | AntD 按钮标签 |
+| `axHasLabel` / `axButtonAccessibleName` / `axButtonIdx` | AntD 按钮；`axButtonIdx` 为名称精确全等 |
+| `closeRunConfigIfOpen` / `debugPanelRunIdx` | 关掉误开的「运行配置」；调试弹框内点「运行」（禁止全局 `axButtonIdx("运行")`） |
 | `findCmdTab` / `findSearchIdx` / `waitSearchIdx` | 指令 Tab + 搜索框 |
 | `defocusCanvas` | 编排区 Tab + Escape（**禁止**点「调试」失焦） |
 | `findCanvasNode` / `listCanvasNodes` | canvas 节点摘要 |

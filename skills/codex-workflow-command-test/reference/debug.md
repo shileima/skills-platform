@@ -39,9 +39,10 @@
 
 1. **确认配置阶段已结束**——此前**从未**为失焦或验证而点过「调试」（失焦用「编排区」Tab + Escape，见 `sky-runtime.md` §defocusCanvas）
 2. 若「调试」「运行」按钮 **disabled** 且 AX 含「**调试中**」→ 轮询等待结束，或先点「**断开**」再重新调试
-3. 点页面顶部「**调试**」按钮（打开右侧调试面板）
-4. 弹框中**直接**点橙色「**运行**」——**无需修改弹框内任何表单项**
-5. 等待云浏览器执行完毕（B 站四步实测 ~48s）
+3. **只点**页面顶部「**调试**」：`axButtonIdx(lines, "调试")`（精确名称全等）。**禁止** `axButtonIdx("运行")`，**禁止**点「运行」右侧无名齿轮（会打开「运行配置」）
+4. 点完后必须验证：出现「随机设备 / 选择我的浏览器环境」才算调试弹框。若出现「运行配置 / 仅保存 / 保存并运行」→ Escape 关掉，重新点「调试」
+5. 弹框内橙色「运行」用 `debugPanelRunIdx`（在「随机设备」切片内精确匹配），**不要**再用全局 `axButtonIdx("运行")`（会点到工具栏「运行」）
+6. 等待云浏览器执行完毕（B 站四步实测 ~48s）
 
 > ⚠️ **聊天区历史**：早先误触调试的失败日志（如 `selectorId`、元素选择器为空）会残留在 Chat 区。判 PASS 以**最新一轮**各步骤 `check-circle` 与时间戳为准，勿被历史条目误导。
 
@@ -54,22 +55,16 @@
 | 是否开启 UI 异常处理全局配置 | 默认关闭 | 不修改 |
 | 选择我的云手机环境 | 空 | 不修改（Web 场景不用） |
 
+> ⚠️ **顶部工具栏（实测踩坑）**：顺序为「创建技能 | 调试 | 运行 | **无名齿轮** | 日志 | 变量 | 更多」。无名齿轮 = 「运行配置」（重置 / 仅保存 / 保存并运行）。找不到「检查」时**禁止**拿无名按钮当降级目标。
+
 ```js
 {
-  // axHasLabel / axButtonIdx 见 ax-verify.md §分析辅助函数（兼容 Ant Design「运 行」「重 置」）
-  function axHasLabel(line, label) {
-    return new RegExp(label.split("").join("\\s*")).test(line);
-  }
-  function axButtonIdx(lines, label) {
-    const line = lines.find(l => axHasLabel(l, label) && l.includes("按钮"));
-    return line ? parseInt(line.match(/^\s*(\d+)/)?.[1]) : null;
-  }
-
+  // axButtonIdx 已改为按钮名称精确全等（去空白）。启动调试只用「调试」。
   const s0 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
   let lines = s0.text.split("\n");
+  if (isRunConfigOpen(s0.text)) await closeRunConfigIfOpen();
   let debugIdx = axButtonIdx(lines, "调试");
   if (debugIdx == null) {
-    // 按钮 disabled：可能仍在「调试中」，先尝试「断开」
     const disc = lines.find(l => /断开/.test(l) && l.includes("按钮") && !/disabled/.test(l));
     if (disc) {
       await sky.click({ app: "com.google.Chrome", element_index: parseInt(disc.match(/^\s*(\d+)/)[1]) });
@@ -82,10 +77,13 @@
   if (debugIdx == null) throw new Error("debug btn still disabled");
   await sky.click({ app: "com.google.Chrome", element_index: debugIdx });
   const s2 = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
-  const lines2 = s2.text.split("\n");
-  const panelOpen = lines2.some(l => l.includes("随机设备") || l.includes("选择我的浏览器环境"));
-  const runIdx = axButtonIdx(lines2, "运行");
-  emitResult({ step: "debug-run", panelOpen, runIdx });
+  if (isRunConfigOpen(s2.text)) {
+    await closeRunConfigIfOpen();
+    throw new Error("hit 运行配置 gear; retry axButtonIdx(调试) only");
+  }
+  const panelOpen = isDebugPanelOpen(s2.text);
+  const runIdx = debugPanelRunIdx(s2.text.split("\n")); // 禁止 axButtonIdx("运行")
+  emitResult({ step: "debug-run", debugIdx, panelOpen, runIdx });
   await sky.click({ app: "com.google.Chrome", element_index: runIdx });
 }
 ```

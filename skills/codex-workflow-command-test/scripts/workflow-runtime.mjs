@@ -106,8 +106,60 @@ export function createWorkflowRuntime(sky) {
 
   const axHasLabel = (line, label) => new RegExp(label.split("").join("\\s*")).test(line);
 
+  /** 按钮无障碍名称：去空白。「  26 按钮 调 试」→「调试」；无名齿轮 → "" */
+  const axButtonAccessibleName = (line) => {
+    const m = String(line)
+      .replace(/\t/g, " ")
+      .match(/^\s*\d+\s+按钮\s*(.*)$/);
+    return (m ? m[1] : "").replace(/\s+/g, "").replace(/,.*$/, "").trim();
+  };
+
+  /**
+   * 精确匹配按钮名称（去空白后全等）。
+   * 禁止用「运行」启动调试：那会命中顶部「运行」或其右侧无名「运行配置」齿轮。
+   */
   const axButtonIdx = (lines, label) => {
-    const line = lines.find((l) => axHasLabel(l, label) && l.includes("按钮") && !/disabled/.test(l));
+    const target = String(label).replace(/\s+/g, "");
+    const line = lines.find((l) => {
+      if (!l.includes("按钮") || /disabled/.test(l)) return false;
+      return axButtonAccessibleName(l) === target;
+    });
+    return line ? parseInt(line.match(/^\s*(\d+)/)?.[1], 10) : null;
+  };
+
+  const isRunConfigOpen = (text) =>
+    /运行配置/.test(text) && (/仅保存/.test(text) || /保存并运行/.test(text) || /hook事件/.test(text));
+
+  const isDebugPanelOpen = (text) => /随机设备/.test(text) || /选择我的浏览器环境/.test(text);
+
+  const closeRunConfigIfOpen = async () => {
+    let s = await sky.get_app_state({ app, disableDiff: true });
+    if (!isRunConfigOpen(s.text)) return { closed: false, stillOpen: false };
+    await sky.press_key({ app, key: "Escape" });
+    await sleep(400);
+    s = await sky.get_app_state({ app, disableDiff: true });
+    if (isRunConfigOpen(s.text)) {
+      const closeBtn = linesOf(s).find((l) => /关闭/.test(l) && l.includes("按钮") && !/disabled/.test(l));
+      if (closeBtn) {
+        await safeClick(
+          { element_index: parseInt(closeBtn.match(/^\s*(\d+)/)[1], 10) },
+          { label: "关闭运行配置" },
+        );
+        await sleep(400);
+        s = await sky.get_app_state({ app, disableDiff: true });
+      }
+    }
+    return { closed: true, stillOpen: isRunConfigOpen(s.text) };
+  };
+
+  /** 调试弹框内的橙色「运行」：只在「随机设备」切片里精确匹配，禁止 axButtonIdx("运行") */
+  const debugPanelRunIdx = (lines) => {
+    const start = lines.findIndex((l) => /随机设备|选择我的浏览器环境/.test(l));
+    if (start < 0) return null;
+    const line = lines.slice(start).find((l) => {
+      if (!l.includes("按钮") || /disabled/.test(l)) return false;
+      return axButtonAccessibleName(l) === "运行";
+    });
     return line ? parseInt(line.match(/^\s*(\d+)/)?.[1], 10) : null;
   };
 
@@ -328,6 +380,7 @@ export function createWorkflowRuntime(sky) {
   };
 
   const debugRunOnce = async () => {
+    await closeRunConfigIfOpen();
     let s = await sky.get_app_state({ app, disableDiff: true });
     let lines = linesOf(s);
     const disc = lines.find((l) => /断开/.test(l) && l.includes("按钮") && !/disabled/.test(l));
@@ -336,26 +389,51 @@ export function createWorkflowRuntime(sky) {
       await safeClick({ element_index: discIdx }, { label: "断开" });
       await sleep(3000);
     }
-    s = await sky.get_app_state({ app, disableDiff: true });
-    lines = linesOf(s);
-    const debugIdx = axButtonIdx(lines, "调试");
-    if (debugIdx == null) throw new Error("debug disabled — wait or disconnect");
-    // safeClick 降级：调试按钮可能因弹框遮罩无坐标
-    const debugRes = await safeClick({ element_index: debugIdx }, { label: "调试" });
-    if (!debugRes.ok) throw new Error(`debugRunOnce: debug click failed: ${debugRes.error}`);
-    await sleep(2000);
-    s = await sky.get_app_state({ app, disableDiff: true });
-    const runIdx = axButtonIdx(linesOf(s), "运行");
-    if (runIdx == null) throw new Error("run btn missing");
-    const runRes = await safeClick({ element_index: runIdx }, { label: "运行" });
-    if (!runRes.ok) throw new Error(`debugRunOnce: run click failed: ${runRes.error}`);
+
+    let debugRes = null;
+    let debugIdx = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await closeRunConfigIfOpen();
+      s = await sky.get_app_state({ app, disableDiff: true });
+      lines = linesOf(s);
+      // 只点顶部「调试」。禁止 axButtonIdx("运行")、禁止点「运行」右侧无名齿轮。
+      debugIdx = axButtonIdx(lines, "调试");
+      if (debugIdx == null) throw new Error("debug disabled — wait or disconnect");
+      debugRes = await safeClick({ element_index: debugIdx }, { label: "调试" });
+      if (!debugRes.ok) throw new Error(`debugRunOnce: debug click failed: ${debugRes.error}`);
+      await sleep(1200);
+      s = await sky.get_app_state({ app, disableDiff: true });
+      if (isRunConfigOpen(s.text)) {
+        await closeRunConfigIfOpen();
+        continue;
+      }
+      if (isDebugPanelOpen(s.text)) break;
+      await sleep(800);
+      s = await sky.get_app_state({ app, disableDiff: true });
+      if (isDebugPanelOpen(s.text)) break;
+    }
+    if (isRunConfigOpen(s.text)) {
+      throw new Error("clicked 运行配置 instead of 调试 — close dialog and retry axButtonIdx(调试)");
+    }
+    if (!isDebugPanelOpen(s.text)) throw new Error("debug panel missing after 调试");
+
+    const runIdx = debugPanelRunIdx(linesOf(s));
+    if (runIdx == null) throw new Error("debug-panel run btn missing (do not use toolbar 运行)");
+    const runRes = await safeClick({ element_index: runIdx }, { label: "调试弹框-运行" });
+    if (!runRes.ok) throw new Error(`debugRunOnce: panel run click failed: ${runRes.error}`);
     for (let i = 0; i < 12; i++) {
       await sleep(10000);
       s = await sky.get_app_state({ app, disableDiff: true });
       if (!/调试中/.test(s.text)) break;
     }
     const tail = linesOf(s).filter((l) => /check-circle|失败节点|小助手出错了/.test(l)).slice(-12);
-    return { step: "debug-run-once", tail, debugStrategy: debugRes.strategy, runStrategy: runRes.strategy };
+    return {
+      step: "debug-run-once",
+      debugIdx,
+      tail,
+      debugStrategy: debugRes?.strategy,
+      runStrategy: runRes.strategy,
+    };
   };
 
   const axRequiredFieldSlice = (lines, label) => {
@@ -420,7 +498,12 @@ export function createWorkflowRuntime(sky) {
     findAllIdx,
     findIdx,
     axHasLabel,
+    axButtonAccessibleName,
     axButtonIdx,
+    isRunConfigOpen,
+    isDebugPanelOpen,
+    closeRunConfigIfOpen,
+    debugPanelRunIdx,
     findCmdTab,
     findSearchIdx,
     waitSearchIdx,
