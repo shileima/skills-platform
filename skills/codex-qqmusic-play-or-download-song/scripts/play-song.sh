@@ -321,6 +321,10 @@ sleep 1
 # 写剪贴板，后续用 sky.press_key(Command+v) 粘贴到 QQ 音乐搜索框
 echo "[qqmusic] set clipboard: $QUERY"
 printf '%s' "$QUERY" | pbcopy
+if [ "$(pbpaste)" != "$QUERY" ]; then
+  echo "Failed to write search query to clipboard" >&2
+  exit 1
+fi
 
 echo "[qqmusic] type into search..."
 SONG_JSON=$(to_json "$SONG")
@@ -348,9 +352,6 @@ SEARCH_JS=$(cat <<'JS'
   await wait(120);
   await sky.press_key({ app: APP, key: "Command+v" });
   await wait(1200);
-  await sky.get_app_state({ app: APP, disableDiff: true });
-  await sky.press_key({ app: APP, key: "Down" });
-  await wait(400);
   await sky.get_app_state({ app: APP, disableDiff: true });
   await sky.press_key({ app: APP, key: "Return" });
   await wait(4000);
@@ -516,22 +517,12 @@ PLAY_JS=$(cat <<'JS'
 
 
   const ensureTargetPlaying = async current => {
-    let state = await sky.get_app_state({ app: APP, disableDiff: true });
-    let np = readNowPlaying(state.text);
-    if (matchesTarget(np) && isPlayingState(state.text)) {
-      return { ...current, np, screenshot: state.screenshot && state.screenshot.url, playing: true };
-    }
-
-    const clicked = await tryClickPlaybackPlay();
-    state = await sky.get_app_state({ app: APP, disableDiff: true });
-    np = readNowPlaying(state.text);
+    const state = await sky.get_app_state({ app: APP, disableDiff: true });
+    const np = readNowPlaying(state.text);
     return {
+      ...current,
       np,
       screenshot: state.screenshot && state.screenshot.url,
-      attempt: `${current.attempt || "matched-row"} + ${clicked ? clicked.attempt : "play-button-missing"}`,
-      x: current.x,
-      y: current.y,
-      strategy: `${current.strategy || "matched-row"}+ensure-playing`,
       playing: matchesTarget(np) && isPlayingState(state.text)
     };
   };
@@ -546,28 +537,45 @@ PLAY_JS=$(cat <<'JS'
     let firstSong = null;
     let best = null;
 
+    const isVipTitle = title => /(^|\s)(VIP|SQ|HQ|臻品|全景声|付费|会员)(\s|$)/.test(title) || title.includes("VIP") || title.includes("试听");
+
     for (let i = 0; i < resultLines.length; i++) {
       const item = resultLines[i];
       const title = item.title;
-      if (/歌曲名：|歌手名：|专辑|时长|播放|下载|批量|更多|MV|VIP|SQ|HQ|臻品|全景声|歌名\s*\/\s*歌手/.test(title)) continue;
+      if (/^\s*(播放|下载|批量|更多|MV|歌名\s*\/\s*歌手)/.test(title)) continue;
       if (/^(歌曲|视频|专辑|歌单|歌词|歌手|用户|有声|播放|下载|批量)$/.test(title)) continue;
       if (/^\d{1,2}:\d{2}$/.test(title)) continue;
+      if (isVipTitle(title)) continue;
 
       const near = resultLines.slice(Math.max(0, i - 4), i + 8).map(l => l.title).join("\n");
+      if (isVipTitle(near)) continue;
       const looksLikeSong = title.includes(SONG) || (ARTIST && near.includes(ARTIST)) || /\d{1,2}:\d{2}/.test(near);
       if (!looksLikeSong) continue;
 
-      if (!firstSong) firstSong = { idx: item.idx, title, score: 0 };
+      if (!firstSong) firstSong = { idx: item.idx, title, score: 0, click_count: 2 };
       if (!title.includes(SONG)) continue;
 
       let score = 1;
       if (ARTIST && title.includes(ARTIST)) score = 4;
       else if (ARTIST && near.includes(ARTIST)) score = 3;
       else if (!ARTIST) score = 2;
-      if (!best || score > best.score) best = { idx: item.idx, title, score };
+      if (!best || score > best.score) best = { idx: item.idx, title, score, click_count: 2 };
     }
 
     return best || firstSong;
+  };
+
+  const tryCloseVipDialog = async text => {
+    if (!/开通会员|VIP歌曲|豪华绿钻|超级会员|qrcode|微信支付/.test(text)) return false;
+    const axLines = parseAxLines(text);
+    const closeButton = axLines.find(l => /关闭/.test(l.title));
+    if (closeButton) {
+      await sky.click({ app: APP, element_index: closeButton.idx });
+    } else {
+      await sky.press_key({ app: APP, key: "Escape" });
+    }
+    await wait(900);
+    return true;
   };
 
   const tryPlayAt = async ({ element_index, x, y, label, strategy, click_count = 1 }) => {
@@ -578,7 +586,13 @@ PLAY_JS=$(cat <<'JS'
       await sky.click({ app: APP, x, y, click_count });
     }
     await wait(2200);
-    const state = await sky.get_app_state({ app: APP, disableDiff: true });
+    let state = await sky.get_app_state({ app: APP, disableDiff: true });
+    const closedVip = await tryCloseVipDialog(state.text);
+    if (closedVip) {
+      state = await sky.get_app_state({ app: APP, disableDiff: true });
+      const np = readNowPlaying(state.text);
+      return { np, screenshot: state.screenshot && state.screenshot.url, attempt: `${label}+skip-vip`, x, y, strategy, playing: false };
+    }
     const np = readNowPlaying(state.text);
     return await ensureTargetPlaying({ np, screenshot: state.screenshot && state.screenshot.url, attempt: label, x, y, strategy });
   };
@@ -597,16 +611,15 @@ PLAY_JS=$(cat <<'JS'
   ];
 
   const attempts = [];
-  if (resultTarget) attempts.push({ element_index: resultTarget.idx, label: `ax:${resultTarget.title}`, strategy: "ax" });
+  if (resultTarget) attempts.push({ element_index: resultTarget.idx, label: `ax:${resultTarget.title}`, strategy: "ax", click_count: resultTarget.click_count || 2 });
   if (OCR_TARGET && Number.isFinite(OCR_TARGET.x) && Number.isFinite(OCR_TARGET.y)) {
-    attempts.push({ x: OCR_TARGET.x, y: OCR_TARGET.y, label: `ocr:${OCR_TARGET.text}@${OCR_TARGET.x},${OCR_TARGET.y}`, strategy: "ocr" });
-    attempts.push({ x: 285, y: OCR_TARGET.y, label: `row-play:${OCR_TARGET.text}@285,${OCR_TARGET.y}`, strategy: "row-play", click_count: 1 });
-    attempts.push({ x: 320, y: OCR_TARGET.y, label: `row-title:${OCR_TARGET.text}@320,${OCR_TARGET.y}`, strategy: "row-title" });
+    attempts.push({ x: OCR_TARGET.x, y: OCR_TARGET.y, label: `ocr-title-double:${OCR_TARGET.text}@${OCR_TARGET.x},${OCR_TARGET.y}`, strategy: "ocr-title", click_count: 2 });
+    attempts.push({ x: 320, y: OCR_TARGET.y, label: `row-title-double:${OCR_TARGET.text}@320,${OCR_TARGET.y}`, strategy: "row-title", click_count: 2 });
   }
-  for (const p of coordCandidates) attempts.push({ x: p.x, y: p.y, label: `coord-scan:${p.x},${p.y}`, strategy: "coord-scan" });
+  for (const p of coordCandidates) attempts.push({ x: p.x, y: p.y, label: `coord-title-double:${p.x},${p.y}`, strategy: "coord-scan", click_count: 2 });
 
-  let last = await ensureTargetPlaying({ np: readNowPlaying(state.text), screenshot: state.screenshot && state.screenshot.url, attempt: "initial", strategy: "initial" });
-  let played = last.playing === true;
+  let last = { np: readNowPlaying(state.text), screenshot: state.screenshot && state.screenshot.url, attempt: "initial", strategy: "initial" };
+  let played = matchesTarget(last.np) && isPlayingState(state.text);
   let successAttempt = played ? last.attempt : undefined;
   let successX = played ? last.x : undefined;
   let successY = played ? last.y : undefined;
@@ -616,7 +629,7 @@ PLAY_JS=$(cat <<'JS'
     if (played) break;
     const freshState = await sky.get_app_state({ app: APP, disableDiff: true });
     const freshTarget = a.strategy === "ax" ? findResultClickTarget(freshState.text) : null;
-    const target = freshTarget ? { element_index: freshTarget.idx, label: `ax:${freshTarget.title}`, strategy: "ax" } : a;
+    const target = freshTarget ? { element_index: freshTarget.idx, label: `ax:${freshTarget.title}`, strategy: "ax", click_count: freshTarget.click_count || 2 } : a;
     const r = await tryPlayAt(target);
     last = r;
     if (r.playing === true) {
@@ -657,42 +670,5 @@ PLAY_JSON=$(printf '%s' "$PLAY_OUT" | python3 -c 'import sys,re; s=sys.stdin.rea
 PLAY_OK=$(printf '%s' "$PLAY_JSON" | python3 -c 'import json,sys; data=json.loads(sys.stdin.read() or "{}"); print("true" if data.get("ok") is True else "false")')
 
 if [ "$PLAY_OK" != "true" ]; then
-  echo "[qqmusic] fallback by menu command..."
-  osascript -e "tell application id \"$QQM_BUNDLE\" to activate" \
-    -e 'tell application "System Events" to tell process "QQ音乐" to click menu item "播放" of menu "播放控制" of menu bar 1' >/dev/null
-
-  VERIFY_JS=$(cat <<'JS'
-{
-  const APP = "com.tencent.QQMusicMac";
-  const SONG = __SONG_JSON__;
-  const ARTIST = __ARTIST_JSON__;
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  const readNowPlaying = text => {
-    const line = text.split("\n").find(l => /歌曲名：/.test(l) && /歌手名：/.test(l)) || "";
-    const m = line.match(/歌曲名：(.+?) - 歌手名：(.+?)(?:\s|$)/);
-    return { line: line.trim(), title: m ? m[1].trim() : "", artist: m ? m[2].trim() : "" };
-  };
-  const matchesTarget = np => {
-    if (!np.title || !np.title.includes(SONG)) return false;
-    if (ARTIST && np.artist && !np.artist.includes(ARTIST)) return false;
-    return true;
-  };
-  const isPlayingState = text => /按钮\s+暂停|按钮\s+暂停播放|暂停播放/.test(text);
-  await wait(1200);
-  const state = await sky.get_app_state({ app: APP, disableDiff: true });
-  const np = readNowPlaying(state.text);
-  nodeRepl.write(JSON.stringify({
-    ok: matchesTarget(np) && isPlayingState(state.text),
-    expected: ARTIST ? `${SONG} - ${ARTIST}` : SONG,
-    nowPlaying: np.line,
-    successAttempt: "menu:播放控制/播放",
-    strategy: "menu",
-    screenshot: state.screenshot && state.screenshot.url
-  }));
-}
-JS
-)
-  VERIFY_JS=${VERIFY_JS/__SONG_JSON__/$SONG_JSON}
-  VERIFY_JS=${VERIFY_JS/__ARTIST_JSON__/$ARTIST_JSON}
-  bash "$SKILL_ROOT/scripts/exec.sh" -t 60000 "$VERIFY_JS"
+  exit 1
 fi
