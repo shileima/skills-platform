@@ -4,17 +4,33 @@
   "description": "通过 Chrome 打开 GitHub 今日 Trending 热榜，汇总前 10 条仓库（名称、Star 数、中文描述），并以 Markdown 消息发送到大象本人会话。",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["github", "trending", "daxiang", "markdown", "desktop-automation", "cua"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "github",
+    "trending",
+    "daxiang",
+    "markdown",
+    "desktop-automation",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
       "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
     }
   ],
-  "modules": ["dx-send-markdown"],
+  "modules": [
+    "dx-send-markdown"
+  ],
   "pack": {
-    "include": ["SKILL.md", "skill.json", "scripts"]
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
   },
   "automan": {
     "source": "user",

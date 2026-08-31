@@ -5,6 +5,6 @@
 ## 分发/安装
 
 ```bash
-skilldev install __NAME__ --target claude
+skilldev install __NAME__ --target cursor
 skilldev pack __NAME__            # automan zip
 ```

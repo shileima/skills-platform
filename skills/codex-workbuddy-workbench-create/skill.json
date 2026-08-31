@@ -4,8 +4,17 @@
   "description": "将录制的 WorkBuddy 桌面操作封装为可复用流程：打开 WorkBuddy，点击左侧「新建任务」，进入日常办公的个人工作台，并提交工作台需求。",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["workbuddy", "workbench", "desktop-automation", "cua", "record-replay"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "workbuddy",
+    "workbench",
+    "desktop-automation",
+    "cua",
+    "record-replay"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
@@ -13,7 +22,10 @@
     }
   ],
   "pack": {
-    "include": ["SKILL.md", "skill.json"]
+    "include": [
+      "SKILL.md",
+      "skill.json"
+    ]
   },
   "automan": {
     "source": "user",

@@ -4,8 +4,17 @@
   "description": "在 rpa.sankuai.com 创建空的可视化编排工作流，并验证画布仅包含开始节点和结束节点",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["rpa", "bots", "workflow", "web-automation", "cua"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "rpa",
+    "bots",
+    "workflow",
+    "web-automation",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
@@ -13,7 +22,11 @@
     }
   ],
   "pack": {
-    "include": ["SKILL.md", "skill.json", "scripts"]
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
   },
   "automan": {
     "source": "user",

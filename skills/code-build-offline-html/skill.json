@@ -13,10 +13,20 @@
     "vite",
     "react"
   ],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [],
   "pack": {
-    "include": [".meta.json", "SKILL.md", "README.md", "CHANGELOG.md", "reference", "scripts"]
+    "include": [
+      ".meta.json",
+      "SKILL.md",
+      "README.md",
+      "CHANGELOG.md",
+      "reference",
+      "scripts"
+    ]
   },
   "automan": {
     "source": "user"

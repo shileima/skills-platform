@@ -14,7 +14,10 @@
     "cua",
     "chrome"
   ],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
@@ -22,7 +25,12 @@
     }
   ],
   "pack": {
-    "include": ["SKILL.md", "skill.json", "scripts", "README.md"]
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts",
+      "README.md"
+    ]
   },
   "automan": {
     "source": "user",

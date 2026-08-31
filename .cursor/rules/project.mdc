@@ -8,7 +8,7 @@ alwaysApply: true
 
 ## 项目概述
 
-`skills-platform` 是技能开发/发布仓库，技能源只维护一份，投递到多生态（Claude、Cursor、Codex、Automan 等）。
+`skills-platform` 是技能开发/发布仓库，技能源只维护一份，投递到 Cursor 与 Automan 生态。
 
 ## 语言规则
 
@@ -31,7 +31,7 @@ alwaysApply: true
 node bin/skilldev.mjs new <name>              # 新建技能
 node bin/skilldev.mjs validate                # 校验全部
 node bin/skilldev.mjs build <name> --target all
-node bin/skilldev.mjs install <name> --target claude --dry-run
+node bin/skilldev.mjs install <name> --target cursor --dry-run
 node bin/skilldev.mjs pack <name>             # 打包 automan zip
 node bin/skilldev.mjs version <name> patch    # 升版本号
 ```

@@ -26,9 +26,9 @@ test("stageModules copies module into skill output", async () => {
 
 test("stageSkill bundles modules with skill files", async () => {
   const root = await fs.mkdtemp(join(tmpdir(), "skilldev-stage-"));
-  const out = join(root, "dist", "codex");
+  const out = join(root, "dist", "cursor");
   const skill = await loadSkill("codex-dx-unread-messages");
-  await stageSkill(skill, "codex", out);
+  await stageSkill(skill, "cursor", out);
   assert.equal(await exists(join(out, "SKILL.md")), true);
   assert.equal(await exists(join(out, "modules", "dx-send-markdown", "scripts", "send-markdown.sh")), true);
   await fs.rm(root, { recursive: true, force: true });

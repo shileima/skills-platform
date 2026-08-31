@@ -4,8 +4,17 @@
   "description": "在美团日程 Chrome 页面按日期、会议室名称和时间段预订会议室",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["calendar", "meeting-room", "room-booking", "web-automation", "cua"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "calendar",
+    "meeting-room",
+    "room-booking",
+    "web-automation",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
@@ -13,7 +22,10 @@
     }
   ],
   "pack": {
-    "include": ["SKILL.md", "skill.json"]
+    "include": [
+      "SKILL.md",
+      "skill.json"
+    ]
   },
   "automan": {
     "source": "user",

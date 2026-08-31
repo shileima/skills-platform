@@ -1,6 +1,6 @@
 // skilldev doctor — environment self-check.
 
-import { ECOSYSTEMS, skillsDir, mirrorDir } from "../lib/ecosystems.mjs";
+import { ECOSYSTEMS, skillsDir } from "../lib/ecosystems.mjs";
 import { exists } from "../lib/fsutil.mjs";
 import { hasZip } from "../lib/zip.mjs";
 import { loadYaml } from "../lib/frontmatter.mjs";
@@ -33,7 +33,5 @@ export default async function doctor() {
     const present = await exists(dir);
     const mark = present ? c.green("✓") : c.yellow("·");
     info(`  ${mark} ${id.padEnd(8)} ${dir}${present ? "" : c.dim("  (will be created on install)")}`);
-    const mdir = mirrorDir(id);
-    if (mdir) info(`      ${c.dim("mirror →")} ${mdir}`);
   }
 }

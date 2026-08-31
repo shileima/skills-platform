@@ -474,11 +474,10 @@ await (async () => {
     let s = await sky.get_app_state({ app, disableDiff: true });
     let items = [];
 
-    const MAX_CHATS = 10;
     let drilled = 0;
     const visited = new Set();
     const unreadConversationNames = new Set(parseUnreadConversations(s.text).map(c => c.name));
-    for (let round = 0; round < MAX_CHATS; round++) {
+    while (true) {
       s = await sky.get_app_state({ app, disableDiff: true });
       await clickUnreadTab(s.text);
       await new Promise(r => setTimeout(r, 500));

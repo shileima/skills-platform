@@ -12,10 +12,8 @@
     "cua"
   ],
   "targets": [
-    "claude",
-    "codex",
-    "automan",
-    "cursor"
+    "cursor",
+    "automan"
   ],
   "dependencies": [
     {

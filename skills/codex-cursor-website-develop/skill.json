@@ -4,8 +4,18 @@
   "description": "Cursor 桌面客户端网站开发技能：打开 New Agents Window，新建本地项目文件夹，默认发送简洁功能版社区站点前端工程开发需求。",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["cursor", "website", "frontend", "community-site", "desktop-automation", "cua"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "cursor",
+    "website",
+    "frontend",
+    "community-site",
+    "desktop-automation",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
@@ -13,7 +23,11 @@
     }
   ],
   "pack": {
-    "include": ["SKILL.md", "skill.json", "scripts"]
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
   },
   "automan": {
     "source": "user",

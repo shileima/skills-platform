@@ -80,7 +80,7 @@ Commands:
   manifest [--dry-run]             Generate repo-level plugin manifests
   doctor                           Environment self-check
 
-Ecosystems: claude, codex, cursor, automan  (paths overridable via env — see README)`);
+Ecosystems: cursor, automan  (paths overridable via env — see README)`);
 }
 
 export async function run(argv) {

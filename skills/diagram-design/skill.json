@@ -13,7 +13,10 @@
     "svg",
     "html"
   ],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "pack": {
     "include": [
       ".meta.json",

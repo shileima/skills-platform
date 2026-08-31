@@ -41,7 +41,7 @@ export default {
 
 ## 参考现有适配器
 
-- `claude.mjs` / `codex.mjs` / `cursor.mjs`：最简，纯按白名单拷贝 `SKILL.md` + 支撑目录。
+- `cursor.mjs`：最简，纯按白名单拷贝 `SKILL.md` + 支撑目录。
 - `automan.mjs`：最全，额外由 `skill.json` 生成 `.meta.json`，并支持 `pack`（zip）与依赖安装。
 
 ## 约定

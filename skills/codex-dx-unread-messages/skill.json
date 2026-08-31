@@ -4,17 +4,32 @@
   "description": "读取大象 App 当前可见未读/近期消息，智能概括后整理为 Markdown 摘要并发送给本人会话",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["daxiang", "message", "summary", "desktop-automation", "cua"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "daxiang",
+    "message",
+    "summary",
+    "desktop-automation",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
       "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
     }
   ],
-  "modules": ["dx-send-markdown"],
+  "modules": [
+    "dx-send-markdown"
+  ],
   "pack": {
-    "include": ["SKILL.md", "skill.json", "scripts"]
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
   },
   "automan": {
     "source": "user",

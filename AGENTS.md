@@ -1,10 +1,10 @@
 # AGENTS.md — 给在本仓库工作的 coding agent
 
-`skills-platform` 是一个**技能开发/发布仓库**。技能源只维护一份，投递到多生态。
+`skills-platform` 是一个**技能开发/发布仓库**。技能源只维护一份，投递到 Cursor 与 Automan 生态。
 
 ## 硬规则
 
-1. **唯一事实来源是 `skills/<name>/`。** 不要手改 `dist/`、也不要直接编辑各生态目录（`~/.claude/skills` 等）里的文件 —— 改源，再 `skilldev install`。
+1. **唯一事实来源是 `skills/<name>/`。** 不要手改 `dist/`、也不要直接编辑各生态目录（`~/.cursor/skills` 等）里的文件 —— 改源，再 `skilldev install`。
 2. **`SKILL.md` frontmatter 只放 `name` 和 `description`。** 其它元数据放 `skill.json`。两者的 `name` 必须与目录名一致。
 3. **automan 的 `.meta.json` 是生成物，不手写。** 由 `skill.json` 派生（automan 名称如需与目录名不同，用 `skill.json.automan.metaName`）。
 4. **改完必须 `skilldev validate` 通过**再提交。
@@ -16,7 +16,7 @@
 node bin/skilldev.mjs new <name>          # 新技能
 node bin/skilldev.mjs validate            # 校验全部
 node bin/skilldev.mjs build <name> --target all
-node bin/skilldev.mjs install <name> --target claude --dry-run
+node bin/skilldev.mjs install <name> --target cursor --dry-run
 node bin/skilldev.mjs pack <name>         # automan zip
 node bin/skilldev.mjs version <name> patch
 ```

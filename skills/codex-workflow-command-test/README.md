@@ -56,7 +56,7 @@ codex-workflow-command-test/
 # 先干跑确认目标路径，不写盘
 skilldev install codex-workflow-command-test --target automan --dry-run
 
-# 正式安装到某个生态（claude | codex | cursor | automan | all）
+# 正式安装到某个生态（cursor | automan | all）
 skilldev install codex-workflow-command-test --target automan
 
 # 安装并一并装依赖（cua-router-basic，会执行其 install 脚本）

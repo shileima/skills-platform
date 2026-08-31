@@ -4,8 +4,16 @@
   "version": "0.0.1",
   "author": "mashilei",
   "license": "MIT",
-  "keywords": ["catdesk", "desktop-automation", "cua", "record-replay"],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "keywords": [
+    "catdesk",
+    "desktop-automation",
+    "cua",
+    "record-replay"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
   "dependencies": [
     {
       "name": "cua-router-basic",
@@ -13,7 +21,11 @@
     }
   ],
   "pack": {
-    "include": ["SKILL.md", "skill.json", "scripts"]
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
   },
   "automan": {
     "source": "user",

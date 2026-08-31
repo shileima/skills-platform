@@ -48,5 +48,5 @@ export default async function newSkill({ positionals, flags }) {
   info("Next:");
   info(`  1. edit skills/${name}/SKILL.md and skill.json`);
   info(`  2. skilldev validate ${name}`);
-  info(`  3. skilldev install ${name} --target claude --dry-run`);
+  info(`  3. skilldev install ${name} --target cursor --dry-run`);
 }

@@ -1,12 +1,10 @@
 // Adapter registry. To add an ecosystem: implement src/adapters/<id>.mjs and
 // register it here (and add its paths to src/lib/ecosystems.mjs).
 
-import claude from "./claude.mjs";
-import codex from "./codex.mjs";
 import cursor from "./cursor.mjs";
 import automan from "./automan.mjs";
 
-export const adapters = { claude, codex, cursor, automan };
+export const adapters = { cursor, automan };
 
 export function getAdapter(id) {
   const a = adapters[id];

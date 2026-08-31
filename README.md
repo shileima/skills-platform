@@ -1,6 +1,6 @@
 # skills-platform
 
-在一个仓库里**开发多个 agent 技能**，做**版本控制**与**测试**，并**一键安装/发布到 `.claude`、`.codex`、`.automan`、`.cursor` 等生态**。
+在一个仓库里**开发多个 agent 技能**，做**版本控制**与**测试**，并**一键安装/发布到 `.cursor`、`.automan` 生态**。
 
 灵感来自 [obra/superpowers](https://github.com/obra/superpowers)：技能源只维护一份（canonical `skills/`），由 `skilldev` CLI 转换并投递到各生态目录。
 
@@ -43,7 +43,7 @@ skills/<name>/
   "author": "you",
   "license": "MIT",
   "keywords": ["..."],
-  "targets": ["claude", "codex", "automan", "cursor"],
+  "targets": ["cursor", "automan"],
   "dependencies": [
     { "name": "cua-router-basic", "install": "curl -fsSL https://.../install-remote.sh | bash" }
   ],
@@ -60,10 +60,10 @@ skills/<name>/
 | `skilldev list` | 列出技能：名称 / 版本 / targets |
 | `skilldev validate [skill]` | 校验 frontmatter、name 一致性、semver、targets、相对链接；失败非零退出 |
 | `skilldev build [skill] [--target …]` | 转换到 `dist/<target>/<name>/`；automan 额外生成 `.meta.json` |
-| `skilldev install <skill> [--target claude\|codex\|automan\|cursor\|all] [--link] [--dry-run]` | 安装进 `~/.<eco>/skills/<name>/` |
+| `skilldev install <skill> [--target cursor\|automan\|all] [--link] [--dry-run]` | 安装进 `~/.<eco>/skills/<name>/` |
 | `skilldev pack <skill>` | 按白名单产出 `dist/<name>_<version>.zip`（automan 分发件） |
 | `skilldev version <skill> <newver\|major\|minor\|patch>` | 升版 `skill.json` + 追加 CHANGELOG 骨架 |
-| `skilldev manifest` | 在仓库根生成整仓插件清单（marketplace 分发，次要能力） |
+| `skilldev manifest` | 在仓库根生成 Cursor 插件清单（marketplace 分发，次要能力） |
 | `skilldev doctor` | 环境自检 |
 
 `--dry-run` 只打印将写入的路径，不落盘 —— 安装前先用它确认目标，避免覆盖既有技能。
@@ -72,12 +72,10 @@ skills/<name>/
 
 | 生态 | 默认安装路径 | 覆盖变量 |
 | --- | --- | --- |
-| claude | `~/.claude/skills` | `SKILLDEV_CLAUDE_SKILLS_DIR` |
-| codex | `~/.codex/skills` | `SKILLDEV_CODEX_SKILLS_DIR` |
 | cursor | `~/.cursor/skills` | `SKILLDEV_CURSOR_SKILLS_DIR` |
 | automan | `~/.automan/claude-code-agents/cua-agent/skills` | `SKILLDEV_AUTOMAN_SKILLS_DIR` |
 
-`claude/codex/cursor` 只需拷贝 `SKILL.md` + 支撑目录；`automan` 额外生成 `.meta.json` 并支持 zip 打包与依赖安装。
+`cursor` 只需拷贝 `SKILL.md` + 支撑目录；`automan` 额外生成 `.meta.json` 并支持 zip 打包与依赖安装。
 
 ## 新增一个生态
 

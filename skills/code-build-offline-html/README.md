@@ -15,6 +15,6 @@
 ## 分发/安装
 
 ```bash
-skilldev install code-build-offline-html --target claude
+skilldev install code-build-offline-html --target cursor
 skilldev pack code-build-offline-html            # automan zip
 ```
