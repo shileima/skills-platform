@@ -27,6 +27,9 @@ if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
 fi
 
 QQM_BUNDLE="com.tencent.QQMusicMac"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib/qqmusic-common.sh
+source "$SCRIPT_DIR/lib/qqmusic-common.sh"
 
 to_json() {
   python3 -c 'import json,sys; print(json.dumps(sys.argv[1], ensure_ascii=False))' "$1"
@@ -306,19 +309,30 @@ open -b "$QQM_BUNDLE" || {
   echo "QQ Music not installed (bundle=$QQM_BUNDLE)" >&2; exit 1;
 }
 
-# 等窗口就绪：最多 8 秒
-for i in 1 2 3 4 5 6 7 8; do
-  if osascript -e "tell application \"System Events\" to exists (window 1 of process \"QQ音乐\")" 2>/dev/null | grep -q true; then
-    break
-  fi
-  sleep 1
-done
+# 等窗口就绪（兼容进程名 QQMusic / QQ音乐）
+if ! qqmusic_wait_for_window >/dev/null; then
+  echo "QQ Music launched but no window appeared within timeout" >&2
+  exit 1
+fi
 
 echo "[qqmusic] activate app..."
-osascript -e "tell application id \"$QQM_BUNDLE\" to activate" >/dev/null
+qqmusic_activate
+
+echo "[qqmusic] dismiss update dialog if present..."
+DISMISS_JSON="$(qqmusic_dismiss_update_dialog "$SKILL_ROOT" || true)"
+if [ -n "${DISMISS_JSON:-}" ]; then
+  echo "[qqmusic] update dialog: $DISMISS_JSON"
+fi
+qqmusic_activate
 sleep 1
 
-# 写剪贴板，后续用 sky.press_key(Command+v) 粘贴到 QQ 音乐搜索框
+echo "[qqmusic] dismiss update dialog again if it reappeared..."
+DISMISS_JSON="$(qqmusic_dismiss_update_dialog "$SKILL_ROOT" || true)"
+if [ -n "${DISMISS_JSON:-}" ]; then
+  echo "[qqmusic] update dialog: $DISMISS_JSON"
+fi
+qqmusic_activate
+
 echo "[qqmusic] set clipboard: $QUERY"
 printf '%s' "$QUERY" | pbcopy
 if [ "$(pbpaste)" != "$QUERY" ]; then
@@ -326,55 +340,57 @@ if [ "$(pbpaste)" != "$QUERY" ]; then
   exit 1
 fi
 
+SEARCH_CENTER_JSON="$(qqmusic_search_box_center)"
+echo "[qqmusic] search box: $SEARCH_CENTER_JSON"
+SEARCH_X="$(printf '%s' "$SEARCH_CENTER_JSON" | json_field x)"
+SEARCH_Y="$(printf '%s' "$SEARCH_CENTER_JSON" | json_field y)"
+[ -n "$SEARCH_X" ] || SEARCH_X=438
+[ -n "$SEARCH_Y" ] || SEARCH_Y=40
+
 echo "[qqmusic] type into search..."
 SONG_JSON=$(to_json "$SONG")
 ARTIST_JSON=$(to_json "$ARTIST")
-SEARCH_JS=$(cat <<'JS'
+QUERY_JSON=$(to_json "$QUERY")
+SEARCH_HELPERS="$(cat "$SCRIPT_DIR/lib/qqmusic-search-helpers.js")"
+SEARCH_JS=$(cat <<JS
 {
+${SEARCH_HELPERS}
   const APP = "com.tencent.QQMusicMac";
-  const SONG = __SONG_JSON__;
+  const SONG = ${SONG_JSON};
+  const QUERY = ${QUERY_JSON};
+  const SEARCH_X = ${SEARCH_X};
+  const SEARCH_Y = ${SEARCH_Y};
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
   const isSearchResultPage = text => {
-    if (text.includes(SONG)) return true;
+    if (/面板 搜索|按钮 取消搜索/.test(text)) return true;
+    const inLibraryFilter = /歌单列表（我喜欢）|文本 我喜欢/.test(text) && !/按钮 取消搜索|面板 搜索/.test(text);
+    if (inLibraryFilter) return false;
     const hasResultTabs = ["歌曲", "视频", "专辑"].every(label => text.includes(label));
     const hasResultActions = ["播放", "下载", "批量"].every(label => text.includes(label));
     return hasResultTabs && hasResultActions;
   };
 
-  await sky.get_app_state({ app: APP, disableDiff: true });
-  await sky.click({ app: APP, x: 438, y: 40 });
-  await wait(700);
-  await sky.get_app_state({ app: APP, disableDiff: true });
-  await sky.press_key({ app: APP, key: "Command+a" });
-  await wait(120);
-  await sky.press_key({ app: APP, key: "Delete" });
-  await wait(120);
-  await sky.press_key({ app: APP, key: "Command+v" });
-  await wait(1200);
-  await sky.get_app_state({ app: APP, disableDiff: true });
+  await qqmFillSearchBox(APP, QUERY, SEARCH_X, SEARCH_Y);
   await sky.press_key({ app: APP, key: "Return" });
-  await wait(4000);
+  await wait(3500);
   let state = await sky.get_app_state({ app: APP, disableDiff: true });
-  if (!state.text.includes(SONG)) {
-    await sky.click({ app: APP, x: 438, y: 40 });
-    await wait(500);
-    await sky.get_app_state({ app: APP, disableDiff: true });
+  if (!isSearchResultPage(state.text) && !qqmOpenedSearch(state.text)) {
+    await qqmFillSearchBox(APP, QUERY, SEARCH_X, SEARCH_Y);
     await sky.press_key({ app: APP, key: "Return" });
-    await wait(4500);
+    await wait(4000);
     state = await sky.get_app_state({ app: APP, disableDiff: true });
   }
 
   nodeRepl.write(JSON.stringify({
-    searchHasSong: state.text.includes(SONG),
+    searchHasSong: state.text.includes(SONG) || isSearchResultPage(state.text),
     isResultPage: isSearchResultPage(state.text),
     screenshot: state.screenshot && state.screenshot.url
   }));
 }
 JS
 )
-SEARCH_JS=${SEARCH_JS/__SONG_JSON__/$SONG_JSON}
-SEARCH_OUT=$(bash "$SKILL_ROOT/scripts/exec.sh" -t 60000 "$SEARCH_JS")
+SEARCH_OUT=$(bash "$SKILL_ROOT/scripts/exec.sh" -t 180000 "$SEARCH_JS")
 SEARCH_JSON=$(printf '%s' "$SEARCH_OUT" | python3 -c 'import sys,json,re; s=sys.stdin.read(); m=re.findall(r"\{.*\}", s, re.S); print(m[-1] if m else "{}")')
 SCREENSHOT_URL=$(printf '%s' "$SEARCH_JSON" | json_field screenshot)
 SCREENSHOT_PATH=$(file_url_to_path "$SCREENSHOT_URL")
@@ -440,7 +456,9 @@ PLAY_JS=$(cat <<'JS'
   }).filter(Boolean);
 
   const isSearchResultPage = text => {
-    if (text.includes(SONG)) return true;
+    if (/面板 搜索|按钮 取消搜索/.test(text)) return true;
+    const inLibraryFilter = /歌单列表（我喜欢）|文本 我喜欢/.test(text) && !/按钮 取消搜索|面板 搜索/.test(text);
+    if (inLibraryFilter) return false;
     const hasResultTabs = ["歌曲", "视频", "专辑"].every(label => text.includes(label));
     const hasResultActions = ["播放", "下载", "批量"].every(label => text.includes(label));
     return hasResultTabs && hasResultActions;

@@ -22,6 +22,9 @@ if [ ! -f "$SKILL_ROOT/SKILL.md" ]; then
 fi
 
 QQM_BUNDLE="com.tencent.QQMusicMac"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib/qqmusic-common.sh
+source "$SCRIPT_DIR/lib/qqmusic-common.sh"
 
 echo "[qqmusic] ensure cua-router..."
 bash "$SKILL_ROOT/scripts/ensure-ready.sh" >/dev/null
@@ -31,24 +34,37 @@ open -b "$QQM_BUNDLE" || {
   echo "QQ Music not installed (bundle=$QQM_BUNDLE)" >&2; exit 1;
 }
 
-for i in 1 2 3 4 5 6 7 8; do
-  if osascript -e "tell application \"System Events\" to exists (window 1 of process \"QQ音乐\")" 2>/dev/null | grep -q true; then
-    break
-  fi
-  sleep 1
-done
+if ! qqmusic_wait_for_window >/dev/null; then
+  echo "QQ Music launched but no window appeared within timeout" >&2
+  exit 1
+fi
 
 echo "[qqmusic] activate app..."
-osascript -e "tell application id \"$QQM_BUNDLE\" to activate" >/dev/null
+qqmusic_activate
+
+echo "[qqmusic] dismiss update dialog if present..."
+DISMISS_JSON="$(qqmusic_dismiss_update_dialog "$SKILL_ROOT" || true)"
+if [ -n "${DISMISS_JSON:-}" ]; then
+  echo "[qqmusic] update dialog: $DISMISS_JSON"
+fi
+qqmusic_activate
 sleep 1
 
 echo "[qqmusic] download top 5 songs for singer: $SINGER"
 printf '%s' "$SINGER" | pbcopy
+SEARCH_CENTER_JSON="$(qqmusic_search_box_center)"
+echo "[qqmusic] search box: $SEARCH_CENTER_JSON"
+SEARCH_X="$(printf '%s' "$SEARCH_CENTER_JSON" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read() or "{}").get("x") or 438)')"
+SEARCH_Y="$(printf '%s' "$SEARCH_CENTER_JSON" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read() or "{}").get("y") or 40)')"
 SINGER_JSON=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1], ensure_ascii=False))' "$SINGER")
-JS_CODE=$(cat <<'JS'
+SEARCH_HELPERS="$(cat "$SCRIPT_DIR/lib/qqmusic-search-helpers.js")"
+JS_CODE=$(cat <<JS
 {
+${SEARCH_HELPERS}
   const APP = "com.tencent.QQMusicMac";
-  const SINGER = __SINGER_JSON__;
+  const SINGER = ${SINGER_JSON};
+  const SEARCH_X = ${SEARCH_X};
+  const SEARCH_Y = ${SEARCH_Y};
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const parseIndex = (text, pattern) => {
@@ -67,14 +83,7 @@ JS_CODE=$(cat <<'JS'
   };
 
   const openSingerPage = async () => {
-    await sky.click({ app: APP, x: 438, y: 40 });
-    await wait(700);
-    await sky.press_key({ app: APP, key: "Command+a" });
-    await wait(120);
-    await sky.press_key({ app: APP, key: "Delete" });
-    await wait(120);
-    await sky.press_key({ app: APP, key: "Command+v" });
-    await wait(700);
+    await qqmFillSearchBox(APP, SINGER, SEARCH_X, SEARCH_Y);
     await sky.press_key({ app: APP, key: "Return" });
     await wait(3500);
 
@@ -225,5 +234,4 @@ JS_CODE=$(cat <<'JS'
 }
 JS
 )
-JS_CODE=${JS_CODE/__SINGER_JSON__/$SINGER_JSON}
 bash "$SKILL_ROOT/scripts/exec.sh" -t 180000 "$JS_CODE"

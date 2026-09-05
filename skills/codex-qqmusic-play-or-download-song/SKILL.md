@@ -40,12 +40,11 @@ bash ./scripts/play-song.sh "晴天" "周杰伦"
 1. 启动 `cua-router` 守护进程（`daemon.sh start`，已在跳过）
 2. `open -b com.tencent.QQMusicMac` 启动 QQ 音乐并等待窗口
 3. `osascript` activate 到前台
-4. **`pbcopy` 写剪贴板**
-5. **坐标点击搜索栏 (438, 40)**（AX 里 `文本框 搜索` 不支持 `set_value`；用 idx click 不能真正聚焦）
-6. `Command+a` → `Delete` 清空 → `Command+v` 粘贴中文
-7. `Return` 提交搜索，等待进入完整搜索结果页
-8. 定位并播放结果：优先 AX Tree 找歌曲元素；AX 缺失时用 macOS Vision OCR 定位歌曲名中心坐标；OCR 失败再按候选坐标扫描。命中后先单击匹配结果行；若底部控制条仍为绿色三角 `播放`（暂停/未播放），依次尝试 AX 中心点点击 → OCR/视觉坐标点击 → 应用级菜单命令 `播放控制 → 播放`。
-9. 校验：同时确认播放控制栏 `歌曲名：X - 歌手名：Y` 匹配，且底部播放控制按钮已变为「暂停/暂停播放」；仅歌名匹配但仍是「播放」态不算成功。
+4. 用 AX 取顶栏「搜索」控件中心坐标并点击（窗口变宽后固定 `(438,40)` 会点到会员中心）
+5. `Command+V` 粘贴歌名；AX 常常不回显中文，不能以树里有没有歌名判断写入失败
+6. `Return` 提交搜索；结果页 AX 可能只有 `面板 搜索`，再用 OCR 点歌名播放
+7. 定位并播放结果：优先 AX Tree 找歌曲元素；AX 缺失时用 macOS Vision OCR 定位歌曲名中心坐标；OCR 失败再按候选坐标扫描。命中后先单击匹配结果行；若底部控制条仍为绿色三角 `播放`（暂停/未播放），依次尝试 AX 中心点点击 → OCR/视觉坐标点击 → 应用级菜单命令 `播放控制 → 播放`。
+8. 校验：同时确认播放控制栏 `歌曲名：X - 歌手名：Y` 匹配，且底部播放控制按钮已变为「暂停/暂停播放」；仅歌名匹配但仍是「播放」态不算成功。
 
 成功时最后一行输出 JSON：
 
@@ -90,7 +89,7 @@ bash ./scripts/download-singer-top5.sh "毛阿敏"
 
 | 位置 | 坐标 / AX | 说明 |
 |------|-----------|------|
-| 搜索栏输入区 | `(438, 40)` | 顶栏中间的"搜索音乐"输入框 |
+| 搜索栏输入区 | 顶栏 `文本框 搜索` → 出现 `取消搜索` 后的内层 `文本栏 (settable) 搜索` | 勿写到页面内筛选框；内层用 `set_value` |
 | 歌手搜索关键词 | `<歌手名>` | 只搜 `张雨生`，不要搜 `张雨生 歌手` |
 | 搜索结果歌手入口 | `(300,190)` 等候选区 | 点击「歌手:张雨生」进入个人页，脚本会尝试多个候选坐标 |
 | 搜索结果第一首 | 动态解析「歌名/歌手」标题下第一条结果的歌曲名称或图标 | 播放歌曲时优先点击，避免点击到搜索建议或其它区域 |
@@ -104,11 +103,12 @@ bash ./scripts/download-singer-top5.sh "毛阿敏"
 
 | 陷阱 | 现象 | 解决 |
 |------|------|------|
-| 对搜索框调用 `set_value` | 报 `Cannot set a value for an element that is not settable` | 只能坐标点击 + 粘贴 |
-| `sky.click({element_index:234})` 定位搜索框 | click 成功但输入框未真正获得焦点，后续按键无效果 | 用坐标 `(438, 40)` |
-| `pbcopy` 后未用 `sky.press_key({ app, key: "Command+v" })` | 剪贴板已写入但搜索框没有文本 | 激活 QQ 音乐并聚焦搜索框后，用 sky 的 `Command+v` 粘贴 |
-| `type_text("晴天 周杰伦")` | 中文 IME 组合异常，可能漏字 | 只走剪贴板 `Command+v` |
-| 未 `activate` 就发 `Command+v` | 组合键落到别的前台 App | 每次执行前 `osascript activate` |
+| 对顶栏 `文本框 搜索` 直接 `set_value` | 报 `Cannot set a value for an element that is not settable` | 先 click 顶栏搜索，再对内层 `文本栏 (settable) 搜索` 执行 `set_value` |
+| 写到页面内筛选 `文本栏 搜索` 而非顶栏全局搜索 | 歌名出现在「喜欢」页筛选框，无法进入全站搜索结果 | 必须先 click 顶栏 `文本框 搜索`，等出现 `取消搜索` 后再 set_value |
+| `sky.click({element_index:234})` 定位搜索框 | click 成功但输入框未真正获得焦点，后续按键无效果 | 动态 findIdx `文本框 搜索` 点击，再 `set_value` 到 settable 文本栏 |
+| `type_text("晴天 周杰伦")` | 中文 IME 组合异常，可能漏字 | 对 settable 文本栏用 `set_value` |
+| 未 `activate` 就写入搜索 | 动作落到别的前台 App | 每次执行前 `osascript activate` |
+| 启动时出现「更新」弹框 | `press_key` 报 `noWindowsAvailable`，主窗口被 modal 挡住 | 自动点「以后提醒」/「稍后更新」；见 `scripts/lib/qqmusic-common.sh` |
 | 搜索 `张雨生 歌手` | 结果容易停在搜索浮层或歌曲结果，不进歌手页 | 只搜索 `张雨生`，再点击「歌手:张雨生」 |
 | 歌手页直接点 `下载` AX link | 没反应或不弹音质窗口 | 必须先点击同一行歌曲名称，让行进入选中 / hover 状态 |
 | 歌手页固定写死前 5 首 AX 下标 | 不同歌手页面下标会变化，可能点错专辑名或其它行 | 动态解析「热门歌曲」区内每行首个歌名文本和 `link 下载` |

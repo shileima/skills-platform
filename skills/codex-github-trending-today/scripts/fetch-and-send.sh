@@ -275,7 +275,7 @@ await (async () => {
 PY
 
 run_fetch() {
-  bash "$SKILL_ROOT/scripts/exec.sh" -t 120000 -f "$FETCH_JS"
+  bash "$SKILL_ROOT/scripts/exec.sh" -t 240000 -f "$FETCH_JS"
 }
 
 build_summary_from_json() {
@@ -317,10 +317,6 @@ case "$MODE" in
     run_fetch
     ;;
   send)
-    if [ -z "$RECEIVER" ]; then
-      echo '{"ok":false,"error":"usage: fetch-and-send.sh send <receiver>"}' >&2
-      exit 1
-    fi
     SUMMARY="$(cat)"
     if [ -z "$SUMMARY" ]; then
       echo '{"ok":false,"error":"empty_summary_on_stdin"}' >&2
@@ -329,9 +325,15 @@ case "$MODE" in
     run_send "$RECEIVER" "$SUMMARY"
     ;;
   all)
-    FETCH_RESULT="$(run_fetch)"
+    set +e
+    FETCH_RESULT="$(run_fetch 2>&1)"
+    FETCH_RC=$?
+    set -e
     echo "$FETCH_RESULT"
     LAST_LINE="$(printf '%s\n' "$FETCH_RESULT" | tail -n 1)"
+    if [ "$FETCH_RC" -ne 0 ]; then
+      exit "$FETCH_RC"
+    fi
     if ! python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok") else 1)' "$LAST_LINE" 2>/dev/null; then
       exit 1
     fi
@@ -339,18 +341,6 @@ case "$MODE" in
       SUMMARY="$SUMMARY_MD"
     else
       SUMMARY="$(build_summary_from_json "$LAST_LINE" "$TIME_LABEL")"
-    fi
-    if [ -z "$RECEIVER" ]; then
-      python3 - <<PY
-import json
-print(json.dumps({
-  "ok": False,
-  "error": "receiver_required_for_all_mode",
-  "hint": "请设置 DAXIANG_RECEIVER 或传入登录人姓名",
-  "fetch": json.loads("""$(printf '%s' "$LAST_LINE" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')""")
-}, ensure_ascii=False))
-PY
-      exit 1
     fi
     run_send "$RECEIVER" "$SUMMARY"
     ;;

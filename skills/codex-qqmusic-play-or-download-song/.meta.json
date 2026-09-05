@@ -1,0 +1,9 @@
+{
+  "uuid": "cskill-2e84a7a8-3",
+  "version": "0.0.7",
+  "name": "codex-qqmusic-play-or-download-song",
+  "description": "QQ 音乐桌面客户端搜索并播放指定歌曲，或下载歌手热门歌曲前 5 首；支持 AX Tree、OCR、坐标扫描三级定位降级。 当用户说「QQ 音乐播放 X」「在 QQ 音乐搜 X 并播放」「用 QQ 音乐听 X」或提供歌名/歌手组合时激活。",
+  "s3PackageUrl": "https://s3plus.sankuai.com/aiagent-bucket/claude_skill/cskill-2e84a7a8-3/codex-qqmusic-play-or-download-song-0.0.7.zip",
+  "source": "user",
+  "installedAt": "2026-09-04T14:36:02.903Z"
+}

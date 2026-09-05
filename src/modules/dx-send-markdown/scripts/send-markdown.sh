@@ -229,11 +229,20 @@ await (async () => {
   function findContactLine(lines, name, searchIdx) {
     const escaped = escapeRegExp(name);
     const exact = new RegExp(`\\d+\\s+(container|文本)\\s+${escaped}$`);
-    return lines.find(l => {
+    const scoped = lines.filter(l => {
       const idx = parseIdx(l);
-      return idx !== null && idx > searchIdx && idx < searchIdx + 250 && exact.test(l.trim());
-    }) || lines.find(l => l.includes(`container ${name}`) && !l.includes("、"))
-      || lines.find(l => l.includes(`文本 ${name}`) && !l.includes("、"));
+      return idx !== null && idx > searchIdx && idx < searchIdx + 300;
+    });
+    const exactLine = scoped.find(l => exact.test(l.trim()))
+      || scoped.find(l => l.includes(`container ${name}`) && !l.includes("、"))
+      || scoped.find(l => l.includes(`文本 ${name}`) && !l.includes("、"));
+    if (exactLine) return exactLine;
+
+    const contactContainers = scoped.filter(l => /^\s*\d+\s+container\s+/.test(l) && !/搜索|消息|通讯录|日历|工作台/.test(l));
+    if (contactContainers.length === 1) return contactContainers[0];
+
+    const contactTexts = scoped.filter(l => /^\s*\d+\s+文本\s+/.test(l) && !/搜索|消息|通讯录|日历|工作台/.test(l) && !l.includes("、"));
+    return contactTexts[0] || contactContainers[0] || null;
   }
 
   function findMarkdownButtonLine(lines, inputIdx) {
@@ -456,9 +465,10 @@ await (async () => {
   await new Promise(r => setTimeout(r, 1200));
 
   let after = await freshState();
-  let sentLikely = contentOk(after.text) && !isMarkdownEditorOpen(after.text);
+  let editorStillOpen = isMarkdownEditorOpen(after.text);
+  let sentLikely = !editorStillOpen;
 
-  if (!sentLikely && isMarkdownEditorOpen(after.text)) {
+  if (!sentLikely && editorStillOpen) {
     const retryLines = after.text.split("\n");
     const retrySendLine = findMarkdownSendLine(retryLines);
     if (retrySendLine) {
@@ -466,7 +476,8 @@ await (async () => {
       await sky.click({ app, element_index: sendIdx });
       await new Promise(r => setTimeout(r, 1500));
       after = await freshState();
-      sentLikely = contentOk(after.text) && !isMarkdownEditorOpen(after.text);
+      editorStillOpen = isMarkdownEditorOpen(after.text);
+      sentLikely = !editorStillOpen;
     }
   }
 
@@ -480,9 +491,10 @@ await (async () => {
     markdownInputIdx,
     sendIdx,
     sentLikely,
-    editorStillOpen: isMarkdownEditorOpen(after.text),
+    editorStillOpen,
     clipboard: filled.clipboard,
-    summaryPreview: summary.slice(0, 200)
+    summaryPreview: summary.slice(0, 200),
+    afterPreview: sentLikely ? undefined : after.text.slice(0, 1000)
   });
 })()
 '''.replace('RECEIVER_PLACEHOLDER', json.dumps(receiver, ensure_ascii=False))
@@ -491,7 +503,29 @@ await (async () => {
    .replace('CONTENT_MARKER_PLACEHOLDER', json.dumps(content_marker, ensure_ascii=False)))
 PY
 
+set +e
 FETCH_RESULT="$(bash "$SKILL_ROOT/scripts/exec.sh" -t 600000 -f "$JS_FILE" 2>&1)"
+EXEC_RC=$?
+set -e
 echo "$FETCH_RESULT"
 LAST_LINE="$(printf '%s\n' "$FETCH_RESULT" | tail -n 1)"
+if [ "$EXEC_RC" -ne 0 ]; then
+  python3 - "$EXEC_RC" "$LAST_LINE" <<'PY'
+import json
+import sys
+
+rc = int(sys.argv[1])
+last_line = sys.argv[2]
+try:
+    payload = json.loads(last_line)
+except Exception:
+    payload = {"ok": False, "error": "dx_exec_failed", "execRc": rc, "lastLine": last_line}
+else:
+    payload.setdefault("ok", False)
+    payload.setdefault("error", "dx_exec_failed")
+    payload["execRc"] = rc
+print(json.dumps(payload, ensure_ascii=False))
+PY
+  exit "$EXEC_RC"
+fi
 python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ok") else 1)' "$LAST_LINE"
