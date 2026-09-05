@@ -1,0 +1,37 @@
+{
+  "name": "codex-update-codex-skills",
+  "version": "0.1.1",
+  "description": "将 skills-platform 中的 codex 技能打包为 zip 并上传到 xgpt.sankuai.com 更新已有 Skill",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": [
+    "xgpt",
+    "skill",
+    "upload",
+    "update",
+    "cua",
+    "web-automation"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
+    }
+  ],
+  "pack": {
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "reference",
+      "scripts"
+    ]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-update-codex-skills"
+  }
+}
