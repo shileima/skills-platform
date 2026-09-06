@@ -1,0 +1,35 @@
+{
+  "name": "codex-wechat-send-message",
+  "version": "0.1.0",
+  "description": "macOS 微信桌面客户端给指定联系人发送消息。搜索联系人、打开聊天、剪贴板粘贴中文并点击发送；窗口相对坐标 + Vision OCR 逐步校验。",
+  "author": "shilei",
+  "license": "MIT",
+  "keywords": [
+    "wechat",
+    "微信",
+    "desktop-automation",
+    "cua",
+    "send-message"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
+    }
+  ],
+  "pack": {
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-wechat-send-message"
+  }
+}
