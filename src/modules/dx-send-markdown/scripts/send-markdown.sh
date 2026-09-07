@@ -257,6 +257,77 @@ await (async () => {
       || null;
   }
 
+  // 校验右侧会话顶栏是否为目标联系人（避免搜索框仍含姓名时误判）
+  function verifyRightPaneReceiver(lines, expectedReceiver, searchIdx) {
+    const escaped = escapeRegExp(expectedReceiver);
+    const exactTitleRe = new RegExp(`^\\s*\\d+\\s+(文本|container|按钮)\\s+${escaped}\\s*$`);
+    const chatInputLine = lines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
+    const chatInputIdx = chatInputLine ? parseIdx(chatInputLine) : null;
+
+    const titleCandidates = lines.filter(l => {
+      const idx = parseIdx(l);
+      if (idx === null) return false;
+      if (searchIdx !== null && idx >= searchIdx && idx < searchIdx + 45) return false;
+      if (chatInputIdx !== null && idx >= chatInputIdx) return false;
+      if (!/^\s*\d+\s+(文本|container)\s+/.test(l)) return false;
+      if (/搜索|Placeholder|通讯录|日历|工作台|Markdown|请输入内容|说点什么/.test(l)) return false;
+      return true;
+    });
+
+    const exact = titleCandidates.find(l => exactTitleRe.test(l.trim()));
+    if (exact) {
+      return { ok: true, matchedLine: exact.trim() };
+    }
+
+    const prominent = titleCandidates.find(l => {
+      const m = l.trim().match(/^\d+\s+(?:文本|container)\s+(.+)$/);
+      if (!m) return false;
+      const name = m[1].trim();
+      return name.length >= 2 && name.length <= 80 && !/^\d+$/.test(name);
+    });
+    const activeTitle = prominent
+      ? prominent.trim().replace(/^\d+\s+(?:文本|container)\s+/, "").trim()
+      : null;
+
+    return {
+      ok: false,
+      error: "active_conversation_mismatch",
+      expectedReceiver,
+      activeTitle,
+      hint: activeTitle
+        ? `右侧当前会话为「${activeTitle}」，不是目标「${expectedReceiver}」`
+        : `未在右侧顶栏确认目标联系人「${expectedReceiver}」`,
+    };
+  }
+
+  async function ensureActiveConversation(expectedReceiver, searchIdx, contactElementIdx) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const state = await freshState();
+      const lines = state.text.split("\n");
+      const check = verifyRightPaneReceiver(lines, expectedReceiver, searchIdx);
+      if (check.ok) return { ok: true, attempt, ...check };
+      if (contactElementIdx !== null && attempt < 2) {
+        await sky.click({ app, element_index: contactElementIdx });
+        await new Promise(r => setTimeout(r, 1000));
+        continue;
+      }
+      return { ok: false, attempt, ...check, preview: state.text.slice(0, 1200) };
+    }
+    return { ok: false, error: "active_conversation_mismatch" };
+  }
+
+  async function assertConversationBeforeMarkdown(searchIdxForVerify, contactElementIdx) {
+    let state = await freshState();
+    let check = verifyRightPaneReceiver(state.text.split("\n"), receiver, searchIdxForVerify);
+    if (check.ok) return { ok: true };
+    const ensured = await ensureActiveConversation(receiver, searchIdxForVerify, contactElementIdx);
+    if (!ensured.ok) return { ok: false, ...ensured };
+    state = await freshState();
+    check = verifyRightPaneReceiver(state.text.split("\n"), receiver, searchIdxForVerify);
+    if (!check.ok) return { ok: false, ...check, preview: state.text.slice(0, 1200) };
+    return { ok: true };
+  }
+
   async function maximizeWindow() {
     const state = await freshState();
     const screenshotWidth = state.screenshotWidth;
