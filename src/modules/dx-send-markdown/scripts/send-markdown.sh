@@ -228,25 +228,49 @@ await (async () => {
 
   function findContactLine(lines, name, searchIdx) {
     const escaped = escapeRegExp(name);
-    const exact = new RegExp(`\\d+\\s+(container|文本)\\s+${escaped}$`);
+    const exactEnd = new RegExp(`^\\s*\\d+\\s+(container|文本)\\s+${escaped}\\s*$`);
+    const textNameRe = new RegExp(`\\s文本\\s+${escaped}\\s*$`);
     const scoped = lines.filter(l => {
       const idx = parseIdx(l);
-      return idx !== null && idx > searchIdx && idx < searchIdx + 300;
+      return idx !== null && idx > searchIdx && idx < searchIdx + 400;
     });
-    const exactLine = scoped.find(l => exact.test(l.trim()))
-      || scoped.find(l => l.includes(`container ${name}`) && !l.includes("、"))
-      || scoped.find(l => l.includes(`文本 ${name}`) && !l.includes("、"));
+    const rejectNav = l => /Placeholder|通讯录|日历|工作台|移动HR|VPN|学城|视频会议/.test(l)
+      && !l.includes(`文本 ${name}`) && !l.includes(`container ${name}`);
+
+    const exactLine = scoped.find(l => !rejectNav(l) && (
+      exactEnd.test(l.trim())
+      || (l.includes(`container ${name}`) && !l.includes("、"))
+      || (l.includes(`文本 ${name}`) && !l.includes("、"))
+    ));
     if (exactLine) return exactLine;
 
-    const contactContainers = scoped.filter(l => /^\s*\d+\s+container\s+/.test(l) && !/搜索|消息|通讯录|日历|工作台/.test(l));
-    if (contactContainers.length === 1) return contactContainers[0];
+    for (let i = 0; i < scoped.length; i++) {
+      const line = scoped[i];
+      if (rejectNav(line) || line.includes("、")) continue;
+      if (!textNameRe.test(line.trim()) && !line.trim().includes(`文本 ${name}`)) continue;
+      if (/^\s*\d+\s+container\s+/.test(line.trim())) return line;
+      for (let j = i - 1; j >= 0 && j >= i - 10; j--) {
+        const prev = scoped[j];
+        if (/^\s*\d+\s+container\s+/.test(prev.trim()) && !rejectNav(prev)) return prev;
+      }
+      return line;
+    }
+    return null;
+  }
 
-    const contactTexts = scoped.filter(l => /^\s*\d+\s+文本\s+/.test(l) && !/搜索|消息|通讯录|日历|工作台/.test(l) && !l.includes("、"));
-    return contactTexts[0] || contactContainers[0] || null;
+  async function waitForContactLine(name, searchIdx, maxAttempts = 10) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 900));
+      const state = await freshState();
+      const lines = state.text.split("\n");
+      const contactLine = findContactLine(lines, name, searchIdx);
+      if (contactLine) return { ok: true, contactLine, state, lines, attempt };
+    }
+    const state = await freshState();
+    return { ok: false, state, lines: state.text.split("\n"), attempt: maxAttempts - 1 };
   }
 
   function findMarkdownButtonLine(lines, inputIdx) {
-    if (inputIdx === null) return null;
     const candidates = lines.filter(l => {
       const idx = parseIdx(l);
       return idx !== null && idx < inputIdx && idx >= inputIdx - 120 && /^\s*\d+\s+按钮\s+/.test(l);
@@ -279,15 +303,31 @@ await (async () => {
       return { ok: true, matchedLine: exact.trim() };
     }
 
+    function isInvalidSessionTitle(name) {
+      if (!name) return true;
+      return /^(大象|消息|VPN|学城|更多|视频会议|移动HR|通讯录|日历|工作台)$/.test(name);
+    }
+
     const prominent = titleCandidates.find(l => {
       const m = l.trim().match(/^\d+\s+(?:文本|container)\s+(.+)$/);
       if (!m) return false;
       const name = m[1].trim();
+      if (isInvalidSessionTitle(name)) return false;
       return name.length >= 2 && name.length <= 80 && !/^\d+$/.test(name);
     });
     const activeTitle = prominent
       ? prominent.trim().replace(/^\d+\s+(?:文本|container)\s+/, "").trim()
       : null;
+
+    if (chatInputIdx === null) {
+      return {
+        ok: false,
+        error: "active_conversation_mismatch",
+        expectedReceiver,
+        activeTitle,
+        hint: `右侧未进入单聊（无「说点什么」输入框）；请在左侧搜索结果中点击「${expectedReceiver}」`,
+      };
+    }
 
     return {
       ok: false,
@@ -352,8 +392,7 @@ await (async () => {
       clickY,
     };
   }
-
-  async function openMarkdownEditor() {
+  async function openMarkdownEditor(searchIdxForVerify, contactElementIdx) {
     let state = await freshState();
     let lines = state.text.split("\n");
 
@@ -365,8 +404,23 @@ await (async () => {
       return { ok: true, method: "already_open" };
     }
 
+    const preMarkdownConv = await assertConversationBeforeMarkdown(searchIdxForVerify, contactElementIdx);
+    if (!preMarkdownConv.ok) {
+      return { ok: false, error: "markdown_blocked_wrong_conversation", ...preMarkdownConv };
+    }
+    state = await freshState();
+    lines = state.text.split("\n");
+
     let markdownMenuLine = lines.find(l => /发送\s*Markdown\s*消息/.test(l));
     if (markdownMenuLine) {
+      const menuConv = await assertConversationBeforeMarkdown(searchIdxForVerify, contactElementIdx);
+      if (!menuConv.ok) {
+        return { ok: false, error: "markdown_menu_blocked_wrong_conversation", ...menuConv };
+      }
+      markdownMenuLine = (await freshState()).text.split("\n").find(l => /发送\s*Markdown\s*消息/.test(l));
+      if (!markdownMenuLine) {
+        return { ok: false, error: "markdown_menu_lost_after_verify" };
+      }
       const menuIdx = parseIdx(markdownMenuLine);
       await sky.click({ app, element_index: menuIdx });
       await new Promise(r => setTimeout(r, 800));
@@ -381,7 +435,20 @@ await (async () => {
       return { ok: false, error: "markdown_button_not_found", inputIdx, markdownPreview };
     }
 
-    const markdownIdx = parseIdx(markdownButtonLine);
+    const toolbarConv = await assertConversationBeforeMarkdown(searchIdxForVerify, contactElementIdx);
+    if (!toolbarConv.ok) {
+      return { ok: false, error: "markdown_toolbar_blocked_wrong_conversation", ...toolbarConv };
+    }
+    state = await freshState();
+    lines = state.text.split("\n");
+    const inputLineRetry = lines.find(l => /文本输入区/.test(l) && /说点什么/.test(l));
+    const inputIdxRetry = inputLineRetry ? parseIdx(inputLineRetry) : inputIdx;
+    const markdownButtonLineRetry = findMarkdownButtonLine(lines, inputIdxRetry);
+    if (!markdownButtonLineRetry) {
+      return { ok: false, error: "markdown_button_not_found_after_verify", inputIdx: inputIdxRetry };
+    }
+
+    const markdownIdx = parseIdx(markdownButtonLineRetry);
     await sky.click({ app, element_index: markdownIdx });
     await new Promise(r => setTimeout(r, 800));
 
@@ -389,6 +456,14 @@ await (async () => {
     lines = state.text.split("\n");
     markdownMenuLine = lines.find(l => /发送\s*Markdown\s*消息/.test(l));
     if (markdownMenuLine && !/Markdown编辑器/.test(state.text)) {
+      const submenuConv = await assertConversationBeforeMarkdown(searchIdxForVerify, contactElementIdx);
+      if (!submenuConv.ok) {
+        return { ok: false, error: "markdown_submenu_blocked_wrong_conversation", ...submenuConv };
+      }
+      markdownMenuLine = (await freshState()).text.split("\n").find(l => /发送\s*Markdown\s*消息/.test(l));
+      if (!markdownMenuLine) {
+        return { ok: false, error: "markdown_submenu_lost_after_verify" };
+      }
       const menuIdx = parseIdx(markdownMenuLine);
       await sky.click({ app, element_index: menuIdx });
       await new Promise(r => setTimeout(r, 800));
@@ -471,16 +546,32 @@ await (async () => {
   }
   state = pasted.state;
   lines = state.text.split("\n");
+  await new Promise(r => setTimeout(r, 1200));
 
-  const contactLine = findContactLine(lines, receiver, searchIdx);
-  if (!contactLine) {
-    emitResult({ ok: false, error: "receiver_not_found", receiver, preview: state.text.slice(0, 1200) });
+  const contactWait = await waitForContactLine(receiver, searchIdx);
+  if (!contactWait.ok) {
+    emitResult({
+      ok: false,
+      error: "receiver_not_found",
+      receiver,
+      attempts: contactWait.attempt + 1,
+      preview: contactWait.state.text.slice(0, 2000),
+    });
     return;
   }
+  state = contactWait.state;
+  lines = contactWait.lines;
+  const contactLine = contactWait.contactLine;
 
   const receiverIdx = parseIdx(contactLine);
   await sky.click({ app, element_index: receiverIdx });
   await new Promise(r => setTimeout(r, 1000));
+
+  const convReady = await ensureActiveConversation(receiver, searchIdx, receiverIdx);
+  if (!convReady.ok) {
+    emitResult({ ok: false, receiver, receiverIdx, ...convReady });
+    return;
+  }
 
   const maximize = await maximizeWindow();
   if (!maximize.ok) {
@@ -489,7 +580,7 @@ await (async () => {
   }
   await new Promise(r => setTimeout(r, 800));
 
-  const editorOpen = await openMarkdownEditor();
+  const editorOpen = await openMarkdownEditor(searchIdx, receiverIdx);
   if (!editorOpen.ok) {
     emitResult({ ok: false, receiver, receiverIdx, maximize, ...editorOpen });
     return;
@@ -524,10 +615,14 @@ await (async () => {
   let filledLines = filledState.text.split("\n");
   let sendLine = findMarkdownSendLine(filledLines);
   let hasContent = contentOk(filledState.text);
-  const hasReceiver = filledState.text.includes(receiver);
+  const editorMode = isMarkdownEditorOpen(filledState.text);
+  const conversationCheck = editorMode
+    ? { ok: true, skipped: true, reason: "markdown_editor_open" }
+    : verifyRightPaneReceiver(filledLines, receiver, searchIdx);
+  const hasReceiver = conversationCheck.ok;
 
   if (!sendLine || !hasContent) {
-    emitResult({ ok: false, error: "markdown_editor_not_ready", hasSend: !!sendLine, hasContent, hasReceiver, preview: filledState.text.slice(0, 1000) });
+    emitResult({ ok: false, error: "markdown_editor_not_ready", hasSend: !!sendLine, hasContent, hasReceiver, conversationCheck, preview: filledState.text.slice(0, 1000) });
     return;
   }
 
