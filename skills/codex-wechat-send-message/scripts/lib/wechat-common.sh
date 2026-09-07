@@ -129,7 +129,7 @@ wechat_go_to_chats_tab() {
   sleep 0.25
 }
 
-# prepare：固定按键序列，零 OCR 截图。
+# prepare：固定按键，零 OCR。
 wechat_prepare_ui() {
   local cliclick_bin
   cliclick_bin="$(wechat_resolve_cliclick)"
@@ -137,14 +137,11 @@ wechat_prepare_ui() {
   wechat_wait_for_window
   wechat_normalize_window || true
   wechat_go_to_chats_tab
-  "$cliclick_bin" kp:esc
-  sleep 0.12
-  "$cliclick_bin" kp:esc
-  sleep 0.12
-  "$cliclick_bin" kd:cmd t:w ku:cmd
-  sleep 0.2
+  "$cliclick_bin" kp:esc; sleep 0.12
+  "$cliclick_bin" kd:cmd t:w ku:cmd; sleep 0.15
+  "$cliclick_bin" kp:esc; sleep 0.12
   wechat_click_rel "0.18" "0.22"
-  sleep 0.25
+  sleep 0.2
 }
 
 # 退出全屏「搜一搜」：点聊天 Tab + Esc + 点击聊天列表区域。
@@ -229,8 +226,18 @@ wechat_paste_text() {
   printf '%s' "$text" | /usr/bin/pbcopy
   cliclick_bin="$(wechat_resolve_cliclick)"
   "$cliclick_bin" kd:cmd t:a ku:cmd
-  sleep 0.15
+  sleep 0.12
   "$cliclick_bin" kd:cmd t:v ku:cmd
+}
+
+# 搜索框专用：仅粘贴，不 Cmd+A（避免误触全局操作）。
+wechat_paste_search() {
+  local text="$1"
+  local cliclick_bin
+  printf '%s' "$text" | /usr/bin/pbcopy
+  cliclick_bin="$(wechat_resolve_cliclick)"
+  "$cliclick_bin" kd:cmd t:v ku:cmd
+  sleep 0.15
 }
 
 wechat_screenshot_path() {
@@ -886,29 +893,42 @@ wechat_poll_message_sent() {
   return 1
 }
 
-# 打开聊天：固定坐标双击 + 聚焦右侧，不做 OCR 校验。
+# 打开聊天：文件传输助手用固定坐标；业务联系人用列表搜索。
 wechat_open_contact() {
   local contact="$1"
-  local list_x list_y focus_x focus_y
+  local cliclick_bin
+  cliclick_bin="$(wechat_resolve_cliclick)"
 
   if wechat_is_file_transfer_assistant "$contact"; then
-    list_x="${WECHAT_FTA_REL_X:-0.18}"
-    list_y="${WECHAT_FTA_REL_Y:-0.28}"
-    echo "[wechat] open 文件传输助手 (list coord)" >&2
+    echo "[wechat] open 文件传输助手" >&2
+    wechat_click_rel "${WECHAT_FTA_REL_X:-0.18}" "${WECHAT_FTA_REL_Y:-0.28}"
+    sleep 0.25
+    wechat_click_rel "${WECHAT_FTA_REL_X:-0.18}" "${WECHAT_FTA_REL_Y:-0.28}"
+    sleep 0.6
   else
-    list_x="${WECHAT_LIST_REL_X:-0.18}"
-    list_y="${WECHAT_CONTACT_LIST_Y:-0.21}"
-    echo "[wechat] open contact from list: $contact ($list_x, $list_y)" >&2
+    echo "[wechat] search and open: $contact" >&2
+    # 关闭可能打开的内嵌页/搜一搜
+    "$cliclick_bin" kp:esc; sleep 0.15
+    "$cliclick_bin" kd:cmd t:w ku:cmd; sleep 0.2
+    wechat_go_to_chats_tab
+    sleep 0.2
+    # 聊天列表内搜索（勿用 Cmd+A）
+    wechat_click_rel "${WECHAT_SEARCH_REL_X:-0.20}" "${WECHAT_SEARCH_REL_Y:-0.035}"
+    sleep 0.3
+    wechat_click_rel "${WECHAT_SEARCH_REL_X:-0.20}" "${WECHAT_SEARCH_REL_Y:-0.035}"
+    sleep 0.2
+    wechat_paste_search "$contact"
+    sleep 0.9
+    # 点击首条搜索结果 + 双击加载右侧聊天窗
+    wechat_click_rel "${WECHAT_RESULT_REL_X:-0.20}" "${WECHAT_RESULT_REL_Y:-0.10}"
+    sleep 0.3
+    wechat_click_rel "${WECHAT_RESULT_REL_X:-0.20}" "${WECHAT_RESULT_REL_Y:-0.10}"
+    sleep 0.8
+    wechat_click_rel "${WECHAT_FOCUS_REL_X:-0.75}" "${WECHAT_FOCUS_REL_Y:-0.45}"
+    sleep 0.3
+    wechat_click_rel "${WECHAT_FOCUS_REL_X:-0.75}" "${WECHAT_FOCUS_REL_Y:-0.45}"
+    sleep 0.7
   fi
-  focus_x="${WECHAT_FOCUS_REL_X:-0.75}"
-  focus_y="${WECHAT_FOCUS_REL_Y:-0.45}"
-
-  wechat_click_rel "$list_x" "$list_y"
-  sleep 0.25
-  wechat_click_rel "$list_x" "$list_y"
-  sleep 0.7
-  wechat_click_rel "$focus_x" "$focus_y"
-  sleep 0.25
   return 0
 }
 
@@ -1013,11 +1033,11 @@ PY
   return 1
 }
 
-# 统一发送入口：固定坐标快速路径，默认零 OCR。
+# 统一发送入口。
 wechat_run_send_message() {
   local contact="$1"
   local message="$2"
-  local strategy="fast-cliclick"
+  local strategy="search-cliclick"
   local input_x="${WECHAT_INPUT_REL_X:-0.65}"
   local input_y="${WECHAT_INPUT_REL_Y:-0.88}"
   local send_x="${WECHAT_SEND_REL_X:-0.88}"
@@ -1035,14 +1055,21 @@ wechat_run_send_message() {
   echo "[wechat] compose and send..." >&2
   wechat_compose_and_send "$message" "$input_x" "$input_y" "$send_x" "$send_y"
 
-  if [ "${WECHAT_VERIFY:-0}" = "1" ]; then
-    sleep 0.5
-    wechat_verify_message_sent "$message" >/tmp/wechat-sent-verify.json 2>/dev/null || \
-      echo '{"ok":false}' >/tmp/wechat-sent-verify.json
-  else
-    printf '{"ok":true,"matched":"send_clicked"}' >/tmp/wechat-sent-verify.json
+  sleep 0.5
+  if wechat_verify_message_sent "$message" >/tmp/wechat-sent-verify.json 2>/dev/null; then
+    wechat_emit_result yes "$contact" "$message" "$strategy"
+    return 0
   fi
 
-  wechat_emit_result yes "$contact" "$message" "$strategy"
-  return 0
+  echo "[wechat] retry send..." >&2
+  wechat_click_rel "$send_x" "$send_y"
+  sleep 0.5
+  if wechat_verify_message_sent "$message" >/tmp/wechat-sent-verify.json 2>/dev/null; then
+    wechat_emit_result yes "$contact" "$message" "$strategy"
+    return 0
+  fi
+
+  wechat_emit_result no "$contact" "$message" "$strategy" "message_not_verified" \
+    "消息未确认发送成功，请检查是否打开了正确的聊天窗口"
+  return 1
 }

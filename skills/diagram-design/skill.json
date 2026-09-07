@@ -1,33 +1,33 @@
 {
   "name": "diagram-design",
-  "version": "0.1.0",
-  "description": "生成 editorial 风格自包含 HTML+SVG 流程图，支持 29 种图表类型。用户提及流程图设计、架构图、时序图、组织架构、diagram mode 时使用。",
-  "author": "shilei",
+  "version": "2.6.0",
+  "description": "生成 editorial 风格 HTML+SVG 流程图/架构图/时序图等 39 种图表，供应用开发 · 流程图设计模式使用。",
+  "author": "cathrynlavery",
   "license": "MIT",
   "keywords": [
     "diagram",
     "flowchart",
     "architecture",
-    "sequence",
-    "editorial",
-    "svg",
-    "html"
+    "code-governance",
+    "automan"
   ],
   "targets": [
     "cursor",
     "automan"
   ],
+  "dependencies": [],
   "pack": {
     "include": [
       ".meta.json",
       "SKILL.md",
-      "README.md",
+      "skill.json",
       "references",
-      "assets",
-      "scripts"
+      "scripts",
+      "assets"
     ]
   },
   "automan": {
-    "source": "platform"
+    "source": "user",
+    "metaName": "diagram-design"
   }
 }

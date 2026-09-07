@@ -1,0 +1,41 @@
+{
+  "name": "archify",
+  "version": "2.17.0",
+  "description": "动态流程图技能：architecture / workflow / sequence / lifecycle / dataflow 五种 JSON 契约渲染为 HTML。",
+  "author": "tt-a1i",
+  "license": "MIT",
+  "keywords": [
+    "archify",
+    "diagram",
+    "dynamic",
+    "code-governance",
+    "automan"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
+  "dependencies": [],
+  "pack": {
+    "include": [
+      ".meta.json",
+      "SKILL.md",
+      "skill.json",
+      "references",
+      "scripts",
+      "bin",
+      "schemas",
+      "renderers",
+      "examples",
+      "brand-marks",
+      "recipes",
+      "migrations",
+      "delta",
+      "assets"
+    ]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "archify"
+  }
+}

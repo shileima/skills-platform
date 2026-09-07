@@ -1,0 +1,9 @@
+{
+  "uuid": "cskill-cc16f5cf-c",
+  "version": "2.6.0",
+  "name": "diagram-design",
+  "description": "生成 editorial 风格 HTML+SVG 流程图/架构图/时序图等 39 种图表，供应用开发 · 流程图设计模式使用。",
+  "s3PackageUrl": "",
+  "source": "user",
+  "installedAt": "2026-09-07T12:00:00.000Z"
+}
