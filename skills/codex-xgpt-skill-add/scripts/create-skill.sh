@@ -55,8 +55,16 @@ await (async () => {
     return state.url || (state.text.match(/URL: ([^\\s,\\n]+)/) || [, ''])[1] || '';
   }
 
-  async function locateOne(keywords, label) {
+  function isCreateSkillDialog(text) {
+    return /container 创建Skill/.test(text)
+      || (text.includes('请输入Skill名称') && text.includes('按钮 确 定') && text.includes('* Skill名称'));
+  }
+
+  async function locateOne(keywords, label, { requireDialog = false } = {}) {
     const s = await refresh();
+    if (requireDialog && !isCreateSkillDialog(s.text)) {
+      throw new Error(label + ': 创建Skill 弹层未打开');
+    }
     const matches = ax.findAllIdx(s.text, ...keywords);
     if (matches.length !== 1) {
       throw new Error(label + ': matches=' + matches.length + ' ' + JSON.stringify(matches.slice(0, 3)));
@@ -65,10 +73,10 @@ await (async () => {
   }
 
   async function fillField(keywords, value, label) {
-    let { match } = await locateOne(keywords, label);
+    let { match } = await locateOne(keywords, label, { requireDialog: true });
     await sky.click({ app, element_index: match.idx });
     await sleep(250);
-    ({ match } = await locateOne(keywords, label + '-重定位'));
+    ({ match } = await locateOne(keywords, label + '-重定位', { requireDialog: true }));
     await sky.set_value({ app, element_index: match.idx, value });
     await sleep(300);
     // Tab 失焦：促使 React 表单同步内部 state（仅 set_value 不足以提交）
@@ -96,43 +104,33 @@ await (async () => {
 
   async function ensureSkillsListPage() {
     let s = await refresh();
-    const url = urlOf(s);
-    if (url.includes('/agent/skills') && !url.includes('/config') && s.text.includes('按钮 新建')) {
-      return s;
+    let url = urlOf(s);
+
+    async function atSkillsList() {
+      s = await refresh();
+      url = urlOf(s);
+      return url.includes('/agent/skills') && !url.includes('/config') && ax.findAllIdx(s.text, '按钮 新建').length === 1;
     }
 
-    const skillNav = ax.findAllIdx(s.text, 'Skill 技能');
-    if (skillNav.length === 1) {
-      await sky.click({ app, element_index: skillNav[0].idx });
+    if (await atSkillsList()) return s;
+
+    await sky.press_key({ app, key: 'Escape' });
+    await sleep(400);
+
+    // 优先点左侧导航「按钮 Skill 技能」
+    s = await refresh();
+    const skillNavBtns = ax.findAllIdx(s.text, '按钮 Skill 技能');
+    if (skillNavBtns.length === 1) {
+      await sky.click({ app, element_index: skillNavBtns[0].idx });
       for (let i = 0; i < 15; i++) {
         await sleep(500);
-        s = await refresh();
-        if (urlOf(s).includes('/agent/skills') && !urlOf(s).includes('/config') && s.text.includes('按钮 新建')) {
-          return s;
-        }
+        if (await atSkillsList()) return await refresh();
       }
     }
 
-    const expertNav = ax.findAllIdx(s.text, '按钮', ' 专家');
-    if (expertNav.length === 1 && !url.includes('/agent/skills')) {
-      await sky.click({ app, element_index: expertNav[0].idx });
-      for (let i = 0; i < 15; i++) {
-        await sleep(500);
-        s = await refresh();
-        if (s.text.includes('Skill 技能')) break;
-      }
-      const skillNav2 = ax.findAllIdx(s.text, 'Skill 技能');
-      if (skillNav2.length === 1) {
-        await sky.click({ app, element_index: skillNav2[0].idx });
-        for (let i = 0; i < 15; i++) {
-          await sleep(500);
-          s = await refresh();
-          if (urlOf(s).includes('/agent/skills') && s.text.includes('按钮 新建')) return s;
-        }
-      }
-    }
-
+    // 地址栏直达技能清单
     const skillsUrl = 'https://xgpt.sankuai.com/space/' + spaceId + '/agent/skills';
+    s = await refresh();
     const addrMatches = ax.findAllIdx(s.text, 'settable', 'string', '地址');
     if (addrMatches.length >= 1) {
       const addrIdx = addrMatches[0].idx;
@@ -143,34 +141,33 @@ await (async () => {
       await sky.press_key({ app, key: 'Return' });
       for (let i = 0; i < 15; i++) {
         await sleep(500);
-        s = await refresh();
-        if (s.text.includes('按钮 新建')) return s;
+        if (await atSkillsList()) return await refresh();
       }
     }
 
-    throw new Error('未能进入技能清单页: ' + urlOf(s));
+    throw new Error('未能进入技能清单页: ' + urlOf(await refresh()));
   }
 
   try {
     await ensureSkillsListPage();
 
     let s = await refresh();
-    if (!s.text.includes('创建Skill')) {
+    if (!isCreateSkillDialog(s.text)) {
       const { match: newBtn } = await locateOne(['按钮 新建'], '新建');
       await sky.click({ app, element_index: newBtn.idx });
       for (let i = 0; i < 12; i++) {
         await sleep(400);
         s = await refresh();
-        if (s.text.includes('创建Skill')) break;
+        if (isCreateSkillDialog(s.text)) break;
       }
-      if (!s.text.includes('创建Skill')) {
+      if (!isCreateSkillDialog(s.text)) {
         throw new Error('创建Skill 弹层未打开');
       }
     }
 
     const confirmBaseline = scanConfirm(await refresh());
-    const nameResult = await fillField(['* Skill名称', '文本栏'], skillName, '名称');
-    const descResult = await fillField(['* Skill简介', '文本'], skillDesc, '简介');
+    const nameResult = await fillField(['文本栏', 'settable', '* Skill名称', '请输入Skill名称'], skillName, '名称');
+    const descResult = await fillField(['文本输入区', 'settable', '* Skill简介', '请输入Skill简介'], skillDesc, '简介');
 
     s = await refresh();
     const confirmAfterFill = scanConfirm(s);
