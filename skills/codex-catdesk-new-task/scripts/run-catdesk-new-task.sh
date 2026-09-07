@@ -2,7 +2,9 @@
 set -euo pipefail
 
 PROMPT="${1:-北京降雨分时}"
-printf '%s' "$PROMPT" | /usr/bin/pbcopy
+# 优先 osascript 写剪贴板，避免部分环境下 pbcopy 失败
+/usr/bin/osascript -e "set the clipboard to $(python3 -c 'import json,sys; print(json.dumps(sys.argv[1], ensure_ascii=False))' "$PROMPT")" 2>/dev/null \
+  || printf '%s' "$PROMPT" | /usr/bin/pbcopy
 PROMPT_JSON="$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1], ensure_ascii=False))' "$PROMPT")"
 
 resolve_cua_root() {
@@ -75,25 +77,44 @@ let idx = firstIdx(s.text, [["按钮", "新任务"], ["新任务"]], "新任务�
 await sky.click({ app, element_index: idx });
 s = await waitFor("点击新任务后审视", current => current.text.includes("聊天输入框"));
 
-const modelButton = ax.findIdx(s.text, "弹出式按钮", "LongCat") ?? ax.findIdx(s.text, "弹出式按钮", "Max");
-if (modelButton == null) {
-  throw new Error("未找到模型弹出式按钮");
-}
-log.push({ target: "模型弹出式按钮", element_index: modelButton });
-await sky.click({ app, element_index: modelButton });
+// 已是 Max 且聊天框可用时跳过模型切换
+const skipModelPick = /弹出式按钮 Max|文本 Max\b/.test(s.text) && s.text.includes("聊天输入框");
+if (!skipModelPick) {
+  const modelButton =
+    ax.findIdx(s.text, "弹出式按钮", "Max") ??
+    ax.findIdx(s.text, "弹出式按钮", "LongCat") ??
+    ax.findIdx(s.text, "弹出式按钮", "Pro");
+  if (modelButton == null) {
+    throw new Error("未找到模型弹出式按钮");
+  }
+  log.push({ target: "模型弹出式按钮", element_index: modelButton });
+  await sky.click({ app, element_index: modelButton });
 
-s = await waitFor("打开模型列表后审视", current => current.text.includes("Lite") && current.text.includes("Pro") && current.text.includes("Max"));
-const maxIdx = ax.findIdx(s.text, "Max", "适合超复杂任务") ?? ax.findIdx(s.text, "Max");
-if (maxIdx == null) {
-  throw new Error("模型列表中未找到 Max");
+  s = await waitFor(
+    "打开模型列表后审视",
+    current => current.text.includes("Lite") && current.text.includes("Pro") && current.text.includes("Max"),
+    6000,
+    300,
+  );
+  const maxIdx = ax.findIdx(s.text, "Max", "适合超复杂任务") ?? ax.findIdx(s.text, "Max");
+  if (maxIdx == null) {
+    throw new Error("模型列表中未找到 Max");
+  }
+  log.push({ target: "Max 模型选项", element_index: maxIdx });
+  await sky.click({ app, element_index: maxIdx });
+  await wait(300);
+  await sky.press_key({ app, key: "Escape" });
 }
-log.push({ target: "Max 模型选项", element_index: maxIdx });
-await sky.click({ app, element_index: maxIdx });
 
-s = await waitFor("选择 Max 后审视", current => current.text.includes("Max"));
-if (!s.text.includes("Max")) {
-  throw new Error("未确认 Max");
-}
+s = await waitFor(
+  "模型选择后/chat 就绪",
+  current =>
+    current.text.includes("聊天输入框") &&
+    current.text.includes("settable") &&
+    !current.text.includes("适合超复杂任务"),
+  8000,
+  300,
+);
 
 idx = settableInputIdx(s.text) ?? firstIdx(s.text, [["聊天输入框"]], "聊天输入框");
 await sky.click({ app, element_index: idx });
