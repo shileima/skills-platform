@@ -1,256 +1,101 @@
 ---
 name: codex-xgpt-skill-add
-description: "在 macOS 上通过 cua-router-basic 复刻 Chrome 桌面回放链路，在 xgpt.sankuai.com 的 XGPT/Bots 平台中新建 Skill 对象并进入配置页。"
+description: >
+  在 macOS 上通过 cua-router-basic 在 xgpt.sankuai.com 创建 Skill 并进入配置页。
+  触发词：「新建 XGPT Skill」「xgpt 新建技能」「在 Bots 创建 Skill」「创建技能对象」。
 ---
 
 # codex-xgpt-skill-add
 
-用于通过 macOS 桌面回放在 XGPT/Bots 平台创建新的 Skill 对象，并等待进入该 Skill 的配置页。触发词包括：`新建 XGPT Skill`、`在 Bots 创建 Skill`、`创建技能对象`、`xgpt 新建技能`。
+在 XGPT/Bots 平台 Chrome 桌面端创建新的 Skill 对象，并等待进入配置页。
 
-## 依赖与执行方式
+## 依赖
 
-- 必须依赖并调用 `cua-router-basic`。
-- 必须把完整录制链路转换为 `version: 1` 的声明式 JSON 动作时间线。
-- 必须通过 `cua-router-basic/scripts/replay.sh` 一次性执行该 JSON。
-- 禁止改用脚本直连接口、浏览器自动化框架直改 URL、或用最终配置页 URL 替代页面内点击和表单输入。
-- 禁止跳过、合并、重排录制步骤。
+参照 `cua-router-basic` 的 `references/install.md` 与 `references/runtime-exec.md`。
+执行前必须 `daemon.sh start` 且 `ensure-ready.sh` 输出 `ok`。
 
-执行时生成临时 JSON，例如：
+## 稳定操作脚本（优先）
 
 ```bash
-ROUTE_JSON="$(mktemp -t xgpt-skill-add.XXXXXX.json)"
-# 将 version 1 声明式 JSON 写入 $ROUTE_JSON
-bash cua-router-basic/scripts/replay.sh "$ROUTE_JSON"
+bash "./scripts/create-skill.sh" "<skill-name>" ["<skill-description>"] ["<space-id>"]
 ```
 
-如当前仓库中依赖路径不同，应先定位 `cua-router-basic/scripts/replay.sh`，但仍只能调用该 replay 入口一次完成整条回放。
+示例：
+
+```bash
+bash ./scripts/create-skill.sh "skill-test-20260907" "test"
+```
+
+脚本成功时最后一行输出 JSON，例如：
+
+```json
+{"ok":true,"skillName":"skill-test-20260907","url":"xgpt.sankuai.com/space/SP57785706e8f74b84/agent/skills/cskill-xxx/config"}
+```
 
 ## 输入参数
 
-- `skill_name`：要创建的 Skill 名称。默认值为 `新建技能测试-<date>`，其中 `<date>` 使用当天日期，建议格式 `YYYYMMDD`。
-- `skill_description`：Skill 简介。默认值为 `test`。
-- `space_id`：空间 ID，默认 `SP57785706e8f74b84`。
-- `entry_query`：Chrome 地址栏输入内容，默认 `xgpt`。
+| 参数 | 说明 | 默认值 |
+|---|---|---|
+| `skill_name` | Skill 名称 | `skill-test-<YYYYMMDDHHMMSS>` |
+| `skill_description` | Skill 简介 | `test` |
+| `space_id` | 空间 ID | `SP57785706e8f74b84` |
 
-名称合法性要求：最终提交的 `skill_name` 不得包含非法空格。如果输入值包含空格，仍按录制链路执行创建尝试；若弹层未关闭，则按录制动作重新聚焦名称输入框并修正为合法名称后再次点击「确 定」。
+## 主流程
 
-## 回放质量要求
+1. 确保进入技能清单页 `/space/{space_id}/agent/skills`（若已在配置页则点左侧「Skill 技能」返回；若在首页则点「专家」→「Skill 技能」）。
+2. 点击右侧「按钮 新建」，等待「创建Skill」弹层出现。
+3. 填写「* Skill名称」：扫描定位 → 点击 → `set_value` → **`Tab` 失焦** → 刷新 AX 校验。
+4. 填写「* Skill简介」：同上（`set_value` + **`Tab` 失焦**）。
+5. **点击「确 定」前必须重扫 AX**：
+   - 记录填写前/填写后「确 定」按钮 idx（检测是否因弹层滚动而偏移）；
+   - `ax.get({ refresh: true })` 后 `findAllIdx("确","定","按钮")`；
+   - 若定位失败，先 scroll 弹层再重扫；
+   - 用**最新 idx** 点击，禁止复用填写前的缓存 index。
+6. 等待 URL 包含 `/config`，或页面出现新 Skill 名称。
 
-生成的每一个 action 都必须具备以下三段语义：
+## 语义定位关键词
 
-1. 操作前刷新 AX tree，并用语义定位目标。
-2. 执行单个原子操作。
-3. 操作后刷新 AX tree，并校验期望状态。
+| 目标 | 关键词组 | 说明 |
+|---|---|---|
+| 主导航「专家」 | `["按钮", " 专家"]` | 空格+专家，避免命中「设计专家」 |
+| 左侧「Skill 技能」 | `["Skill 技能"]` | |
+| 右侧「新建」 | `["按钮 新建"]` | 单行精确匹配，避免列表项误命中 |
+| 名称输入框 | `["* Skill名称", "文本栏"]` | |
+| 简介输入区 | `["* Skill简介", "文本"]` | |
+| 「确 定」 | `["确", "定", "按钮"]` | 点击前必须重扫 |
 
-禁止在声明式 JSON 中使用：
+## 关键稳定策略
 
-- `elementIndex`
-- 坐标点击或坐标偏移
-- `observationId`
-- 仅依赖 AXGroup 外壳的泛化点击
-- BARE target
+### 1. React 表单：`set_value` 后必须 `Tab` 失焦
 
-录制质量基线：Chrome `window.changed` 有完整 AX tree；关键 `mouse.click` target 必须能语义命中按钮「专家」「Skill 技能」「新建」「确 定」，以及名称文本栏、简介文本输入区目标；不能退化为全部 AXGroup 壳层点击。
+仅 `set_value` 会让 AX 树显示 `Value:`，但 React 内部 state 可能未同步，导致点「确定」后弹层关闭却不创建 Skill。
+**每个字段写入后必须 `press_key(Tab)` 触发 blur/onChange。**
 
-Web 表单输入推荐使用 paste 策略，并在输入后校验字段值。
+### 2. 确定按钮：填写后重扫 AX
 
-## 必须复刻的完整动作时间线
+填简介时弹层可能滚动，「确 定」的 `element_index` 会从 64 漂移到 65/66。
+**点击确定前强制 `refresh: true` 并重新语义定位，必要时 scroll 后再扫。**
 
-声明式 JSON 必须严格包含以下步骤，不能用摘要替代：
+### 3. 每步刷新，禁止复用 idx
 
-1. 点击 Dock 或激活 Google Chrome。
-2. 新建标签页。
-3. 在 Chrome 地址栏输入 `entry_query`，默认 `xgpt`。
-4. 按 Return，进入 `https://xgpt.sankuai.com/home`。
-5. 点击主导航「专家」。
-6. 等待进入 `/space/{space_id}/agent/ai-employee`，并出现「AI 专家」「Skill 技能」。
-7. 点击左侧「Skill 技能」。
-8. 等待进入 `/space/{space_id}/agent/skills`，并出现「搜索...」「技能清单」「新建」。
-9. 点击「新建」，打开「创建Skill」弹层。
-10. 点击「* Skill名称」输入框。
-11. 输入 `skill_name`，录制默认值为 `新建技能测试-date`。
-12. 点击「* Skill简介」输入区。
-13. 输入 `skill_description`，录制默认值为 `test`。
-14. 保留录制中的 Return 键动作，但不得把它作为最终提交创建。
-15. 重新定位并点击「确 定」。
-16. 若名称里存在非法空格导致仍停留在弹层，按录制动作聚焦名称并修正为合法 `skill_name`。
-17. 再点击「确 定」。
-18. 等待跳转到 `/space/{space_id}/agent/skills/<new-skill-id>/config` 配置页。
+所有 click / set_value / press_key 的目标 idx 必须来自**当前** AX 树，不得跨步骤缓存。
 
-## version 1 JSON 生成规则
+## 操作规范
 
-生成的 JSON 顶层必须声明版本与变量，例如：
+遵循 `cua-router-basic` 主文件核心操作规范；Web 表单输入优先 `set_value` + `Tab` 失焦，Electron/WebView 不稳定时再降级 paste。
 
-```json
-{
-  "version": 1,
-  "name": "codex-xgpt-skill-add",
-  "variables": {
-    "skill_name": "新建技能测试-20250101",
-    "skill_description": "test",
-    "space_id": "SP57785706e8f74b84",
-    "entry_query": "xgpt"
-  },
-  "actions": []
-}
-```
-
-`actions` 中每一步都要写成声明式三段结构。动作命名可因 `cua-router-basic` 的实际 schema 调整，但语义必须等价：
-
-```json
-{
-  "name": "click-new-button",
-  "before": {
-    "refreshAX": true,
-    "locate": {
-      "role": "button",
-      "name": "新建",
-      "within": "技能清单"
-    }
-  },
-  "do": {
-    "type": "mouse.click",
-    "target": {
-      "role": "button",
-      "name": "新建"
-    }
-  },
-  "after": {
-    "refreshAX": true,
-    "assert": {
-      "visibleText": "创建Skill"
-    }
-  }
-}
-```
-
-不要把上例中的字段理解为固定模板；应以当前 `cua-router-basic` 支持的 version 1 schema 为准，但必须保留同等的前置 AX 刷新定位、单步操作、后置 AX 刷新校验。
-
-## 动作细化要求
-
-### 1. 激活 Chrome
-
-- 前置：刷新桌面 AX，定位 Dock 或应用切换中的 `Google Chrome`。
-- 操作：点击或激活 `Google Chrome`。
-- 后置：刷新 AX，确认前台应用为 Chrome，存在 Chrome 窗口。
-
-### 2. 新建标签页
-
-- 前置：刷新 AX，确认 Chrome 前台。
-- 操作：使用录制等价的新建标签页动作，例如 `Command+L` 后 `Command+T`，或语义点击新建标签页按钮；只能执行一个原子动作。
-- 后置：刷新 AX，确认地址栏可输入或新标签页已激活。
-
-### 3. 地址栏输入 entry_query
-
-- 前置：刷新 AX，语义定位 Chrome 地址栏。
-- 操作：聚焦地址栏并 paste `entry_query`。
-- 后置：刷新 AX，校验地址栏值为 `entry_query`。
-
-### 4. Return 进入首页
-
-- 前置：刷新 AX，确认地址栏仍为 `entry_query`。
-- 操作：按 Return。
-- 后置：刷新 AX，等待并校验 URL 到达 `https://xgpt.sankuai.com/home`，或页面出现 XGPT 首页可识别内容。
-
-### 5. 点击「专家」
-
-- 前置：刷新 AX，定位主导航按钮或链接「专家」。
-- 操作：点击「专家」。
-- 后置：刷新 AX，等待导航开始并出现可继续判断的页面状态。
-
-### 6. 等待 AI 专家页
-
-- 前置：刷新 AX。
-- 操作：等待 URL 匹配 `/space/{space_id}/agent/ai-employee`。
-- 后置：刷新 AX，校验页面同时出现「AI 专家」和「Skill 技能」。
-
-### 7. 点击「Skill 技能」
-
-- 前置：刷新 AX，定位左侧导航「Skill 技能」。
-- 操作：点击「Skill 技能」。
-- 后置：刷新 AX，等待页面切换。
-
-### 8. 等待技能清单页
-
-- 前置：刷新 AX。
-- 操作：等待 URL 匹配 `/space/{space_id}/agent/skills`。
-- 后置：刷新 AX，校验出现「搜索...」「技能清单」「新建」。
-
-### 9. 点击「新建」
-
-- 前置：刷新 AX，定位按钮「新建」。
-- 操作：点击「新建」。
-- 后置：刷新 AX，校验出现「创建Skill」弹层。
-
-### 10. 点击「* Skill名称」输入框
-
-- 前置：刷新 AX，在「创建Skill」弹层内定位标签「* Skill名称」对应的文本输入框。
-- 操作：点击名称输入框。
-- 后置：刷新 AX，校验该输入框获得焦点。
-
-### 11. 输入 skill_name
-
-- 前置：刷新 AX，确认焦点在「* Skill名称」输入框。
-- 操作：paste `skill_name`。
-- 后置：刷新 AX，校验字段值等于 `skill_name`。
-
-### 12. 点击「* Skill简介」输入区
-
-- 前置：刷新 AX，在「创建Skill」弹层内定位标签「* Skill简介」对应的文本输入区。
-- 操作：点击简介输入区。
-- 后置：刷新 AX，校验该输入区获得焦点。
-
-### 13. 输入 skill_description
-
-- 前置：刷新 AX，确认焦点在「* Skill简介」输入区。
-- 操作：paste `skill_description`。
-- 后置：刷新 AX，校验字段值等于 `skill_description`。
-
-### 14. 保留 Return 键动作
-
-- 前置：刷新 AX，确认仍在「创建Skill」弹层内。
-- 操作：按 Return。
-- 后置：刷新 AX，校验仍可定位弹层或表单区域；不得把这个 Return 视为最终提交成功条件。
-
-### 15. 点击「确 定」
-
-- 前置：刷新 AX，在「创建Skill」弹层内重新定位按钮「确 定」。
-- 操作：点击「确 定」。
-- 后置：刷新 AX，判断是否跳转或是否仍停留弹层；若弹层消失则进入最终等待步骤，若仍存在且名称校验失败则进入修正步骤。
-
-### 16. 非法空格修正分支
-
-仅当点击「确 定」后仍停留在「创建Skill」弹层，且名称因为非法空格等原因未通过校验时执行：
-
-- 前置：刷新 AX，重新定位「* Skill名称」输入框。
-- 操作：聚焦名称输入框，清空原值，paste 合法 `skill_name`。
-- 后置：刷新 AX，校验名称字段值为合法 `skill_name`，且不含非法空格。
-
-合法化策略应保持名称含义，优先删除首尾空格并将内部空白替换为 `-` 或直接移除，确保最终值符合平台限制。
-
-### 17. 再次点击「确 定」
-
-- 前置：刷新 AX，在弹层内重新定位按钮「确 定」。
-- 操作：点击「确 定」。
-- 后置：刷新 AX，确认弹层关闭或页面开始跳转。
-
-### 18. 等待配置页
-
-- 前置：刷新 AX。
-- 操作：等待 URL 匹配 `/space/{space_id}/agent/skills/<new-skill-id>/config`，其中 `<new-skill-id>` 为平台生成的任意非空路径段。
-- 后置：刷新 AX，校验已经进入 Skill 配置页，并尽可能确认页面显示当前 `skill_name` 或配置相关区域。
+- 禁止用最终 config URL 直跳替代页面内点击和表单提交。
+- 禁止跨轮次复用 `observationId` 或旧 `element_index`。
+- 确定按钮是高风险动作：重扫 → 单步点击 → 刷新验证，结果不明时不重复点击。
 
 ## 失败处理
 
-- 如果未登录、无权限或空间不存在，应停止回放并报告当前 AX 可见错误文本，不得尝试绕过登录或权限控制。
-- 如果语义定位不到目标，必须重新刷新 AX 并重试有限次数；仍失败时输出缺失的目标名称与当前 URL。
-- 如果最终没有进入 `/space/{space_id}/agent/skills/<new-skill-id>/config`，应报告最后一次 URL、弹层是否仍存在、名称字段值和简介字段值。
+- 未登录、无权限或空间不存在：停止并报告 AX 可见错误文本。
+- 语义定位不到目标：刷新 AX 重试；仍失败时输出缺失目标名与当前 URL。
+- 弹层关闭但未进入 `/config`：报告名称/简介字段 AX 值、最后一次 URL、确定按钮扫描结果。
 
 ## 成功判定
 
-只有同时满足以下条件才算成功：
-
-- 已按录制链路执行 Chrome 激活、新标签页、地址栏输入、Return、页面导航点击、表单输入、Return 保留动作、确定按钮提交。
-- 最终 URL 匹配 `/space/{space_id}/agent/skills/<new-skill-id>/config`。
-- 未使用坐标、索引、observationId 或最终 URL 直跳替代页面操作。
-- 表单中的 Skill 名称和简介已经按输入参数提交。
+- 最终 URL 包含 `/agent/skills/<id>/config`。
+- 页面可见提交的 `skill_name`。
+- 名称与简介已按参数写入并提交。

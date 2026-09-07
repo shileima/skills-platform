@@ -1,0 +1,35 @@
+{
+  "name": "codex-xgpt-skill-add",
+  "version": "0.1.0",
+  "description": "在 xgpt.sankuai.com 通过 Chrome 桌面自动化创建 Skill 并进入配置页",
+  "author": "shilei",
+  "license": "MIT",
+  "keywords": [
+    "xgpt",
+    "bots",
+    "skill",
+    "cua",
+    "chrome"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
+    }
+  ],
+  "pack": {
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts"
+    ]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-xgpt-skill-add"
+  }
+}
