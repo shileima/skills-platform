@@ -44,11 +44,15 @@ export function findToolbarIconButtons(lines, shelfIdx) {
   return icons.sort((a, b) => a - b);
 }
 
+function findShelfButtonIdx(lines) {
+  return findIdx(lines, /按钮.*上架/) || findIdx(lines, /按钮.*下架/);
+}
+
 export function findImportButtonIdx(lines) {
   const labeled = findIdx(lines, /按钮 导入/);
   if (labeled) return labeled;
 
-  const shelfIdx = findIdx(lines, /按钮 上架/) || findIdx(lines, /按钮 下架/);
+  const shelfIdx = findShelfButtonIdx(lines);
   if (!shelfIdx) return null;
 
   // 主策略：导入 icon 在 shelf 前固定偏移（catdesk 实测 shelf=36 → 导入=31）
@@ -64,7 +68,7 @@ export function findImportButtonIdx(lines) {
 
 /** 按优先级返回「导入」icon 候选 idx；排除 AI 助手（工具栏簇第 1 个） */
 export function findImportButtonCandidates(lines) {
-  const shelfIdx = findIdx(lines, /按钮 上架/) || findIdx(lines, /按钮 下架/);
+  const shelfIdx = findShelfButtonIdx(lines);
   if (!shelfIdx) return [];
 
   const candidates = [];
