@@ -42,7 +42,7 @@
 
 | step | 常见原因 |
 |------|----------|
-| `open-skills-page` | 未登录、无空间权限 |
+| `open-skills-page` | 未登录、无空间权限；地址栏定位失败（勿用 `type_text` 或 fallback idx）；Google 首页误点页面搜索框 |
 | `find-skill-card` | 平台无同名 Skill → 先用 `codex-xgpt-skill-add` 新建 |
 | `find-import-button` | 不在编辑视图；检查是否有「标签 (selected) 编辑」 |
 | `select-zip-file` | zip 未在桌面；pack 失败；type-ahead 前缀不匹配 |

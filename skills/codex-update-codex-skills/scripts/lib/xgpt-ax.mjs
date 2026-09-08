@@ -106,6 +106,21 @@ export function findSkillSearchIdx(lines) {
   return findIdx(lines, /文本栏.*搜索\.\.\./) || findIdx(lines, /^[^\n]*搜索\.\.\.[^\n]*$/);
 }
 
+/** Chrome 地址栏（Omnibox）；禁止 fallback 到任意 idx，避免误点页面内搜索框 */
+export function findAddressBarLine(lines) {
+  return (
+    findLine(lines, /\(settable,\s*string\).*(地址和搜索栏|Address and search bar|Omnibox)/i) ||
+    findLine(lines, /settable, string.*(地址和搜索栏|Address and search bar|Omnibox)/i) ||
+    findLine(lines, /\(settable,\s*string\).*地址/) ||
+    findLine(lines, /settable, string.*地址/) ||
+    findLine(lines, /\(settable,\s*string\).*Placeholder:.*(网址|url)/i)
+  );
+}
+
+export function findAddressBarIdx(lines) {
+  return idxFromLine(findAddressBarLine(lines));
+}
+
 /** 技能卡片：清单页上为「按钮 <skillName> 技能 …」；兜底匹配文本行 */
 export function findSkillCardIdx(lines, skillName) {
   const card = findIdx(lines, new RegExp(`按钮 ${escapeRegExp(skillName)}`));

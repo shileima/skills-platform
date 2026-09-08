@@ -1,4 +1,5 @@
 import {
+  findAddressBarIdx,
   findIdx,
   findImportButtonCandidates,
   findImportButtonIdx,
@@ -27,29 +28,76 @@ export async function updateSkillOnXgpt({ skillName, zipPath, spaceId }) {
     return ax.get("com.google.Chrome", { refresh: true });
   }
 
-  async function navigateToSkillsList() {
+  async function navigateChromeToUrl(targetUrl, { verify, maxWaitMs = 15000, pollMs = 500 } = {}) {
     await refresh();
     await sky.press_key({ app: "com.google.Chrome", key: "Escape" });
     await sleep(400);
+
     let s = await refresh();
-    if (isSkillsListPage(urlOf(s.text))) return s;
+    const currentUrl = urlOf(s.text);
+    if (verify?.(currentUrl, s.text)) {
+      return { ok: true, s };
+    }
 
-    const lines = s.text.split("\n");
-    const addrLine = findLine(lines, /settable, string.*地址和搜索栏/);
-    const addrIdx = idxFromLine(addrLine) || findIdx(lines, /settable, string.*地址/) || 10;
+    // Command+L 聚焦 Omnibox，避免误点页面内搜索框（如 Google 首页）
+    await sky.press_key({ app: "com.google.Chrome", key: "Command+l" });
+    await sleep(500);
 
-    await sky.click({ app: "com.google.Chrome", element_index: addrIdx });
+    s = await refresh();
+    let lines = s.text.split("\n");
+    let addrIdx = findAddressBarIdx(lines);
+    if (!addrIdx) {
+      return {
+        ok: false,
+        step: "open-skills-page",
+        reason: "未找到 Chrome 地址栏",
+        url: urlOf(s.text),
+        targetUrl,
+        hints: important(lines, /地址|Address|Omnibox|settable/),
+      };
+    }
+
+    await sky.set_value({ app: "com.google.Chrome", element_index: addrIdx, value: targetUrl });
     await sleep(200);
-    await sky.press_key({ app: "com.google.Chrome", key: "Command+a" });
-    await sleep(100);
-    await sky.type_text({ app: "com.google.Chrome", text: skillsUrl });
     await sky.press_key({ app: "com.google.Chrome", key: "Return" });
-    await sleep(3500);
-    return refresh();
+
+    const deadline = Date.now() + maxWaitMs;
+    while (Date.now() < deadline) {
+      await sleep(pollMs);
+      s = await refresh();
+      const url = urlOf(s.text);
+      if (verify ? verify(url, s.text) : url.replace(/^https?:\/\//, "").includes(targetUrl.replace(/^https?:\/\//, ""))) {
+        return { ok: true, s };
+      }
+    }
+
+    s = await refresh();
+    lines = s.text.split("\n");
+    return {
+      ok: false,
+      step: "open-skills-page",
+      reason: "导航后未到达目标页面",
+      url: urlOf(s.text),
+      targetUrl,
+      hints: important(lines, /skills|xgpt|登录|错误|google/i),
+    };
+  }
+
+  async function navigateToSkillsList() {
+    let s = await refresh();
+    if (isSkillsListPage(urlOf(s.text))) {
+      return { ok: true, s };
+    }
+
+    return navigateChromeToUrl(skillsUrl, {
+      verify: (url) => isSkillsListPage(url),
+    });
   }
 
   async function searchSkillCard(skill) {
-    let s = await navigateToSkillsList();
+    const nav = await navigateToSkillsList();
+    if (!nav.ok) return nav;
+    let s = nav.s;
     let lines = s.text.split("\n");
     let cardIdx = findSkillCardIdx(lines, skill);
     if (cardIdx) return { ok: true, cardIdx, s };
