@@ -17,7 +17,9 @@
 
 **配置表单前**先在浏览器**新建 Tab** 打开目标页，**一次性采集完本任务所需的全部元素定位信息**，再切回工作流 Tab 逐条填表。
 
-> ⚠️ **禁止**在工作流编排 Tab 的地址栏直接导航到目标站——会丢失 canvas 编辑状态。须 **Cmd+T 新建 Tab** 探测，采完切回。
+> ⚠️ **禁止**在工作流编排 Tab 的地址栏直接导航到目标站——会丢失 canvas 编辑状态。须 **新建 Tab** 探测，采完切回。
+>
+> ⚠️ **Chrome 新建 Tab 禁止用 `Cmd+T` / `Meta+t`**：`inspect/act press_key` 要求焦点在目标元素上，窗口级快捷键易报 `focus_changed`；且 `target: {"all":["Chrome"]}` 会 `target_ambiguous`。应 **点击 Chrome 标签栏「新标签页」按钮**（见 §第 2 步）。
 
 ### 何时触发
 
@@ -30,7 +32,7 @@
 ```
 1. Read 场景文件（scenarios/<场景>.md）→ 列出本任务需要的全部元素（搜索框、按钮…）
 2. 优先 Read locators 缓存；若不可用 → 进入新建 Tab 采集
-3. Chrome 新建 Tab（Cmd+T）→ 打开目标 URL → 等待页面加载
+3. Chrome 点击「新标签页」按钮 → 打开目标 URL → 等待页面加载
 4. DevTools Console 批量探测 → 记录每个元素的准确 XPath
 5. （可选）更新 locators 缓存：bash scripts/update-locators.sh <site>
 6. 切回 bots/rpa 工作流 Tab → 用采集到的 XPath 逐条配置指令表单
@@ -49,19 +51,45 @@
 
 **第 2 步：新建 Tab 打开目标页**
 
+> **禁止 `Cmd+T` / `Meta+t`**。Chrome 标签栏有 AX 暴露的「新标签页」按钮，直接 click 更稳（约 4s；`Cmd+T` 经 `inspect/act` 常因 `focus_changed` 失败）。
+
+**exec.sh / sky 脚本（推荐）**：
+
 ```js
 {
   // 工作流 Tab 保持不动；新建 Tab 用于探测
-  await sky.press_key({ app: "com.google.Chrome", key: "cmd+t" });
+  const app = "com.google.Chrome";
+  let s = await sky.get_app_state({ app, disableDiff: true });
+  const tabLine = s.text.split("\n").find(l => /按钮/.test(l) && /新标签页/.test(l));
+  const tabIdx = parseInt((tabLine || "").match(/^\s*(\d+)/)?.[1]);
+  if (!tabIdx) {
+    emitResult({ ok: false, step: "find-new-tab-button" });
+    return;
+  }
+  await sky.click({ app, element_index: tabIdx });
   await new Promise(r => setTimeout(r, 800));
 
-  const s = await sky.get_app_state({ app: "com.google.Chrome", disableDiff: true });
+  s = await sky.get_app_state({ app, disableDiff: true });
   const addrLine = s.text.split("\n").find(l => /settable, string/.test(l) && /地址/.test(l));
   const addrIdx = parseInt((addrLine || "10 ").match(/^\s*(\d+)/)[1]);
-  await sky.set_value({ app: "com.google.Chrome", element_index: addrIdx, value: "https://目标网址" });
-  await sky.press_key({ app: "com.google.Chrome", key: "Return" });
+  await sky.set_value({ app, element_index: addrIdx, value: "https://目标网址" });
+  await sky.press_key({ app, key: "Return" });
   await new Promise(r => setTimeout(r, 2500));
 }
+```
+
+**cua.sh inspect → act（探索型 Agent）**：
+
+```bash
+SKILL_ROOT="${CUA_ROUTER_INSTALL_DIR:-${HOME}/.automan/claude-code-agents/cua-agent/skills/cua-router-basic}"
+
+INSPECT=$(bash "$SKILL_ROOT/scripts/cua.sh" inspect \
+  '{"app":"com.google.Chrome","intent":"点击新标签页","target":{"anyOf":[{"all":["按钮","新标签页"]}],"expectedCount":1}}')
+OBS=$(echo "$INSPECT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('observationId',''))")
+
+bash "$SKILL_ROOT/scripts/cua.sh" act \
+  "{\"observationId\":\"$OBS\",\"action\":{\"type\":\"click\"},\"verify\":{\"appearAny\":[{\"all\":[\"新标签页\"]}]}}"
+# 若返回 stale_observation ui_changed：Tab 通常已打开，重新 inspect 地址栏继续导航
 ```
 
 > 多页场景（如首页 + 搜索结果页）：在同一探测 Tab 内依次导航各 URL，**一次性采完**再关 Tab；或按页新建 Tab，但须在本轮配置前汇总全部 XPath。

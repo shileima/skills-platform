@@ -1,0 +1,38 @@
+{
+  "name": "codex-rpa-workflow-generate",
+  "version": "0.1.2",
+  "description": "根据用户场景或指令计划，调用平台 API 构建编排工作流节点 JSON，通过剪贴板批量粘贴到空编排工作流",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": [
+    "rpa",
+    "bots",
+    "workflow",
+    "web-automation",
+    "orchestration",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
+    }
+  ],
+  "pack": {
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "reference",
+      "scripts",
+      "data"
+    ]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-rpa-workflow-generate"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "workflowName": "GitHub-Codex近一周Issues-20260908",
+  "targetUrl": "https://github.com/openai/codex",
+  "description": "GitHub 网页 UI：NavigateToUrl 进入 Commits/Issues 子页，URL 直链筛选近一周 issues，提高 OpenUrl 超时",
+  "instructionPlan": [
+    {
+      "unionId": "OpenUrl",
+      "params": {
+        "url": "https://github.com/openai/codex",
+        "timeout": "120000",
+        "waitUntil": "DOMCONTENTLOADED"
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "Delay",
+      "params": { "second": "2" }
+    },
+    {
+      "unionId": "NavigateToUrl",
+      "params": { "url": "https://github.com/openai/codex/commits" }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "WaitForElementPresent",
+      "params": {
+        "findTimeout": "20000",
+        "selector": {
+          "alias": "定位 GitHub Commits 页主内容区 commit 列表，包含 commit message 链接"
+        }
+      }
+    },
+    {
+      "unionId": "GetText",
+      "params": {
+        "findTimeout": "20000",
+        "selector": {
+          "alias": "定位 GitHub Commits 页 commit 列表区域第一条 commit message 文本"
+        },
+        "outKey": "recentCommitsText"
+      }
+    },
+    {
+      "unionId": "NavigateToUrl",
+      "params": {
+        "url": "https://github.com/openai/codex/issues?q=is%3Aissue+updated%3A%3E2026-09-01"
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "WaitForElementPresent",
+      "params": {
+        "findTimeout": "25000",
+        "selector": {
+          "alias": "定位 GitHub Issues 筛选结果页 issue 列表主内容区，包含 issue 标题链接"
+        }
+      }
+    },
+    {
+      "unionId": "ScrollToElement",
+      "params": {
+        "findTimeout": "15000",
+        "selector": {
+          "alias": "定位 GitHub Issues 列表中第一条 issue 标题链接"
+        }
+      }
+    },
+    {
+      "unionId": "GetText",
+      "params": {
+        "findTimeout": "25000",
+        "selector": {
+          "alias": "定位 GitHub Issues 列表中第一条 issue 标题链接文本"
+        },
+        "outKey": "weeklyIssuesText"
+      }
+    },
+    {
+      "unionId": "TakeScreenshot",
+      "params": { "outKey": "issuesSummaryScreenshot" }
+    }
+  ]
+}

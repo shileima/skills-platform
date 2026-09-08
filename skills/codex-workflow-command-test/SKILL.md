@@ -163,7 +163,7 @@ sky `/exec` 步骤脚本见 `test-workflow.md` §保存后配置校验、§调�
 | **批次步骤** | 一条指令 = 一次 `/exec` 步骤；4 步场景 ≤ 6 次步骤 | 每条指令拆 5+ 步骤；配置未完成就运行 |
 | **禁止盲 sleep** | 搜索框用 `waitSearchIdx()` 轮询 | 固定 2s 盲等 |
 | **剪贴板** | URL/XPath/中文：**Shell** `pbcopy` | `/exec` 步骤内 `execFileSync('pbcopy')` |
-| **钉住工作流 Tab** | XPath 采集仅 **Cmd+T 新 Tab** | 工作流 Tab 地址栏打开目标站 |
+| **钉住工作流 Tab** | XPath 采集仅 **点击「新标签页」按钮** 新建 Tab（禁止 Cmd+T） | 工作流 Tab 地址栏打开目标站 |
 | **LLM 确认** | 只用 `LLM动态定位` slice 内「确 认」 | 全局第一个确认按钮 |
 | **ASCII 待填充** | `bilibili` 等纯 ASCII 用 `type_text` | 对 ASCII 用 paste |
 | **禁止点「调试」** | 配置阶段不点「调试」；失焦用「编排区」Tab + Escape | 用「调试」失焦；每条指令后调试 |

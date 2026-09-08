@@ -1,0 +1,105 @@
+{
+  "workflowName": "京东天猫-iPhone17比价-20260908",
+  "targetUrl": "https://www.jd.com",
+  "description": "分别打开京东、天猫 Web 版，搜索 iPhone 17 256G 黑色并抓取首个商品价格，用于比价",
+  "instructionPlan": [
+    {
+      "unionId": "OpenUrl",
+      "params": { "url": "https://www.jd.com" }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "FillText",
+      "params": {
+        "text": "iPhone 17 256G 黑色",
+        "selector": {
+          "alias": "定位京东首页顶部搜索输入框，用于输入商品关键词"
+        }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "selector": {
+          "alias": "定位京东首页搜索按钮，用于点击搜索商品"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "WaitForElementPresent",
+      "params": {
+        "selector": {
+          "alias": "定位京东搜索结果页商品列表区域，用于确认搜索结果已加载"
+        }
+      }
+    },
+    {
+      "unionId": "GetText",
+      "params": {
+        "selector": {
+          "alias": "定位京东搜索结果页第一个匹配 iPhone 17 256G 黑色商品的售价金额元素，用于获取京东价格"
+        },
+        "outKey": "jdPrice"
+      }
+    },
+    {
+      "unionId": "OpenUrl",
+      "params": { "url": "https://www.tmall.com" }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "FillText",
+      "params": {
+        "text": "iPhone 17 256G 黑色",
+        "selector": {
+          "alias": "定位天猫首页顶部搜索输入框，用于输入商品关键词"
+        }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "selector": {
+          "alias": "定位天猫首页搜索按钮，用于点击搜索商品"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD" }
+    },
+    {
+      "unionId": "WaitForElementPresent",
+      "params": {
+        "selector": {
+          "alias": "定位天猫搜索结果页商品列表区域，用于确认搜索结果已加载"
+        }
+      }
+    },
+    {
+      "unionId": "GetText",
+      "params": {
+        "selector": {
+          "alias": "定位天猫搜索结果页第一个匹配 iPhone 17 256G 黑色商品的售价金额元素，用于获取天猫价格"
+        },
+        "outKey": "tmallPrice"
+      }
+    },
+    {
+      "unionId": "TakeScreenshot",
+      "params": {
+        "outKey": "priceCompareScreenshot"
+      }
+    }
+  ]
+}

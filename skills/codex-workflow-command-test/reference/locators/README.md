@@ -45,7 +45,7 @@ Agent 在配置/调试指令前，若缓存超过 7 天或用户要求刷新，*
 配置工作流前若需 XPath，**不要在工作流 Tab 里导航**。流程见 `reference/element-selector.md` §批量采集：
 
 ```
-Read 场景 → 列出全部待采元素 → Cmd+T 新建 Tab → 打开目标 URL
+Read 场景 → 列出全部待采元素 → 点击 Chrome「新标签页」按钮 → 打开目标 URL
 → DevTools 一次性采齐 XPath → 切回工作流 Tab → 逐条填表
 ```
 

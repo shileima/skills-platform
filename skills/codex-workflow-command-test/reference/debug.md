@@ -227,6 +227,54 @@
 - 聊天区无错但左侧有红 → 断开后重跑，或修复执行失败项
 - 「检查」仍有 badge → 以「检查」面板为准，逐项修复
 
+### 聊天区调试结果展开（必做 · 有失败时）
+
+调试运行后，聊天区会出现 **「调试结果」** 卡片与 **「哎呀，小助手出错了 · …」** 报错条。摘要只有失败节点名，**必须展开详情**才能读到 `errorCode`、`errorMessage`、`rootExceptionMessage`（如 `Timeout 30000ms exceeded`）。
+
+**人工操作（二选一）**：
+
+1. **调试结果**卡片标题行**最右侧**图标 → 点 **「展开详情」**（eye-slash 图标）
+2. 报错条内点 **「更多详情 >」** → 展开 `errorMessage` / `rootExceptionMessage` / 堆栈
+
+展开后必读字段：
+
+| 字段 | 用途 |
+|------|------|
+| `errorCode` | 如 `10121008`，对照平台错误码 |
+| `errorMessage` | 中文摘要，如「打开网页超时异常」 |
+| `rootExceptionMessage` | 引擎原文，如 `Timeout 30000ms exceeded` |
+| `instructionName` | 失败指令 unionId，如 `OpenUrl` |
+
+**sky 自动化**（先 `get_app_state` 再 click）：
+
+```js
+{
+  const chromeApp = "com.google.Chrome";
+  const s0 = await sky.get_app_state({ app: chromeApp, disableDiff: true });
+  const lines = s0.text.split("\n");
+  const btn = (re) => {
+    const line = lines.find(l => re.test(l.replace(/\t/g, " ")) && l.includes("按钮"));
+    return line ? parseInt(line.match(/^\s*(\d+)/)[1]) : null;
+  };
+  const moreIdx = btn(/更多详情/);
+  const expandIdx = btn(/展开详情/);
+  const targetIdx = moreIdx ?? expandIdx;
+  if (targetIdx == null) {
+    emitResult({ step: "expand-debug-detail", ok: false, reason: "未找到更多详情/展开详情按钮" });
+  } else {
+    await sky.click({ app: chromeApp, element_index: targetIdx });
+    await new Promise(r => setTimeout(r, 1500));
+    const s1 = await sky.get_app_state({ app: chromeApp, disableDiff: true });
+    const detail = s1.text.split("\n").filter(l =>
+      /errorMessage|rootExceptionMessage|errorCode|10121|Timeout|超时|OpenUrl/.test(l)
+    ).slice(0, 20);
+    emitResult({ step: "expand-debug-detail", ok: true, detail });
+  }
+}
+```
+
+> 修复循环：**展开详情 → 读 rootExceptionMessage → 改节点/重贴 → 保存 → 检查 → 再调试**，直至四处扫描全部通过。
+
 ### sky 自动化：执行后四处扫描
 
 完整脚本见 `test-workflow.md` §第 5 步「sky 自动化：执行后四处扫描」（`step: "post-debug-four-way-check"`）。
@@ -313,7 +361,7 @@ bash "$SKILL_DIR/scripts/ensure-ready.sh"
 | FillText / 页面元素不存在 | LLM 动态定位未稳定或描述不符合 §LLM 自然语言描述写法（缺位置/目标元素/操作意图）、或 XPath 与真实 DOM 不符 | 先按 `element-selector.md` §方式 A 重写描述（位置 + 目标元素 + 操作意图）并确认落库；仍失败再按 §批量采集（新建 Tab）重采全部相关 XPath，或更新 locators |
 | FillText 10120036 | 选择器指向容器 div 而非 input | 精确 XPath：`//textarea[@id="xxx"]` |
 | 元素未找到 | selector 不精确、LLM 未确认落库或页面改版 | 先检查 LLM 是否已点击「确认」并落库；否则重新采集，勿沿用旧 XPath |
-| 导航失败 | URL 格式错误 | pbcopy+paste 重填 |
+| 导航失败 / 打开网页超时 | URL 错误或 `navigateOptions.timeout` 过短（OpenUrl 默认 30s） | 补全 URL；OpenUrl 设 `navigateOptions: { timeout: "120000" }`；GitHub 等慢站可用 `DOMCONTENTLOADED` |
 | 网址显示 `https//`（缺冒号） | 用了 `type_text` 填 URL | 见 `url-input.md`：`pbcopy` + 粘贴或 `set_value`，禁止 type_text |
 | Chrome 地址栏出现目标 URL，弹框「网址」仍空/红框 | 误填地址栏或未 scoped 定位 | 见 `url-input.md` §误填地址栏后的修复；**canSave 为 false 时禁止保存** |
 | 点了「保存」但节点右侧仍有配置警示 ⓘ / 「检查」报节点配置不完整 | **保存前未 assertCanSave**；网址仍空或仍占位符 | 双击节点 → 补全必填项 → assertCanSave → 再保存 |

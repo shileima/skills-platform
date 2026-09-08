@@ -63,7 +63,7 @@ bash "$SKILL_DIR/scripts/lib/ensure-chrome-front.sh"
 | 「检查」 | **全部指令保存后** 点一次 | 每保存一条都点「检查」 |
 | 「调试」 | **终检通过后** 一次性「调试 → 运行」 | **每条指令插入/保存后调试** |
 | 剪贴板 | **Shell** `printf '%s' '…' \| pbcopy`，再进 hosted paste | 进程内 `execFileSync('pbcopy')` |
-| 导航 | **钉在工作流 Tab**；XPath 采集用 **Cmd+T 新 Tab** | 工作流 Tab 地址栏打开目标站（丢 canvas） |
+| 导航 | **钉在工作流 Tab**；XPath 采集用 **点击「新标签页」按钮**（禁止 Cmd+T） | 工作流 Tab 地址栏打开目标站（丢 canvas） |
 | idx | **同步骤内**动态解析；下一步骤重新抓树 | 跨步骤复用 `element_index` |
 | 失败 | 同指令 **2 次**仍失败 → 删节点原位重插 | 同位置连点 4+ 次 |
 

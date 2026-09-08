@@ -1,0 +1,33 @@
+{
+  "workflowName": "Bilibili搜索测试-自动生成",
+  "targetUrl": "https://www.bilibili.com",
+  "instructionPlan": [
+    {
+      "unionId": "OpenUrl",
+      "params": {
+        "url": "https://www.bilibili.com"
+      }
+    },
+    {
+      "unionId": "FillText",
+      "params": {
+        "text": "codex",
+        "selector": {
+          "alias": "定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词"
+        }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "selector": {
+          "alias": "定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索"
+        }
+      }
+    },
+    {
+      "unionId": "ReloadPage",
+      "params": {}
+    }
+  ]
+}

@@ -1,0 +1,404 @@
+[
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "OpenUrl",
+      "icon": "",
+      "nodeId": "DTF13Pes1tbFny0P6JN7l",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "打开网页(web)",
+        "aiShowDesc": "",
+        "toolDesc": "打开网页 url:https://www.bilibili.com",
+        "commandType": 1,
+        "unionId": "OpenUrl",
+        "icon": "https://msstest.vip.sankuai.com/digital/command__20250121/webui-打开网页.svg",
+        "showDesc": "打开网页 url:${url}",
+        "formData": {
+          "launchOptions": {},
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "newPageOptions": {
+            "defaultTimeout": "120000"
+          },
+          "sendMsgFlag": true,
+          "url": "https://www.bilibili.com",
+          "browserType": "CHROME",
+          "navigateOptions": {
+            "timeout": "120000",
+            "waitUntil": "LOAD"
+          },
+          "toolDesc": "打开网页 url:https://www.bilibili.com"
+        },
+        "id": 1,
+        "title": "打开网页(web)"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "WaitPageState",
+      "icon": "",
+      "nodeId": "vkN3d1jIDlLzyV7nWJc6D",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "等待页面加载",
+        "aiShowDesc": "",
+        "toolDesc": "等待页面LOAD",
+        "commandType": 1,
+        "unionId": "WaitPageState",
+        "icon": "https://msstest.vip.sankuai.com/digital/command__20250213/等待页面加载.svg",
+        "showDesc": "等待页面${loadState}",
+        "formData": {
+          "loadState": "LOAD",
+          "waitForLoadStateOptions": {
+            "timeout": "30000"
+          },
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "sendMsgFlag": true,
+          "toolDesc": "等待页面LOAD"
+        },
+        "id": 139,
+        "title": "等待页面加载"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "FillText",
+      "icon": "",
+      "nodeId": "jo06ngYmbUTayPHm8Vk6n",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "输入文本(web)",
+        "aiShowDesc": "",
+        "toolDesc": "在页面定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词元素中输入codex",
+        "commandType": 1,
+        "unionId": "FillText",
+        "icon": "https://s3plus.vip.sankuai.com/digital/command__20250728/输入文本.svg",
+        "showDesc": "在${web_page}页面${selectorId}元素中输入${text}",
+        "formData": {
+          "selectorId": {
+            "workflowElementId": 1788865158325,
+            "label": "定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词",
+            "locateModeJsons": [
+              {
+                "enable": true,
+                "locateModeValue": "{\"alias\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158325}",
+                "locateMode": "LLM"
+              }
+            ],
+            "isCustomXpathOption": false,
+            "pageName": "",
+            "screenshotUrl": "",
+            "highlightScreenshotUrl": "",
+            "alias": "定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词",
+            "elementSourceType": "elementAdd",
+            "selector": "{\"alias\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158325}",
+            "selectorType": "element",
+            "locator": {
+              "locator": "{\"alias\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158325}"
+            },
+            "element": "{\"alias\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158325}"
+          },
+          "locatorOptions": {},
+          "fillOptions": {},
+          "dynamicTextOptions": {},
+          "showEncryptedInfo": "false",
+          "masked": false,
+          "text": {
+            "content": "codex",
+            "textGenerateMode": "preset"
+          },
+          "findElementOptions": {
+            "timeout": "10000"
+          },
+          "sendMsgFlag": true,
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "toolDesc": "在页面定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词元素中输入codex"
+        },
+        "id": 55,
+        "title": "输入文本(web)"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "ClickElementMixed",
+      "icon": "",
+      "nodeId": "3vVgnr0PZyquHXp9w165P",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "点击(web)",
+        "aiShowDesc": "",
+        "toolDesc": "点击页面定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索元素",
+        "commandType": 1,
+        "unionId": "ClickElementMixed",
+        "icon": "https://msstest.vip.sankuai.com/digital/command__20250121/webui-click-element.svg",
+        "showDesc": "点击${web_page}页面${selectorId}元素",
+        "formData": {
+          "selectorId": {
+            "workflowElementId": 1788865158731,
+            "label": "定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索",
+            "locateModeJsons": [
+              {
+                "enable": true,
+                "locateModeValue": "{\"alias\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158731}",
+                "locateMode": "LLM"
+              }
+            ],
+            "isCustomXpathOption": false,
+            "pageName": "",
+            "screenshotUrl": "",
+            "highlightScreenshotUrl": "",
+            "alias": "定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索",
+            "elementSourceType": "elementAdd",
+            "selector": "{\"alias\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158731}",
+            "selectorType": "element",
+            "locator": {
+              "locator": "{\"alias\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158731}"
+            },
+            "element": "{\"alias\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158731}"
+          },
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "clickOptions": {
+            "button": "LEFT",
+            "clickCount": "1",
+            "modifiers": []
+          },
+          "findElementOptions": {
+            "timeout": "10000"
+          },
+          "sendMsgFlag": true,
+          "toolDesc": "点击页面定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索元素"
+        },
+        "id": 841,
+        "title": "点击(web)"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "WaitPageState",
+      "icon": "",
+      "nodeId": "voD0qKIxJi7U3RV9RXwTk",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "等待页面加载",
+        "aiShowDesc": "",
+        "toolDesc": "等待页面LOAD",
+        "commandType": 1,
+        "unionId": "WaitPageState",
+        "icon": "https://msstest.vip.sankuai.com/digital/command__20250213/等待页面加载.svg",
+        "showDesc": "等待页面${loadState}",
+        "formData": {
+          "loadState": "LOAD",
+          "waitForLoadStateOptions": {
+            "timeout": "30000"
+          },
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "sendMsgFlag": true,
+          "toolDesc": "等待页面LOAD"
+        },
+        "id": 139,
+        "title": "等待页面加载"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "ClickElementMixed",
+      "icon": "",
+      "nodeId": "3NFag5zW15Cl0Bz6reweh",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "点击(web)",
+        "aiShowDesc": "",
+        "toolDesc": "点击页面定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序元素",
+        "commandType": 1,
+        "unionId": "ClickElementMixed",
+        "icon": "https://msstest.vip.sankuai.com/digital/command__20250121/webui-click-element.svg",
+        "showDesc": "点击${web_page}页面${selectorId}元素",
+        "formData": {
+          "selectorId": {
+            "workflowElementId": 1788865158211,
+            "label": "定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序",
+            "locateModeJsons": [
+              {
+                "enable": true,
+                "locateModeValue": "{\"alias\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158211}",
+                "locateMode": "LLM"
+              }
+            ],
+            "isCustomXpathOption": false,
+            "pageName": "",
+            "screenshotUrl": "",
+            "highlightScreenshotUrl": "",
+            "alias": "定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序",
+            "elementSourceType": "elementAdd",
+            "selector": "{\"alias\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158211}",
+            "selectorType": "element",
+            "locator": {
+              "locator": "{\"alias\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158211}"
+            },
+            "element": "{\"alias\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158211}"
+          },
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "clickOptions": {
+            "button": "LEFT",
+            "clickCount": "1",
+            "modifiers": []
+          },
+          "findElementOptions": {
+            "timeout": "10000"
+          },
+          "sendMsgFlag": true,
+          "toolDesc": "点击页面定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序元素"
+        },
+        "id": 841,
+        "title": "点击(web)"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "WaitPageState",
+      "icon": "",
+      "nodeId": "hWPhO3NSnebHoQUCugzbD",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "等待页面加载",
+        "aiShowDesc": "",
+        "toolDesc": "等待页面LOAD",
+        "commandType": 1,
+        "unionId": "WaitPageState",
+        "icon": "https://msstest.vip.sankuai.com/digital/command__20250213/等待页面加载.svg",
+        "showDesc": "等待页面${loadState}",
+        "formData": {
+          "loadState": "LOAD",
+          "waitForLoadStateOptions": {
+            "timeout": "30000"
+          },
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "sendMsgFlag": true,
+          "toolDesc": "等待页面LOAD"
+        },
+        "id": 139,
+        "title": "等待页面加载"
+      }
+    }
+  },
+  {
+    "type": "rpaNode",
+    "attrs": {
+      "canvasPosition": null,
+      "tag": "GetText",
+      "icon": "",
+      "nodeId": "iLeTvaywszCryg23uysyY",
+      "disabled": false,
+      "nodeConfigState": "done",
+      "breakpoints": false,
+      "actionType": "",
+      "originalData": null,
+      "data": {
+        "skillName": "获取文本",
+        "aiShowDesc": "",
+        "toolDesc": "获取定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本的文本",
+        "commandType": 1,
+        "unionId": "GetText",
+        "icon": "https://s3plus.vip.sankuai.com/digital/command__20250625/获取文本.svg",
+        "showDesc": "获取${web_page}页面${selectorId}元素文本，将结果保存至${outKey}",
+        "formData": {
+          "selectorId": {
+            "workflowElementId": 1788865158871,
+            "label": "定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本",
+            "locateModeJsons": [
+              {
+                "enable": true,
+                "locateModeValue": "{\"alias\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158871}",
+                "locateMode": "LLM"
+              }
+            ],
+            "isCustomXpathOption": false,
+            "pageName": "",
+            "screenshotUrl": "",
+            "highlightScreenshotUrl": "",
+            "alias": "定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本",
+            "elementSourceType": "elementAdd",
+            "selector": "{\"alias\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158871}",
+            "selectorType": "element",
+            "locator": {
+              "locator": "{\"alias\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158871}"
+            },
+            "element": "{\"alias\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"elementType\":\"web\",\"locateModeJsons\":[{\"editable\":true,\"enable\":true,\"frameSelector\":\"\",\"locateMode\":\"LLM\",\"locateModeValue\":\"定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本\",\"modelName\":\"Doubao-Seed-2.0-pro\"}],\"workflowElementId\":1788865158871}"
+          },
+          "findElementOptions": {
+            "timeout": "10000"
+          },
+          "failOptions": {
+            "failureHandling": "stop"
+          },
+          "sendMsgFlag": true,
+          "outKey": "top5Videos",
+          "toolDesc": "获取定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本的文本"
+        },
+        "id": 353,
+        "title": "获取文本"
+      }
+    }
+  }
+]

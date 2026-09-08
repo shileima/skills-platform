@@ -8,7 +8,7 @@
 
 ## 元素选择器
 
-搜狗首页 DOM：`input#query` + `input#stb`（value="搜索"）。配置前可用 Cmd+T 打开 `https://www.sogou.com/` 在 DevTools 快速验证 visible。
+搜狗首页 DOM：`input#query` + `input#stb`（value="搜索"）。配置前可点击 Chrome「新标签页」按钮打开 `https://www.sogou.com/` 在 DevTools 快速验证 visible。
 
 **默认首选 LLM 动态定位**（`element-selector.md` §方式 A）：描述须遵循 **位置 + 目标元素 + 操作意图**（句式：`定位 XX 页面 XX 位置的 XX 元素，用于 XX 操作`）。
 

@@ -1,0 +1,67 @@
+{
+  "workflowName": "Bilibili搜索Codex播放量Top5-自动生成",
+  "targetUrl": "https://www.bilibili.com",
+  "instructionPlan": [
+    {
+      "unionId": "OpenUrl",
+      "params": {
+        "url": "https://www.bilibili.com"
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "timeout": "30000"
+      }
+    },
+    {
+      "unionId": "FillText",
+      "params": {
+        "text": "codex",
+        "selector": {
+          "alias": "定位 Bilibili 首页顶部导航栏中间偏上的搜索输入框，用于输入搜索关键词"
+        }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "selector": {
+          "alias": "定位 Bilibili 首页顶部导航栏搜索框右侧的搜索按钮，用于点击执行搜索"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "timeout": "30000"
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "selector": {
+          "alias": "定位 Bilibili 搜索结果页排序栏中的「最多播放」按钮，用于按播放量排序"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "timeout": "30000"
+      }
+    },
+    {
+      "unionId": "GetText",
+      "params": {
+        "selector": {
+          "alias": "定位 Bilibili 搜索结果页视频列表区域前 5 条视频卡片，用于获取标题和播放量文本"
+        },
+        "outKey": "top5Videos"
+      }
+    }
+  ]
+}
