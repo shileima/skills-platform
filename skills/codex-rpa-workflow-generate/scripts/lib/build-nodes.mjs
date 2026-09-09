@@ -27,6 +27,7 @@ export const ALLOWED_UNION_IDS = new Set([
   "TakeScreenshot",
   "SendKeys",
   "ScrollToElement",
+  "ScrollToPosition",
   "MouseOver",
   "BackPage",
   "ForwardPage",
@@ -189,22 +190,36 @@ function buildFormData(unionId, params = {}) {
         toolDesc: `获取${alias}的文本`,
       };
     }
+    case "WaitForElementPresent":
+    case "WaitForElementNotPresent": {
+      const alias = params.selector?.alias || params.selectorAlias || "定位目标元素";
+      const formData = {
+        selectorId: buildSelectorId(alias),
+        timeout: String(params.timeout ?? params.findTimeout ?? "10000"),
+        findElementOptions: findElementOptions(params),
+        failOptions: params.failOptions ?? fail,
+        sendMsgFlag: true,
+        toolDesc: alias,
+      };
+      if (params.outKey) formData.outKey = params.outKey;
+      return formData;
+    }
     case "VerifyElementPresent":
     case "VerifyElementVisible":
     case "VerifyElementNotPresent":
     case "VerifyElementNotVisible":
-    case "WaitForElementPresent":
-    case "WaitForElementNotPresent":
     case "ScrollToElement":
     case "MouseOver": {
       const alias = params.selector?.alias || params.selectorAlias || "定位目标元素";
-      return {
+      const formData = {
         selectorId: buildSelectorId(alias),
         findElementOptions: findElementOptions(params),
-        failOptions: fail,
+        failOptions: params.failOptions ?? fail,
         sendMsgFlag: true,
         toolDesc: alias,
       };
+      if (params.outKey) formData.outKey = params.outKey;
+      return formData;
     }
     case "SendKeys": {
       const alias = params.selector?.alias || params.selectorAlias || "定位目标元素";
@@ -253,6 +268,21 @@ function buildFormData(unionId, params = {}) {
         sendMsgFlag: true,
         toolDesc: "截图",
       };
+    case "ScrollToPosition": {
+      const alias =
+        params.selector?.alias ||
+        params.selectorAlias ||
+        "定位左侧导航菜单栏容器，用于按偏移量滚动";
+      return {
+        selectorId: buildSelectorId(alias),
+        x: String(params.x ?? "0"),
+        y: String(params.y ?? params.scrollY ?? "600"),
+        findElementOptions: findElementOptions(params),
+        failOptions: fail,
+        sendMsgFlag: true,
+        toolDesc: `在${alias}按偏移量滚动 x:${params.x ?? 0} y:${params.y ?? params.scrollY ?? 600}`,
+      };
+    }
     case "BackPage":
     case "ForwardPage":
       return { failOptions: fail, sendMsgFlag: true, toolDesc: unionId };

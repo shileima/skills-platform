@@ -2,6 +2,8 @@
 
 编排工作流在 TipTap 编辑器中以 JSON 数组存储。本技能**只生成 `rpaNode`**，不包含 `startNode` / `endNode`（空工作流已存在）。
 
+> 全部 56 种编辑器节点的 type/tag/字段/用法见 [editor-nodes.md](editor-nodes.md)。
+
 ## rpaNode 结构
 
 ```json

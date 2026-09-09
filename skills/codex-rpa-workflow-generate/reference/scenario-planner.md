@@ -69,5 +69,18 @@ OpenUrl / NavigateToUrl
 ## Agent 执行步骤
 
 1. 解析用户意图 → 写出 `instruction-plan.json`（可放 `/tmp/` 或技能 `reference/examples/`）
-2. 运行 `bash scripts/generate-workflow.sh --plan <plan.json>`
-3. 粘贴成功后，**必须**激活 `codex-workflow-command-test` 完成检查与调试
+2. **组装 JSON 并粘贴**（首次生成强制，禁止 UI 逐条插入）：
+   - 纯 rpaNode：`bash scripts/generate-workflow.sh --plan <plan.json>`
+   - 含 IF/ELSE 等容器：`node scripts/build-composite-workflow.mjs <composite-plan.json>` → `wrap-clipboard.mjs` → `paste-workflow.sh` 或 `generate-workflow.sh --no-create`
+3. 验证 canvas 摘要顺序与节点数量
+4. **必须**激活 `codex-workflow-command-test` 完成检查与调试
+5. 调试后修复：优先改 plan → `--clear-and-paste`；单点定位/表单问题才用 command-test UI（双击节点、新建 LLM、此处开始调试）
+
+## 生成路线 vs 修复路线
+
+| | 首次生成 | 调试后修复 |
+|---|---------|-----------|
+| **主路径** | JSON 组装 + 剪贴板粘贴 | `--clear-and-paste` 重贴 |
+| **辅路径** | — | command-test UI 单点改节点 |
+| **禁止** | command-test `insertAfterAnchor` 逐条插入 | 为修一点而 UI 全量重建 |
+

@@ -14,6 +14,28 @@ description: >
 
 根据用户场景或指令计划，**构建节点 JSON → 剪贴板粘贴**到空编排工作流，跳过逐条搜索插入。
 
+## 重要规范（强制）
+
+> 🚫🚫🚫 **首次生成必须走「组装 JSON → 剪贴板粘贴」，禁止走 UI 逐条插入。**
+
+| 阶段 | 允许路径 | 禁止路径 |
+|------|---------|---------|
+| **首次生成** | 写 plan → `build-nodes.mjs` / `build-composite-workflow.mjs` 组装 JSON → `wrap-clipboard.mjs` → `generate-workflow.sh` 粘贴 | 激活 command-test 用「指令 Tab 搜索 + 双击」逐条插入节点 |
+| **调试后修复** | 优先 `--clear-and-paste` 重贴修正后的 JSON；单节点定位/表单微调可走 command-test UI | 首次生成阶段提前用 UI 插节点 |
+| **单点修复** | 双击节点 → 「新建 LLM」改定位 → 保存；或右击「此处开始调试」 | 为修一个节点而清空重走 UI 全量插入 |
+
+**铁律**：
+
+1. **第一次**往空编排 canvas 写业务节点，**只能**通过剪贴板协议（`__JSON_DATA__...__JSON_DATA__`）批量粘贴；含 IF/ELSE 等容器节点时，用 `build-composite-workflow.mjs` 组装完整 JSON 再粘贴，**不得**改用 UI 搜索插入逻辑节点。
+2. **粘贴完成并验证 canvas 摘要后**，才激活 `codex-workflow-command-test` 做检查 → 调试 → 修复。
+3. **调试报错后的修复**：优先改 plan / formData → `--clear-and-paste` 重贴；仅当 JSON 无法表达（如 LLM 定位微调、单字段条件必填）时，才在 command-test 里用 UI 双击节点、新建 LLM、保存。
+4. **禁止**在首次生成阶段以「IF/ELSE 复杂」「指令搜不到」等理由跳过 JSON 路线——应扩展 plan、扩展 `ALLOWED_UNION_IDS` 或写 composite 组装脚本，仍走粘贴。
+
+```
+首次生成：plan.json → build JSON → clipboard → paste → canvas 验证
+调试修复：command-test 检查/调试 → 改 JSON 重贴 或 UI 单点修复
+```
+
 ## 与相关技能的分工
 
 | 技能 | 职责 |
@@ -51,6 +73,10 @@ bash "$SKILL_ROOT/scripts/ensure-ready.sh"   # 输出 ok
 4. 验证粘贴结果（canvas 摘要顺序）
 5. 激活 codex-workflow-command-test → 检查 → 调试 → 修复
 6. **修复迭代**：用 `--clear-and-paste` 清空 canvas 后重贴，**禁止**每次新建工作流；调试失败时展开聊天区 **「更多详情」** 或 **「展开详情」** 读 `rootExceptionMessage`（见 command-test `debug.md`）
+
+> 步骤 3 的 `--clear-and-paste` 仍属 **JSON 粘贴路线**；步骤 5 之后的单点 UI 修复见上文 §重要规范。
+
+清空 canvas 策略见 [reference/clear-canvas.md](reference/clear-canvas.md)：**选中开始节点 → Control+a → Delete** 批量清空；残留节点 **hover 行 → 点右侧删除图标** 逐条删除。
 ```
 
 调试若遇 `WaitPageState doesn't support the "timeout" attribute`，见 [reference/form-data-rules.md](reference/form-data-rules.md)。
@@ -106,9 +132,12 @@ bash "$SKILL_ROOT/scripts/generate-workflow.sh" \
 | 模块 | 文件 | 何时 Read |
 |------|------|----------|
 | 场景规划 | [reference/scenario-planner.md](reference/scenario-planner.md) | **每次执行最先** |
-| 节点 JSON | [reference/node-schema.md](reference/node-schema.md) | 理解构建格式 |
+| 编辑器节点全集 | [reference/editor-nodes.md](reference/editor-nodes.md) | 理解节点 type/tag/字段/容器结构 |
+| 节点 JSON | [reference/node-schema.md](reference/node-schema.md) | 理解 rpaNode 构建格式 |
 | API 鉴权 | [reference/command-api.md](reference/command-api.md) | API 异常时 |
 | formData 字段 | [reference/form-data-rules.md](reference/form-data-rules.md) | 构建/调试 formData 报错时 |
+| 清空 canvas | [reference/clear-canvas.md](reference/clear-canvas.md) | `--clear-and-paste` 或修复重贴前 |
+| 复合节点组装 | `scripts/build-composite-workflow.mjs` | IF/ELSE 等容器 + rpaNode 首次生成 |
 | B 站示例 plan | [reference/examples/bilibili-plan.json](reference/examples/bilibili-plan.json) | 默认场景 |
 | 携程机票 | [reference/scenarios/ctrip-flights.md](reference/scenarios/ctrip-flights.md) | 用户说携程/机票 |
 | 跨站比价 | [reference/scenarios/price-compare.md](reference/scenarios/price-compare.md) | 天猫/京东比价 |
