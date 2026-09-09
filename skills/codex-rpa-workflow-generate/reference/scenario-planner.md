@@ -60,7 +60,7 @@ OpenUrl / NavigateToUrl
 | 携程 / 机票 | `scenarios/ctrip-flights.md` |
 | 比价 / 天猫 / 京东 | `scenarios/price-compare.md` · `examples/jd-tmall-iphone17-plan.json` |
 | sogou / 搜狗 | `scenarios/sogou-search.md` |
-| GitHub / codex / issues 汇总 | `scenarios/github-codex-issues.md` |
+| GitHub / codex / issues 汇总 | `scenarios/github-codex-issues.md` · `examples/github-codex-issues-composite-plan.json` |
 | 闪购 / 折扣活动 / shangou | `scenarios/shangou-discount.md` · `examples/shangou-discount-plan.json` |
 
 ## 一期支持的 unionId

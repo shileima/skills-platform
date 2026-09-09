@@ -264,7 +264,7 @@ preSteps（2 步）
 
 ## 自然语言一段话（可直接粘贴给 Agent）
 
-在闪购测试环境 `https://e.shangou.test.sankuai.com/` 创建折扣活动：打开网页 → 等登录框 8 秒（异常继续，保存到本节点）→ 若有则登录（SGtest_yingixao / qwer12345678，勾协议，等 LOAD）→ 通用：侧栏滚 600 → 滚到店铺活动菜单 → 店铺活动 → 立即创建 → 创建折扣活动 → 结束时间明天 → 门店（北京市/确定）→ 商品（商品名称/手机/苹果手机/搜索/勾第一个/确定）→ 滚到底 → 请设置 9 折/确定 → 一键全选 → 勾协议 → 确认创建。Plan：preSteps 2 + ifBranch 5 + postSteps 24，无 Else。异常：有 selector 重试 3 次；WaitForElementPresent continue；OpenUrl/WaitPageState stop。
+在闪购测试环境 `https://e.shangou.test.sankuai.com/` 创建折扣活动：打开网页 → 等登录框 8 秒（异常 continue，`probeForIf` 保存本节点）→ 若有则登录（SGtest_yingixao / qwer12345678，勾协议，等 LOAD）→ 通用：侧栏滚 600 → 验「店铺活动」→ 店铺活动 → 立即创建（链式滚动自愈）→ 等 LOAD → 创建折扣活动（链式滚动自愈）→ 结束时间明天 → 门店（北京市/确定）→ 商品（商品名称/手机/苹果手机/搜索/勾第一个/确定，添加商品链式自愈）→ 滚到底 → 请设置 9 折/确定 → 一键全选 → 勾底部协议 → 确认创建 → 延迟 30 秒。Plan：preSteps 2 + ifBranch 5 + postSteps 26（含 2×WaitPageState + Delay），无 Else。异常：有 selector 重试 3 次。
 
 ---
 

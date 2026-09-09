@@ -1,0 +1,194 @@
+{
+  "workflowName": "GitHub-Codex近7天Issues中文汇总-20260909",
+  "targetUrl": "https://github.com",
+  "description": "兼容 GitHub 登录/未登录：探测 Sign in → 搜索 openai/codex → 点击仓库 → 点击 Issues → 输入筛选条件 → 获取列表 → 翻译 → SSE",
+  "preSteps": [
+    {
+      "unionId": "OpenUrl",
+      "params": {
+        "url": "https://github.com",
+        "timeout": "120000",
+        "waitUntil": "LOAD"
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "waitForLoadStateOptions": { "timeout": "30000" }
+      }
+    },
+    {
+      "unionId": "WaitForElementPresent",
+      "params": {
+        "outKey": "isLoggedOut",
+        "findTimeout": "8000",
+        "failOptions": { "failureHandling": "continue" },
+        "selector": {
+          "alias": "定位 GitHub 首页顶部导航栏右侧的 Sign in 登录按钮，用于判断当前是否为未登录状态"
+        }
+      }
+    }
+  ],
+  "ifElse": {
+    "conditionVar": "isLoggedOut",
+    "ifBranch": [
+      {
+        "unionId": "ClickElementMixed",
+        "params": {
+          "findTimeout": "15000",
+          "selector": {
+            "alias": "定位 GitHub 未登录首页顶部导航栏右侧的搜索图标按钮（放大镜），用于点击展开搜索输入框"
+          }
+        }
+      },
+      {
+        "unionId": "WaitForElementPresent",
+        "params": {
+          "findTimeout": "15000",
+          "selector": {
+            "alias": "定位 GitHub 未登录首页点击搜索图标后弹出的搜索输入框，用于输入仓库关键词"
+          }
+        }
+      },
+      {
+        "unionId": "FillText",
+        "params": {
+          "text": "openai/codex",
+          "findTimeout": "15000",
+          "selector": {
+            "alias": "定位 GitHub 未登录首页弹出的搜索输入框，用于输入仓库关键词 openai/codex"
+          }
+        }
+      },
+      {
+        "unionId": "SendKeys",
+        "params": {
+          "keys": "Return",
+          "findTimeout": "15000",
+          "selector": {
+            "alias": "定位 GitHub 未登录首页弹出的搜索输入框，用于按回车执行搜索"
+          }
+        }
+      }
+    ],
+    "elseBranch": [
+      {
+        "unionId": "FillText",
+        "params": {
+          "text": "openai/codex",
+          "findTimeout": "15000",
+          "selector": {
+            "alias": "定位 GitHub 已登录首页顶部导航栏中间的搜索输入框，用于输入仓库关键词 openai/codex"
+          }
+        }
+      },
+      {
+        "unionId": "SendKeys",
+        "params": {
+          "keys": "Return",
+          "findTimeout": "15000",
+          "selector": {
+            "alias": "定位 GitHub 已登录首页顶部导航栏中间的搜索输入框，用于按回车执行搜索"
+          }
+        }
+      }
+    ]
+  },
+  "postSteps": [
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "waitForLoadStateOptions": { "timeout": "30000" }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "findTimeout": "20000",
+        "selector": {
+          "alias": "定位 GitHub 搜索结果页仓库列表中 openai/codex 仓库链接，用于点击进入该仓库主页"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "waitForLoadStateOptions": { "timeout": "30000" }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "findTimeout": "20000",
+        "selector": {
+          "alias": "定位 GitHub openai/codex 仓库页顶部导航栏中的 Issues 标签链接，用于点击进入 Issues 列表页"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "waitForLoadStateOptions": { "timeout": "30000" }
+      }
+    },
+    {
+      "unionId": "FillText",
+      "params": {
+        "text": "is:open updated:>2026-09-02",
+        "findTimeout": "15000",
+        "selector": {
+          "alias": "定位 GitHub Issues 页顶部的 Search issues 搜索输入框，用于输入 open 状态和近7天更新时间筛选条件"
+        }
+      }
+    },
+    {
+      "unionId": "SendKeys",
+      "params": {
+        "keys": "Return",
+        "findTimeout": "15000",
+        "selector": {
+          "alias": "定位 GitHub Issues 页顶部的 Search issues 搜索输入框，用于按回车应用筛选条件"
+        }
+      }
+    },
+    {
+      "unionId": "WaitPageState",
+      "params": {
+        "loadState": "LOAD",
+        "waitForLoadStateOptions": { "timeout": "30000" }
+      }
+    },
+    {
+      "unionId": "WaitForElementPresent",
+      "params": {
+        "findTimeout": "25000",
+        "selector": {
+          "alias": "定位 GitHub Issues 筛选结果页 issue 列表主内容区，包含 open 状态的 issue 标题链接"
+        }
+      }
+    },
+    {
+      "unionId": "ScrollToElement",
+      "params": {
+        "findTimeout": "15000",
+        "selector": {
+          "alias": "定位 GitHub Issues 列表中第一条 open issue 标题链接，用于滚动到列表可见区域"
+        }
+      }
+    },
+    {
+      "unionId": "GetText",
+      "params": {
+        "findTimeout": "25000",
+        "selector": {
+          "alias": "定位 GitHub Issues 列表主内容区全部 open issue 条目，包含标题、编号、标签和更新时间文本"
+        },
+        "outKey": "weeklyIssuesText"
+      }
+    }
+  ]
+}
