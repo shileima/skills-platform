@@ -83,9 +83,20 @@
       }
     },
     {
+      "unionId": "ScrollToElement",
+      "params": {
+        "findTimeout": "10000",
+        "selector": {
+          "alias": "定位闪购折扣活动表单中活动日期区域的结束时间输入框，用于滚动到可见位置"
+        }
+      }
+    },
+    {
       "unionId": "ClickElementMixed",
       "params": {
-        "selector": { "alias": "定位闪购折扣活动表单中活动日期区域右侧的结束时间输入框，用于打开结束日期下拉面板" }
+        "selector": {
+          "alias": "定位闪购折扣活动表单活动日期行右侧带日历图标的结束时间输入框，用于点击打开日期选择面板"
+        }
       }
     },
     {

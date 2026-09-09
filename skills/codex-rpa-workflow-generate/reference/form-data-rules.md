@@ -23,6 +23,25 @@
 
 **不支持**顶层 `timeout` 属性 → 报错：`WaitPageState doesn't support the "timeout" attribute`
 
+## LLM 元素选择器节点的异常处理
+
+凡 `formData` 含 `selectorId`（由 `buildSelectorId()` 生成的 LLM 动态定位），默认写入：
+
+```json
+{
+  "failOptions": {
+    "failureHandling": "retry",
+    "retryOptions": { "maxRetryCount": 3, "retryInterval": 1000 },
+    "retryFailOptions": { "retryFailHandling": "stop" }
+  }
+}
+```
+
+对应编辑器「异常处理 → 处理方式：异常重试 → 最大重试次数：3」。
+
+- plan 中显式传 `params.failOptions` 时优先使用（如 `WaitForElementPresent` 的 `continue`）
+- 无元素选择器的指令（`OpenUrl`、`VerifyTextPresent` 等）仍为 `failureHandling: "stop"`
+
 ## 校验
 
 构建后运行：

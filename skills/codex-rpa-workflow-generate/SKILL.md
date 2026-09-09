@@ -153,6 +153,10 @@ bash "$SKILL_ROOT/scripts/generate-workflow.sh" \
 
 `workflowElementId` 无需平台注册；`elementSourceType: "elementAdd"` + LLM 内联 JSON。构建见 `scripts/lib/build-nodes.mjs`。
 
+### LLM 定位节点的异常处理
+
+凡含 `selectorId`（LLM 动态定位）的节点，`failOptions` 默认 **异常重试、最大 3 次**（`failureHandling: "retry"`，`retryOptions.maxRetryCount: 3`）。plan 显式传 `params.failOptions` 时可覆盖（如等待节点 `continue`）。详见 [reference/form-data-rules.md](reference/form-data-rules.md)。
+
 ### API
 
 - 列表：`GET /platform/api/v1/command/listAll?source=1`
