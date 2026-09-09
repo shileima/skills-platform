@@ -78,8 +78,24 @@ export function buildSelectorId(alias) {
   };
 }
 
-function defaultFailOptions() {
+function stopFailOptions() {
   return { failureHandling: "stop" };
+}
+
+function retryFailOptions(maxRetryCount = 3, retryInterval = 1000) {
+  return {
+    failureHandling: "retry",
+    retryOptions: { maxRetryCount, retryInterval },
+    retryFailOptions: { retryFailHandling: "stop" },
+  };
+}
+
+/** plan.params.failOptions 优先；含 selectorId 的节点默认异常重试 3 次 */
+function resolveFailOptions(params = {}, { hasSelector = false } = {}) {
+  if (params.failOptions) {
+    return { ...params.failOptions };
+  }
+  return hasSelector ? retryFailOptions() : stopFailOptions();
 }
 
 function findElementOptions(params = {}) {
@@ -102,12 +118,13 @@ function renderToolDesc(showDesc, formData) {
 }
 
 function buildFormData(unionId, params = {}) {
-  const fail = defaultFailOptions();
+  const failNoSelector = resolveFailOptions(params, { hasSelector: false });
+  const failWithSelector = resolveFailOptions(params, { hasSelector: true });
   switch (unionId) {
     case "OpenUrl":
       return {
         launchOptions: {},
-        failOptions: fail,
+        failOptions: failNoSelector,
         newPageOptions: {
           defaultTimeout: String(params.pageTimeout ?? params.timeout ?? "120000"),
         },
@@ -127,7 +144,7 @@ function buildFormData(unionId, params = {}) {
           timeout: String(params.timeout ?? "30000"),
           waitUntil: params.waitUntil ?? "LOAD",
         },
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
         toolDesc: `导航到 url:${params.url ?? params.rawUrl}`,
       };
@@ -148,7 +165,7 @@ function buildFormData(unionId, params = {}) {
         text: { content: text, textGenerateMode: "preset" },
         findElementOptions: findElementOptions(params),
         sendMsgFlag: true,
-        failOptions: fail,
+        failOptions: failWithSelector,
         toolDesc: `在页面${alias}元素中输入${text}`,
       };
       return formData;
@@ -161,7 +178,7 @@ function buildFormData(unionId, params = {}) {
       const selectorId = buildSelectorId(alias);
       return {
         selectorId,
-        failOptions: fail,
+        failOptions: failWithSelector,
         clickOptions: {
           button: "LEFT",
           clickCount: "1",
@@ -176,7 +193,7 @@ function buildFormData(unionId, params = {}) {
       return {
         reloadOptions: { waitUntil: "LOAD", timeout: "30000" },
         toolDesc: "刷新网页",
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
       };
     case "GetText": {
@@ -184,12 +201,13 @@ function buildFormData(unionId, params = {}) {
       return {
         selectorId: buildSelectorId(alias),
         findElementOptions: findElementOptions(params),
-        failOptions: fail,
+        failOptions: failWithSelector,
         sendMsgFlag: true,
         outKey: params.outKey ?? "",
         toolDesc: `获取${alias}的文本`,
       };
     }
+    // 布尔探测供 IF 引用：禁止在此写 outKey；由 build-composite-workflow bindProbeOutputToSelf() 设 outKey=""
     case "VerifyElementPresent":
     case "VerifyElementVisible":
     case "VerifyElementNotPresent":
@@ -202,7 +220,7 @@ function buildFormData(unionId, params = {}) {
       return {
         selectorId: buildSelectorId(alias),
         findElementOptions: findElementOptions(params),
-        failOptions: fail,
+        failOptions: failWithSelector,
         sendMsgFlag: true,
         toolDesc: alias,
       };
@@ -214,7 +232,7 @@ function buildFormData(unionId, params = {}) {
         keys: params.keys ?? params.sendKeys ?? "Return",
         pressOptions: params.pressOptions ?? {},
         findElementOptions: findElementOptions(params),
-        failOptions: fail,
+        failOptions: failWithSelector,
         sendMsgFlag: true,
         toolDesc: `在${alias}模拟键盘输入 ${params.keys ?? params.sendKeys ?? "Return"}`,
       };
@@ -223,7 +241,7 @@ function buildFormData(unionId, params = {}) {
     case "VerifyTextNotPresent":
       return {
         text: params.text ?? "",
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
         toolDesc: `验证文本${params.text ?? ""}`,
       };
@@ -233,7 +251,7 @@ function buildFormData(unionId, params = {}) {
         waitForLoadStateOptions: params.waitForLoadStateOptions ?? {
           timeout: String(params.timeout ?? "30000"),
         },
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
         toolDesc: `等待页面${params.loadState ?? "LOAD"}`,
       };
@@ -242,7 +260,7 @@ function buildFormData(unionId, params = {}) {
     case "GetWindowIndex":
       return {
         outKey: params.outKey ?? "",
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
         toolDesc: unionId,
       };
@@ -250,7 +268,7 @@ function buildFormData(unionId, params = {}) {
       return {
         screenshotOption: params.screenshotOption ?? { fullPage: true },
         outKey: params.outKey ?? "screenshotPath",
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
         toolDesc: "截图",
       };
@@ -264,19 +282,19 @@ function buildFormData(unionId, params = {}) {
         x: String(params.x ?? "0"),
         y: String(params.y ?? params.scrollY ?? "600"),
         findElementOptions: findElementOptions(params),
-        failOptions: fail,
+        failOptions: failWithSelector,
         sendMsgFlag: true,
         toolDesc: `在${alias}按偏移量滚动 x:${params.x ?? 0} y:${params.y ?? params.scrollY ?? 600}`,
       };
     }
     case "BackPage":
     case "ForwardPage":
-      return { failOptions: fail, sendMsgFlag: true, toolDesc: unionId };
+      return { failOptions: failNoSelector, sendMsgFlag: true, toolDesc: unionId };
     case "Delay":
       return {
         second: String(params.second ?? params.delay ?? params.ms ?? "1"),
         timeUnit: params.timeUnit ?? "SECOND",
-        failOptions: fail,
+        failOptions: failNoSelector,
         sendMsgFlag: true,
         toolDesc: `延迟 ${params.second ?? params.delay ?? "1"} 秒`,
       };

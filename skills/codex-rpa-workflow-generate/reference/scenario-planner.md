@@ -61,6 +61,7 @@ OpenUrl / NavigateToUrl
 | 比价 / 天猫 / 京东 | `scenarios/price-compare.md` · `examples/jd-tmall-iphone17-plan.json` |
 | sogou / 搜狗 | `scenarios/sogou-search.md` |
 | GitHub / codex / issues 汇总 | `scenarios/github-codex-issues.md` |
+| 闪购 / 折扣活动 / shangou | `scenarios/shangou-discount.md` · `examples/shangou-discount-plan.json` |
 
 ## 一期支持的 unionId
 
@@ -71,6 +72,10 @@ OpenUrl / NavigateToUrl
 线性场景用 `instructionPlan`；含条件分支时用 `composite-plan.json`（`preSteps` + `ifElse` + `postSteps`）。
 
 > 🚫 **通用流程提取到最外层**：IF、Else、ElseIf 汇合后都要执行的步骤 → **只写** `postSteps`，输出在分支块**之外**；各分支内**禁止**重复粘贴同一套通用节点。详见 [composite-workflow.md](composite-workflow.md)。
+
+> 🚫 **布尔 outKey 本节点**：preSteps 写 `params.probeForIf: true`；构建时 `outKey=""` + `outKeyType: Boolean`；IF `${nodeId}`。**禁止** `outKey=nodeId 字符串`。详见 [boolean-outkey-self-node.md](boolean-outkey-self-node.md)。
+
+> **滚动自愈**：元素不存在时步骤加 `selfHealScroll: true`；构建为「滚一档 → 探测 → 可见则停」，禁止 Else 内连续多档滚动。详见 [self-heal-scroll.md](self-heal-scroll.md)。
 
 ```bash
 node scripts/build-composite-workflow.mjs reference/examples/shangou-discount-plan.json

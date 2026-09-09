@@ -224,6 +224,7 @@ Reference 文件位于本技能目录下的 `reference/`，与 `SKILL.md` 同级
 | **URL 输入规范** | [reference/url-input.md](reference/url-input.md) | 填「网址」等 URL 字段时**必读**（禁止 type_text） |
 | **插入指令** | [reference/insert-command.md](reference/insert-command.md) | **需在编排区 canvas 中追加指令时**：插入位置约束、光标定位、搜索+双击、右键菜单调序、插入后强制核对 |
 | 调试修复 | [reference/debug.md](reference/debug.md) | 保存后调试、报错修复 |
+| 元素不存在滚动自愈 | `codex-rpa-workflow-generate/reference/self-heal-scroll.md` | 10120031；plan 加 `selfHealScroll: true` |
 | 场景索引 | [reference/scenarios/index.md](reference/scenarios/index.md) | 选择测试场景 |
 | 元素定位器缓存 | [reference/locators/README.md](reference/locators/README.md) | 了解缓存机制 |
 | 百度首页 XPath | [reference/locators/baidu.elements.json](reference/locators/baidu.elements.json) | 百度首页元素 |

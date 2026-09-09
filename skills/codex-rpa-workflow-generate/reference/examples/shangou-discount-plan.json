@@ -9,7 +9,7 @@
     {
       "unionId": "WaitForElementPresent",
       "params": {
-        "outKey": "hasLoginForm",
+        "probeForIf": true,
         "timeout": "8000",
         "failOptions": { "failureHandling": "continue" },
         "selector": {
@@ -19,7 +19,6 @@
     }
   ],
   "ifElse": {
-    "conditionVar": "hasLoginForm",
     "ifBranch": [
       {
         "unionId": "FillText",
@@ -77,13 +76,29 @@
     {
       "unionId": "ClickElementMixed",
       "params": {
+        "selfHealScroll": true,
+        "selfHealScrollContainer": {
+          "alias": "定位闪购店铺活动页面右侧主内容滚动区域，用于自愈滚动以寻找折扣活动立即创建按钮"
+        },
         "selector": { "alias": "定位闪购店铺活动页面右侧折扣活动卡片上的立即创建按钮，用于开始创建折扣活动" }
       }
     },
     {
+      "unionId": "WaitPageState",
+      "params": { "loadState": "LOAD", "timeout": "30000" }
+    },
+    {
       "unionId": "ClickElementMixed",
       "params": {
-        "selector": { "alias": "定位闪购折扣活动新建页面顶部的创建折扣活动按钮，用于进入活动配置表单" }
+        "selfHealScroll": true,
+        "selfHealProbeTimeout": "5000",
+        "findTimeout": "15000",
+        "selfHealScrollContainer": {
+          "alias": "定位闪购折扣活动新建页面主内容滚动区域，用于自愈滚动以寻找创建折扣活动按钮"
+        },
+        "selector": {
+          "alias": "定位闪购折扣活动新建页面顶部标题栏右侧的创建折扣活动主按钮，用于点击进入活动配置表单"
+        }
       }
     },
     {
@@ -119,6 +134,10 @@
     {
       "unionId": "ClickElementMixed",
       "params": {
+        "selfHealScroll": true,
+        "selfHealScrollContainer": {
+          "alias": "定位闪购折扣活动表单右侧主内容滚动区域，用于自愈滚动以寻找添加商品按钮"
+        },
         "selector": { "alias": "定位闪购折扣活动表单中的添加商品按钮，用于打开添加商品弹框" }
       }
     },
@@ -191,6 +210,12 @@
     {
       "unionId": "ClickElementMixed",
       "params": {
+        "selector": { "alias": "定位闪购折扣活动商品列表区域的一键全选按钮，用于选中所有已添加商品" }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
         "selector": { "alias": "定位闪购折扣活动表单底部商家自营销协议复选框，用于勾选同意协议" }
       }
     },
@@ -199,6 +224,10 @@
       "params": {
         "selector": { "alias": "定位闪购折扣活动页面右下角的确认创建按钮，用于提交创建折扣活动" }
       }
+    },
+    {
+      "unionId": "Delay",
+      "params": { "second": "30" }
     }
   ]
 }

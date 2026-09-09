@@ -2,10 +2,37 @@
 
 构建节点 JSON 时，`formData` 的 key **必须**与 `getCommandDetail.paramInfo.xbotJson.input[].paramsName` 一致，禁止臆造顶层字段。
 
+## outKey（输出变量）
+
+> 布尔探测「本节点」完整规范：**[boolean-outkey-self-node.md](boolean-outkey-self-node.md)**（强制）
+
+### 供 IF 引用的探测步（保存到本节点）
+
+`WaitForElementPresent` / `VerifyElementPresent` 等供 IF 判断时，平台「将结果保存至」= **本节点**：
+
+| 字段 | 值 | 说明 |
+|------|-----|------|
+| `formData.outKey` | **`""`（空字符串）** | 平台 UI 显示「本节点」；运行时 outKey 属性 = nodeId |
+| `data.outKeyType` | **`"Boolean"`**（来自指令 API） | 布尔输出，变量选择器无 `{nodeId}.xxx` 子项 |
+| IF `conditions.left` | **`${nodeId}`** | 点节点标题插入；禁止 `${nodeId.field}` |
+
+plan 标记：`preSteps[].params.probeForIf: true`（见 [composite-workflow.md](composite-workflow.md)）。
+
+### 普通输出步（自定义变量名）
+
+`GetText`、`GetUrl`、`TakeScreenshot` 等收集业务数据时，仍用 plan `params.outKey` 自定义名（如 `top5Videos`、`jdPrice`），**不**用于 IF 探测绑定。
+
+```
+✅ IF 探测：outKey = ""（本节点）+ outKeyType Boolean，IF 条件 ${nodeId}
+✅ GetText：outKey = "tmallPrice"，下游 ${tmallPrice}
+❌ IF 探测：outKey = nodeId 字符串或 "hasLoginForm" → 变量列表出现 {nodeId}.xxx
+```
+
 ## 常见错误
 
 | 指令 | 错误写法 | 正确写法 |
 |------|---------|---------|
+| WaitForElementPresent（供 IF 引用） | outKey = nodeId 或自定义名；IF 写 `${nodeId.xxx}` | outKey = "" + outKeyType Boolean；IF `${nodeId}` |
 | WaitPageState | `timeout: "30000"` | `waitForLoadStateOptions: { timeout: "30000" }` |
 | OpenUrl | `timeout` 只写 `newPageOptions.defaultTimeout` | `navigateOptions: { timeout: "120000", waitUntil: "LOAD" }`（导航超时默认 30s） |
 | NavigateToUrl | `url: "..."` | `rawUrl: "..."`, 可选 `navigateOptions: { timeout, waitUntil }` |

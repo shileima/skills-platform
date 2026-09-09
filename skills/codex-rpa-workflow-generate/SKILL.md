@@ -115,16 +115,37 @@ bash "$SKILL_ROOT/scripts/generate-workflow.sh" \
 | 节点 JSON | [reference/node-schema.md](reference/node-schema.md) | 理解 rpaNode 构建格式 |
 | API 鉴权 | [reference/command-api.md](reference/command-api.md) | API 异常时 |
 | formData 字段 | [reference/form-data-rules.md](reference/form-data-rules.md) | 构建/调试 formData 报错时 |
+| **布尔 outKey 本节点** | [reference/boolean-outkey-self-node.md](reference/boolean-outkey-self-node.md) | **复合 IF 工作流必读**；禁止 outKey=nodeId 字符串 |
+| **滚动自愈** | [reference/self-heal-scroll.md](reference/self-heal-scroll.md) | 每档偏移后探测、可见即停；`selfHealScroll: true` |
 | 清空 canvas | [reference/clear-canvas.md](reference/clear-canvas.md) | `--clear-and-paste` 或修复重贴前 |
 | 复合分支组装 | [reference/composite-workflow.md](reference/composite-workflow.md) | IF/Else/ElseIf；**通用流程提取到最外层** |
 | Plan 预览确认 | `scripts/preview-plan.mjs` | **构建 JSON 前必须**；输出流程树 + 结构警告 |
 | B 站示例 plan | [reference/examples/bilibili-plan.json](reference/examples/bilibili-plan.json) | 默认场景 |
-| 闪购折扣示例 | [reference/examples/shangou-discount-plan.json](reference/examples/shangou-discount-plan.json) | 登录分叉 + postSteps 通用流程 |
+| 闪购折扣场景 | [reference/scenarios/shangou-discount.md](reference/scenarios/shangou-discount.md) | 自然语言逐步规格 → 还原 plan/JSON |
+| 闪购折扣 plan | [reference/examples/shangou-discount-plan.json](reference/examples/shangou-discount-plan.json) | 登录 IF + postSteps 通用 24 步 |
 | 携程机票 | [reference/scenarios/ctrip-flights.md](reference/scenarios/ctrip-flights.md) | 用户说携程/机票 |
 | 跨站比价 | [reference/scenarios/price-compare.md](reference/scenarios/price-compare.md) | 天猫/京东比价 |
 | 搜狗 | [reference/scenarios/sogou-search.md](reference/scenarios/sogou-search.md) | sogou + 导航到URL |
 
 ## 技术要点
+
+### 布尔 outKey「本节点」（强制，禁止再犯）
+
+复合 plan 中 IF 引用 `WaitForElementPresent` 等**布尔探测步**时：
+
+| 字段 | 值 | 效果 |
+|------|-----|------|
+| `formData.outKey` | `""`（空字符串） | UI 显示「**本节点**」 |
+| `data.outKeyType` | `"Boolean"` | 布尔输出 |
+| IF `conditions.left` | `${nodeId}` | 点节点标题插入，**无** `.xxx` 后缀 |
+
+**禁止**：`outKey = nodeId 字符串`（如 `cWRpqnSneO7p...`）→ 变量选择器出现 `{nodeId}.xxx` String 子项；`outKey = "hasLoginForm"`；IF 写 `${nodeId.xxx}` 或 `${hasLoginForm}`。
+
+- plan：仅 `params.probeForIf: true`，不写 `outKey` / `conditionVar`
+- 构建：由 `bindProbeOutputToSelf()` 绑定，构建校验失败即中止
+- 粘贴后终检：「保存至 **本节点**」；IF 有登录框时耗时 >>6ms
+
+**完整规范**：[reference/boolean-outkey-self-node.md](reference/boolean-outkey-self-node.md)（Agent 生成复合 IF 工作流前**必读**）
 
 ### 剪贴板协议
 

@@ -2,6 +2,69 @@
 
 含条件分支时，用 `composite-plan.json` + `scripts/build-composite-workflow.mjs` 组装 JSON，再 `wrap-clipboard.mjs` → 粘贴。**禁止** UI 逐条插入逻辑节点。
 
+## 变量引用铁律（强制）
+
+> 🚫🚫🚫 **布尔探测「保存至本节点」：`formData.outKey = ""` + `outKeyType: "Boolean"`；IF 引用 `${nodeId}`。禁止写 nodeId 字符串到 outKey（会出现 `{nodeId}.xxx` String 子项）。**
+>
+> 完整规范见 **[boolean-outkey-self-node.md](boolean-outkey-self-node.md)**（唯一事实来源，Agent 必读）。
+
+### 两条必须同时满足
+
+| # | 位置 | 要求 | 典型错误 |
+|---|------|------|---------|
+| 1 | **探测节点** formData | `outKey: ""` + `data.outKeyType: "Boolean"`（本节点） | `outKey: nodeId` 或自定义名 → 变量列表出现 `{nodeId}.xxx` |
+| 2 | **ifNode** conditions[].left | `${<探测节点nodeId>}`（无 `.xxx` 后缀） | `${nodeId.field}`、`${hasLoginForm}` → IF 输出 false |
+
+### 闪购登录 IF 正确示例
+
+```
+preSteps[1] WaitForElementPresent（params.probeForIf: true）
+  attrs.nodeId      = "HzhsAQrsEbE0LPOqRcxz4"
+  formData.outKey   = ""                        ← 空 = 本节点
+  data.outKeyType   = "Boolean"
+
+ifNode.conditions[0].left = "${HzhsAQrsEbE0LPOqRcxz4}"   ← 仅 nodeId，无 .xxx
+ifNode.conditions[0].comparisonOperator = "="
+ifNode.conditions[0].right = "true"
+```
+
+编辑器 UI 可能显示为「${等待元素存在}」（指令标题），JSON 底层仍是 `${nodeId}`。
+
+### 错误示例与运行时表现
+
+```json
+// ❌ outKey 写成 nodeId 字符串（最常见回归）
+{ "formData": { "outKey": "cWRpqnSneO7pWLnSwegvB" }, ... }
+// → 变量选择器出现 {nodeId}.xxx String 子项；canvas 显示「保存至 cWRpqn...」
+
+// ❌ 自定义变量名
+{ "formData": { "outKey": "hasLoginForm" }, ... }
+{ "left": "${hasLoginForm}", ... }
+
+// ❌ 错误 dot 后缀
+{ "left": "${HzhsAQrsEbE0LPOqRcxz4.hasLoginForm}", ... }
+```
+
+**表现**：探测步输出 `true`，IF 节点 ✅，**ifBranch 内步骤全部跳过**，直接 postSteps。
+
+### plan → 构建约定
+
+| plan 字段 | 用途 |
+|-----------|------|
+| `preSteps[].params.probeForIf` | 标记供 IF 引用的探测步（推荐） |
+| `ifElse.conditionPreStepIndex` | 或指定 preSteps 下标 |
+| （构建产物） | `bindProbeOutputToSelf()` → `outKey = ""` + `outKeyType: Boolean`；IF → `${nodeId}` |
+
+**禁止** Agent 手写 IF 条件 left 或自定义探测 outKey；由 `build-composite-workflow.mjs` 绑定。
+
+### 粘贴后终检（调试前必做）
+
+| canvas 摘要 | 通过 |
+|-------------|------|
+| 等待元素存在 … **保存至 本节点**（非 nodeId 字符串、无 `{nodeId}.xxx` 子项） | ✅ |
+| IF … **`${<同 nodeId>}`** = true | ✅ |
+| IF … **`${hasLoginForm}`** 或 **`.hasLoginForm}`** | ❌ 需重构建重贴 |
+
 ## 核心铁律：通用流程提取到最外层
 
 > 🚫🚫🚫 **若 IF、Else、ElseIf 各分支在汇合后都要执行同一套步骤，必须把这套「通用流程」放在分支块之外（最外层），禁止在每个分支内重复粘贴。**
@@ -43,7 +106,7 @@ elseNode.content:   滚动 + 验证 + 创建折扣…（21 步重复）
   { "type": "rpaNode", "attrs": { "tag": "WaitForElementPresent", "...": "..." } },
   {
     "type": "ifNode",
-    "attrs": { "data": { "conditions": [{ "left": "${nodeId.outKey}", "comparisonOperator": "=", "right": "true" }] } },
+    "attrs": { "data": { "conditions": [{ "left": "${probeNodeId}", "comparisonOperator": "=", "right": "true" }] } },
     "content": [ /* 仅 true 分支独有 rpaNode */ ]
   },
   {
@@ -66,7 +129,7 @@ elseNode.content:   滚动 + 验证 + 创建折扣…（21 步重复）
     { "unionId": "OpenUrl", "params": { "url": "https://..." } }
   ],
   "ifElse": {
-    "conditionVar": "hasLoginForm",
+    "conditionPreStepIndex": 1,
     "ifBranch": [ /* 分支独有 */ ],
     "elseBranch": [ /* 分支独有；无 Else 时可省略 */ ]
   },
@@ -77,10 +140,38 @@ elseNode.content:   滚动 + 验证 + 创建折扣…（21 步重复）
 | 字段 | 说明 |
 |------|------|
 | `preSteps` | 条件判断之前的步骤（打开网页、Wait* 探测等） |
-| `ifElse.conditionVar` | 条件变量名，默认取 preSteps 中带 `outKey` 的节点 |
+| `preSteps[].params.probeForIf` | 标记 IF 探测步；构建时 `outKey=""` + `outKeyType: Boolean` |
+| `ifElse.conditionPreStepIndex` | 可选，指定 preSteps 下标 |
 | `ifElse.ifBranch` | **仅**条件为 true 时执行的步骤 |
 | `ifElse.elseBranch` | **仅**条件为 false 时的**独有**步骤；无独有步骤时可省略（不生成 Else 节点） |
 | `postSteps` | **通用流程**，组装时输出到 if/else **块之后** |
+
+### postSteps 内联 IF（探测 + 条件滚动等）
+
+通用流程中间若需「先探测再按条件执行」，在 `postSteps` 插入内联块（**不要**拆成顶层第二个 ifElse）：
+
+```json
+{
+  "block": "ifElse",
+  "probeStep": {
+    "unionId": "WaitForElementPresent",
+    "params": {
+      "timeout": "5000",
+      "failOptions": { "failureHandling": "continue" },
+      "selector": { "alias": "…用于判断某按钮是否已出现" }
+    }
+  },
+  "ifBranch": [],
+  "elseBranch": [
+    { "unionId": "ScrollToPosition", "params": { "x": "0", "y": "300", "selector": { "alias": "…" } } }
+  ]
+}
+```
+
+- 探测步由 `bindProbeOutputToSelf()` 绑定（`outKey=""` + `outKeyType: Boolean`）
+- IF `${probeNodeId}=true` → `ifBranch`；false → `elseBranch`
+- 示例：闪购「添加商品按钮未出现则滚 300px」→ [shangou-discount-plan.json](examples/shangou-discount-plan.json)
+- **推荐**：元素点击类步骤用 `params.selfHealScroll: true`（**每档偏移后探测，可见即停**），见 [self-heal-scroll.md](self-heal-scroll.md)
 
 ### 仅 IF、无 Else（常见：可选登录）
 
@@ -108,7 +199,7 @@ node "$SKILL_ROOT/scripts/preview-plan.mjs" /tmp/composite-plan.json
 输出示例：
 
 ```
-打开网页（e.shangou.test.sankuai.com） → 等待元素存在（→ hasLoginForm）
+打开网页（e.shangou.test.sankuai.com） → 等待元素存在（→ 本节点 IF 探测）
 ├─ IF（有登录框）：输入文本 → … → 等待页面加载 → 通用流程（21 步）
 └─ Else（无登录框）：滚动（600px） → 验证文本存在（"店铺活动"） → 通用流程（21 步）
 

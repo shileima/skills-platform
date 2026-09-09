@@ -30,6 +30,38 @@ const UNION_LABELS = {
 
 const SCROLL_UNION_IDS = new Set(["ScrollToPosition", "ScrollToElement"]);
 
+export function isIfElseBlock(step) {
+  return step?.block === "ifElse" && step?.probeStep;
+}
+
+/** 展开 postSteps 中的内联 ifElse，供校验与计数 */
+export function flattenPlanSteps(steps = []) {
+  const out = [];
+  for (const step of steps) {
+    if (isIfElseBlock(step)) {
+      out.push(step.probeStep);
+      out.push(...flattenPlanSteps(step.ifBranch || []));
+      out.push(...flattenPlanSteps(step.elseBranch || []));
+    } else {
+      out.push(step);
+    }
+  }
+  return out;
+}
+
+function inlineIfElseSummary(step) {
+  const probe = step.probeStep;
+  const alias = probe?.params?.selector?.alias || "";
+  let label = "探测=true";
+  if (/添加商品/.test(alias)) label = "添加商品按钮已出现";
+  const elseSteps = step.elseBranch || [];
+  const elsePart =
+    elseSteps.length > 0
+      ? `；否则 ${summarizeSteps(elseSteps).join(" → ")}`
+      : "";
+  return `IF（${label}）${elsePart}`;
+}
+
 function stepDetail(step) {
   const p = step.params || {};
   if (step.unionId === "OpenUrl" || step.unionId === "NavigateToUrl") {
@@ -48,6 +80,8 @@ function stepDetail(step) {
     const y = p.y ?? p.scrollY ?? "";
     return y ? `${y}px` : "";
   }
+  if (p.selfHealScroll) return "→ 滚动自愈";
+  if (step.unionId === "WaitForElementPresent" && p.probeForIf) return "→ 本节点(IF探测)";
   if (step.unionId === "WaitForElementPresent" && p.outKey) return `→ ${p.outKey}`;
   if (p.selector?.alias) {
     const a = p.selector.alias;
@@ -58,6 +92,7 @@ function stepDetail(step) {
 }
 
 export function stepSummary(step) {
+  if (isIfElseBlock(step)) return inlineIfElseSummary(step);
   const label = UNION_LABELS[step.unionId] || step.unionId;
   const detail = stepDetail(step);
   return detail ? `${label}（${detail}）` : label;
@@ -110,7 +145,7 @@ export function collectAllSteps(plan) {
     ...(plan.preSteps || []),
     ...(plan.ifElse?.ifBranch || []),
     ...(plan.ifElse?.elseBranch || []),
-    ...(plan.postSteps || []),
+    ...flattenPlanSteps(plan.postSteps || []),
   ];
 }
 
@@ -205,15 +240,16 @@ function formatStepList(steps, { maxShow = 4 } = {}) {
 }
 
 function conditionLabel(plan) {
-  const varName = plan.ifElse?.conditionVar;
   const pre = plan.preSteps || [];
-  const probe = pre.find((s) => s.params?.outKey === varName || s.params?.outKey);
+  const probe =
+    pre.find((s) => s.params?.probeForIf) ||
+    (plan.ifElse?.conditionPreStepIndex != null ? pre[plan.ifElse.conditionPreStepIndex] : null) ||
+    pre.find((s) => s.unionId === "WaitForElementPresent");
   if (probe?.unionId === "WaitForElementPresent") {
     const alias = probe.params?.selector?.alias || "";
     if (/登录|账号|密码/.test(alias)) return "有登录框";
-    if (varName) return `${varName}=true`;
   }
-  return varName ? `${varName}=true` : "条件为真";
+  return "探测=true";
 }
 
 function elseConditionLabel(plan) {

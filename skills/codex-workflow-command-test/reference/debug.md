@@ -358,6 +358,7 @@ bash "$SKILL_DIR/scripts/ensure-ready.sh"
 
 | 错误类型 | 原因 | 修复方式 |
 |---------|------|---------|
+| **`ClickElementMixed` 10120031 / 页面元素不存在** | 目标在视窗外未滚动到位；或 selector 不准 | **先滚动自愈**：在 plan 对应步骤加 `selfHealScroll: true`（见 `codex-rpa-workflow-generate/reference/self-heal-scroll.md`）→ 重构建重贴；仍失败再改 selector |
 | FillText / 页面元素不存在 | LLM 动态定位未稳定或描述不符合 §LLM 自然语言描述写法（缺位置/目标元素/操作意图）、或 XPath 与真实 DOM 不符 | 先按 `element-selector.md` §方式 A 重写描述（位置 + 目标元素 + 操作意图）并确认落库；仍失败再按 §批量采集（新建 Tab）重采全部相关 XPath，或更新 locators |
 | FillText 10120036 | 选择器指向容器 div 而非 input | 精确 XPath：`//textarea[@id="xxx"]` |
 | 元素未找到 | selector 不精确、LLM 未确认落库或页面改版 | 先检查 LLM 是否已点击「确认」并落库；否则重新采集，勿沿用旧 XPath |
@@ -370,6 +371,17 @@ bash "$SKILL_DIR/scripts/ensure-ready.sh"
 | **「节点配置不完整」**（检查面板 / 编排区右侧 ⓘ） | 条件必填未满足（如 SetCookie Domain 为空、域名误填 Path） | 双击节点 → Read `commands/<slug>.md` 补全 → 保存 → 点「检查」确认无异常 |
 | 配置改了但不生效 | 节点状态脏 / 保存未落盘 | **删指令 → 原位重插 → 重配表单**（见下） |
 | **指令顺序错误**（如「输入文本」在「打开网页」前） | 添加时未先单击最后一条已保存指令行按 Enter 空行，导致光标落在错误位置（如已有指令上方/之间）就插入了新指令 | **首选**：选中错位节点 → 右击 **剪切** → 选中锚点行（最后一条正确指令）→ 按 **Enter** 创建空行 → **粘贴**（`insert-command.md` §右键菜单调整指令顺序，保留已填配置）；剪切失败再删后重插 |
+
+## 元素不存在 · 滚动自愈
+
+报错 **`10120031`**、`instructionName=ClickElementMixed`、`页面元素不存在` 时：
+
+1. **优先判断视口**：目标元素可能在滚动容器外（表单较长、侧栏遮挡等）
+2. **plan 修复**（`codex-rpa-workflow-generate`）：在失败步骤加 `params.selfHealScroll: true`，可选 `selfHealScrollContainer.alias` 指定滚动区域 → `build-composite-workflow.mjs` → 重贴
+3. **构建展开语义（链式）**：初始探测 → 不可见则 **滚动一档 → 再探测 → IF 可见则停止** → 仍不可见则下一档偏移，**禁止** Else 内无探测连续滚多档
+4. **仍失败**：按 `element-selector.md` 重采 selector；勿与手写 ifElse 滚动块重复包裹
+
+详见 `codex-rpa-workflow-generate/reference/self-heal-scroll.md`。
 
 修复流程：`修复 → 保存 → 点「检查」→ 断开(如需) → 调试 → 运行 → 再查四处报错`
 
