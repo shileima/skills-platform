@@ -36,10 +36,6 @@
 
 构建逻辑见 `scripts/lib/build-nodes.mjs` → `buildSelectorId()`。
 
-### 异常处理（LLM 定位节点）
-
-含 `selectorId` 的节点自动生成 **异常重试 ×3**（`failOptions.failureHandling: "retry"`，`retryOptions.maxRetryCount: 3`）。plan 可通过 `params.failOptions` 覆盖。
-
 ## 剪贴板格式
 
 编辑器 `clipboard.ts` 协议：

@@ -10,7 +10,7 @@
       "unionId": "WaitForElementPresent",
       "params": {
         "outKey": "hasLoginForm",
-        "timeout": "5000",
+        "timeout": "8000",
         "failOptions": { "failureHandling": "continue" },
         "selector": {
           "alias": "定位闪购商家后台登录页账号输入框，用于判断是否需要登录"
@@ -46,6 +46,10 @@
         "params": {
           "selector": { "alias": "定位闪购商家后台登录页登录按钮，用于点击提交登录" }
         }
+      },
+      {
+        "unionId": "WaitPageState",
+        "params": { "loadState": "LOAD", "timeout": "30000" }
       }
     ]
   },
@@ -83,20 +87,9 @@
       }
     },
     {
-      "unionId": "ScrollToElement",
-      "params": {
-        "findTimeout": "10000",
-        "selector": {
-          "alias": "定位闪购折扣活动表单中活动日期区域的结束时间输入框，用于滚动到可见位置"
-        }
-      }
-    },
-    {
       "unionId": "ClickElementMixed",
       "params": {
-        "selector": {
-          "alias": "定位闪购折扣活动表单活动日期行右侧带日历图标的结束时间输入框，用于点击打开日期选择面板"
-        }
+        "selector": { "alias": "定位闪购折扣活动表单中活动日期区域右侧的结束时间输入框，用于打开结束日期下拉面板" }
       }
     },
     {
@@ -121,16 +114,6 @@
       "unionId": "ClickElementMixed",
       "params": {
         "selector": { "alias": "定位闪购添加门店弹框右下角的确定按钮，用于确认门店选择" }
-      }
-    },
-    {
-      "unionId": "ScrollToPosition",
-      "params": {
-        "x": "0",
-        "y": "9999",
-        "selector": {
-          "alias": "定位闪购折扣活动表单主内容滚动区域，用于向下滚动到页面最底部"
-        }
       }
     },
     {
@@ -167,7 +150,7 @@
     {
       "unionId": "ClickElementMixed",
       "params": {
-        "selector": { "alias": "定位闪购添加商品弹框商品列表中的全选复选框，用于勾选全部搜索结果" }
+        "selector": { "alias": "定位闪购添加商品弹框商品列表中第一个商品前的复选框，用于勾选第一个商品" }
       }
     },
     {
@@ -177,9 +160,13 @@
       }
     },
     {
-      "unionId": "ClickElementMixed",
+      "unionId": "ScrollToPosition",
       "params": {
-        "selector": { "alias": "定位闪购折扣活动表单底部商家自营销协议复选框，用于勾选同意协议" }
+        "x": "0",
+        "y": "9999",
+        "selector": {
+          "alias": "定位闪购折扣活动表单右侧主内容滚动区域，用于向下滚动到商品列表底部"
+        }
       }
     },
     {
@@ -199,6 +186,12 @@
       "unionId": "ClickElementMixed",
       "params": {
         "selector": { "alias": "定位闪购商品折扣设置弹框中的确定或保存按钮，用于确认折扣设置" }
+      }
+    },
+    {
+      "unionId": "ClickElementMixed",
+      "params": {
+        "selector": { "alias": "定位闪购折扣活动表单底部商家自营销协议复选框，用于勾选同意协议" }
       }
     },
     {

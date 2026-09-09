@@ -66,21 +66,41 @@ OpenUrl / NavigateToUrl
 
 见 `scripts/lib/build-nodes.mjs` 中 `ALLOWED_UNION_IDS`。不含 LoopElements、UploadFile、移动端指令。
 
+## 复合 plan（含 IF / Else / ElseIf）
+
+线性场景用 `instructionPlan`；含条件分支时用 `composite-plan.json`（`preSteps` + `ifElse` + `postSteps`）。
+
+> 🚫 **通用流程提取到最外层**：IF、Else、ElseIf 汇合后都要执行的步骤 → **只写** `postSteps`，输出在分支块**之外**；各分支内**禁止**重复粘贴同一套通用节点。详见 [composite-workflow.md](composite-workflow.md)。
+
+```bash
+node scripts/build-composite-workflow.mjs reference/examples/shangou-discount-plan.json
+node scripts/wrap-clipboard.mjs reference/examples/shangou-discount-plan.nodes.json /tmp/clipboard.txt
+bash scripts/paste-workflow.sh /tmp/clipboard.txt   # 或 repaste-workflow.sh
+```
+
+## 构建前预览确认（强制）
+
+写出 plan 后、构建 JSON **之前**：
+
+```bash
+node scripts/preview-plan.mjs /tmp/your-plan.json
+```
+
+将输出的流程树展示给用户，**等待确认**后再 build。复合 plan 示例：
+
+```
+打开网页 → 等待登录框
+├─ IF（有登录框）：登录 → 通用流程（21 步）
+└─ Else（无登录框）：滚动600px → 验证「店铺活动」→ 通用流程（21 步）
+```
+
+`preview-plan.mjs` 会警告：通用流程误写在分支内、滚动类指令层级放错等。**默认 B 站四步线性场景可跳过确认**。
+
 ## Agent 执行步骤
 
-1. 解析用户意图 → 写出 `instruction-plan.json`（可放 `/tmp/` 或技能 `reference/examples/`）
-2. **组装 JSON 并粘贴**（首次生成强制，禁止 UI 逐条插入）：
+1. 解析用户意图 → 写出 plan（线性 `instruction-plan.json` 或复合 `composite-plan.json`）
+2. **`preview-plan.mjs` → 展示流程树 → 用户确认**
+3. 构建 JSON 并粘贴：
    - 纯 rpaNode：`bash scripts/generate-workflow.sh --plan <plan.json>`
-   - 含 IF/ELSE 等容器：`node scripts/build-composite-workflow.mjs <composite-plan.json>` → `wrap-clipboard.mjs` → `paste-workflow.sh` 或 `generate-workflow.sh --no-create`
-3. 验证 canvas 摘要顺序与节点数量
-4. **必须**激活 `codex-workflow-command-test` 完成检查与调试
-5. 调试后修复：优先改 plan → `--clear-and-paste`；单点定位/表单问题才用 command-test UI（双击节点、新建 LLM、此处开始调试）
-
-## 生成路线 vs 修复路线
-
-| | 首次生成 | 调试后修复 |
-|---|---------|-----------|
-| **主路径** | JSON 组装 + 剪贴板粘贴 | `--clear-and-paste` 重贴 |
-| **辅路径** | — | command-test UI 单点改节点 |
-| **禁止** | command-test `insertAfterAnchor` 逐条插入 | 为修一点而 UI 全量重建 |
-
+   - 含 IF/Else：`build-composite-workflow.mjs` → `wrap-clipboard.mjs` → `paste-workflow.sh`
+4. 粘贴成功后，**必须**激活 `codex-workflow-command-test` 完成检查与调试

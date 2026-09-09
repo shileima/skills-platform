@@ -14,28 +14,6 @@ description: >
 
 根据用户场景或指令计划，**构建节点 JSON → 剪贴板粘贴**到空编排工作流，跳过逐条搜索插入。
 
-## 重要规范（强制）
-
-> 🚫🚫🚫 **首次生成必须走「组装 JSON → 剪贴板粘贴」，禁止走 UI 逐条插入。**
-
-| 阶段 | 允许路径 | 禁止路径 |
-|------|---------|---------|
-| **首次生成** | 写 plan → `build-nodes.mjs` / `build-composite-workflow.mjs` 组装 JSON → `wrap-clipboard.mjs` → `generate-workflow.sh` 粘贴 | 激活 command-test 用「指令 Tab 搜索 + 双击」逐条插入节点 |
-| **调试后修复** | 优先 `--clear-and-paste` 重贴修正后的 JSON；单节点定位/表单微调可走 command-test UI | 首次生成阶段提前用 UI 插节点 |
-| **单点修复** | 双击节点 → 「新建 LLM」改定位 → 保存；或右击「此处开始调试」 | 为修一个节点而清空重走 UI 全量插入 |
-
-**铁律**：
-
-1. **第一次**往空编排 canvas 写业务节点，**只能**通过剪贴板协议（`__JSON_DATA__...__JSON_DATA__`）批量粘贴；含 IF/ELSE 等容器节点时，用 `build-composite-workflow.mjs` 组装完整 JSON 再粘贴，**不得**改用 UI 搜索插入逻辑节点。
-2. **粘贴完成并验证 canvas 摘要后**，才激活 `codex-workflow-command-test` 做检查 → 调试 → 修复。
-3. **调试报错后的修复**：优先改 plan / formData → `--clear-and-paste` 重贴；仅当 JSON 无法表达（如 LLM 定位微调、单字段条件必填）时，才在 command-test 里用 UI 双击节点、新建 LLM、保存。
-4. **禁止**在首次生成阶段以「IF/ELSE 复杂」「指令搜不到」等理由跳过 JSON 路线——应扩展 plan、扩展 `ALLOWED_UNION_IDS` 或写 composite 组装脚本，仍走粘贴。
-
-```
-首次生成：plan.json → build JSON → clipboard → paste → canvas 验证
-调试修复：command-test 检查/调试 → 改 JSON 重贴 或 UI 单点修复
-```
-
 ## 与相关技能的分工
 
 | 技能 | 职责 |
@@ -68,13 +46,14 @@ bash "$SKILL_ROOT/scripts/ensure-ready.sh"   # 输出 ok
 
 ```
 1. Read reference/scenario-planner.md → 解析用户意图
-2. 写出 instruction-plan.json（见 reference/examples/bilibili-plan.json）
-3. bash scripts/generate-workflow.sh --plan instruction-plan.json（内含 validate-built-nodes 校验）
-4. 验证粘贴结果（canvas 摘要顺序）
-5. 激活 codex-workflow-command-test → 检查 → 调试 → 修复
-6. **修复迭代**：用 `--clear-and-paste` 清空 canvas 后重贴，**禁止**每次新建工作流；调试失败时展开聊天区 **「更多详情」** 或 **「展开详情」** 读 `rootExceptionMessage`（见 command-test `debug.md`）
+2. 写出 plan.json（线性 instructionPlan 或复合 preSteps+ifElse+postSteps）
+3. node scripts/preview-plan.mjs plan.json → 展示简洁流程树 → **等用户确认后再构建**
+4. 构建 + 粘贴（generate-workflow.sh 或 build-composite-workflow.mjs）
+5. 验证粘贴结果（canvas 摘要顺序）
+6. 激活 codex-workflow-command-test → 检查 → 调试 → 修复
+7. **修复迭代**：用 `--clear-and-paste` 清空 canvas 后重贴；改 plan 后重新 preview → 确认 → 重贴
 
-> 步骤 3 的 `--clear-and-paste` 仍属 **JSON 粘贴路线**；步骤 5 之后的单点 UI 修复见上文 §重要规范。
+> 步骤 3 例外：默认 B 站四步线性场景可跳过用户确认（禁止询问场景，但可静默 preview）。
 
 清空 canvas 策略见 [reference/clear-canvas.md](reference/clear-canvas.md)：**选中开始节点 → Control+a → Delete** 批量清空；残留节点 **hover 行 → 点右侧删除图标** 逐条删除。
 ```
@@ -137,8 +116,10 @@ bash "$SKILL_ROOT/scripts/generate-workflow.sh" \
 | API 鉴权 | [reference/command-api.md](reference/command-api.md) | API 异常时 |
 | formData 字段 | [reference/form-data-rules.md](reference/form-data-rules.md) | 构建/调试 formData 报错时 |
 | 清空 canvas | [reference/clear-canvas.md](reference/clear-canvas.md) | `--clear-and-paste` 或修复重贴前 |
-| 复合节点组装 | `scripts/build-composite-workflow.mjs` | IF/ELSE 等容器 + rpaNode 首次生成 |
+| 复合分支组装 | [reference/composite-workflow.md](reference/composite-workflow.md) | IF/Else/ElseIf；**通用流程提取到最外层** |
+| Plan 预览确认 | `scripts/preview-plan.mjs` | **构建 JSON 前必须**；输出流程树 + 结构警告 |
 | B 站示例 plan | [reference/examples/bilibili-plan.json](reference/examples/bilibili-plan.json) | 默认场景 |
+| 闪购折扣示例 | [reference/examples/shangou-discount-plan.json](reference/examples/shangou-discount-plan.json) | 登录分叉 + postSteps 通用流程 |
 | 携程机票 | [reference/scenarios/ctrip-flights.md](reference/scenarios/ctrip-flights.md) | 用户说携程/机票 |
 | 跨站比价 | [reference/scenarios/price-compare.md](reference/scenarios/price-compare.md) | 天猫/京东比价 |
 | 搜狗 | [reference/scenarios/sogou-search.md](reference/scenarios/sogou-search.md) | sogou + 导航到URL |
@@ -152,10 +133,6 @@ bash "$SKILL_ROOT/scripts/generate-workflow.sh" \
 ### 元素定位（不入库）
 
 `workflowElementId` 无需平台注册；`elementSourceType: "elementAdd"` + LLM 内联 JSON。构建见 `scripts/lib/build-nodes.mjs`。
-
-### LLM 定位节点的异常处理
-
-凡含 `selectorId`（LLM 动态定位）的节点，`failOptions` 默认 **异常重试、最大 3 次**（`failureHandling: "retry"`，`retryOptions.maxRetryCount: 3`）。plan 显式传 `params.failOptions` 时可覆盖（如等待节点 `continue`）。详见 [reference/form-data-rules.md](reference/form-data-rules.md)。
 
 ### API
 

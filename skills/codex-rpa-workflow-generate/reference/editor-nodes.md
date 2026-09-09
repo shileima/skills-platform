@@ -452,17 +452,8 @@ AI 任务编排容器，内部可嵌套任意节点。
 - **关键字段**：`conditions`（条件数组）、`logicalOperator`（and/or）
 - **高级**：`enableCustomLogic`、`customLogicExpression`
 - **使用**：通常 IF → ElseIf* → Else 组合
-- **JSON 层级（重要）**：`ifNode` 与 `elseNode` 必须是**同级兄弟节点**（有 false 分支时才生成 `elseNode`），`elseNode` **禁止**嵌在 `ifNode.content` 内。`ifNode.content` 只放条件为 true 时的步骤（如登录）。
-- **登录后通用步骤**：放在 IF/Else **之后**的顶层 `postSteps`（含滚动、验证文案、业务操作等），两条分支汇合后继续执行。
-- **组装示例**（顶层片段）：
-
-```json
-[
-  { "type": "ifNode", "content": [ /* 登录 rpaNode */ ] },
-  { "type": "elseNode", "content": [ /* 未登录 rpaNode */ ] },
-  /* postSteps：店铺活动、创建折扣等通用业务步骤 */
-]
-```
+- **JSON 层级**：`ifNode` 与 `elseNode` / `elseifNode` 为**同级兄弟**；`elseNode` **禁止**嵌在 `ifNode.content` 内
+- **通用流程**：各分支汇合后共享的步骤 → 放在分支块**最外层之后**（composite plan 的 `postSteps`），**禁止**在每个分支内重复。见 [composite-workflow.md](composite-workflow.md)
 
 ### forNode — 列表循环
 
