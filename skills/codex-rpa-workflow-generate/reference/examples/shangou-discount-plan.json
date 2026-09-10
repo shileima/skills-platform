@@ -1,5 +1,5 @@
 {
-  "workflowName": "闪购折扣活动创建-20260909",
+  "workflowName": "闪购折扣活动创建-20260910",
   "targetUrl": "https://e.shangou.test.sankuai.com/",
   "preSteps": [
     {
@@ -96,9 +96,7 @@
         "selfHealScrollContainer": {
           "alias": "定位闪购折扣活动新建页面主内容滚动区域，用于自愈滚动以寻找创建折扣活动按钮"
         },
-        "selector": {
-          "alias": "定位闪购折扣活动新建页面顶部标题栏右侧的创建折扣活动主按钮，用于点击进入活动配置表单"
-        }
+        "selector": { "alias": "定位闪购折扣活动新建页面顶部标题栏右侧的创建折扣活动主按钮，用于点击进入活动配置表单" }
       }
     },
     {
@@ -227,7 +225,7 @@
     },
     {
       "unionId": "Delay",
-      "params": { "second": "30" }
+      "params": { "second": "30", "timeUnit": "SECOND" }
     }
   ]
 }

@@ -170,7 +170,7 @@ elseNode.content:   滚动 + 验证 + 创建折扣…（21 步重复）
 
 - 探测步由 `bindProbeOutputToSelf()` 绑定（`outKey=""` + `outKeyType: Boolean`）
 - IF `${probeNodeId}=true` → `ifBranch`；false → `elseBranch`
-- 示例：闪购「添加商品按钮未出现则滚 300px」→ [shangou-discount-plan.json](examples/shangou-discount-plan.json)
+- 示例：闪购「添加商品按钮未出现则滚 300px」→ [scenarios/shangou-discount.md](scenarios/shangou-discount.md)
 - **推荐**：元素点击类步骤用 `params.selfHealScroll: true`（**每档偏移后探测，可见即停**），见 [self-heal-scroll.md](self-heal-scroll.md)
 
 ### 仅 IF、无 Else（常见：可选登录）
@@ -232,7 +232,7 @@ node "$SKILL_ROOT/scripts/wrap-clipboard.mjs" /tmp/workflow.nodes.json /tmp/work
 
 ## 示例：闪购折扣活动（登录分叉 + 通用创建）
 
-见 [examples/shangou-discount-plan.json](examples/shangou-discount-plan.json)：
+见 [scenarios/shangou-discount.md](scenarios/shangou-discount.md)（Agent 按自然语言规格推理写出 plan）：
 
 - **IF**：有登录框 → 填账号密码、勾选协议、登录
 - **Else**：无登录框 → 侧栏滚动 600px、验证「店铺活动」

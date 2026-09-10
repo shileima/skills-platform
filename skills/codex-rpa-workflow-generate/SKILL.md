@@ -121,8 +121,7 @@ bash "$SKILL_ROOT/scripts/generate-workflow.sh" \
 | 复合分支组装 | [reference/composite-workflow.md](reference/composite-workflow.md) | IF/Else/ElseIf；**通用流程提取到最外层** |
 | Plan 预览确认 | `scripts/preview-plan.mjs` | **构建 JSON 前必须**；输出流程树 + 结构警告 |
 | B 站示例 plan | [reference/examples/bilibili-plan.json](reference/examples/bilibili-plan.json) | 默认场景 |
-| 闪购折扣场景 | [reference/scenarios/shangou-discount.md](reference/scenarios/shangou-discount.md) | 自然语言逐步规格 → 还原 plan/JSON |
-| 闪购折扣 plan | [reference/examples/shangou-discount-plan.json](reference/examples/shangou-discount-plan.json) | 登录 IF + postSteps 通用 24 步 |
+| 闪购折扣场景 | [reference/scenarios/shangou-discount.md](reference/scenarios/shangou-discount.md) | 自然语言规格 → Agent 推理写出 plan → 构建 JSON |
 | 携程机票 | [reference/scenarios/ctrip-flights.md](reference/scenarios/ctrip-flights.md) | 用户说携程/机票 |
 | 跨站比价 | [reference/scenarios/price-compare.md](reference/scenarios/price-compare.md) | 天猫/京东比价 |
 | 搜狗 | [reference/scenarios/sogou-search.md](reference/scenarios/sogou-search.md) | sogou + 导航到URL |

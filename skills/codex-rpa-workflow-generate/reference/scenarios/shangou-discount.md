@@ -1,11 +1,10 @@
 # 场景：闪购商家后台 — 创建折扣活动
 
-**Plan 文件**：`reference/examples/shangou-discount-plan.json`  
 **Plan 类型**：复合 plan（`preSteps` + `ifElse` + `postSteps`，**仅 IF、无 Else**）  
-**工作流名称**：`闪购折扣活动创建-20260909`  
+**工作流名称**：`闪购折扣活动创建-YYYYMMDD`（由 Agent 或用户指定）  
 **目标 URL**：`https://e.shangou.test.sankuai.com/`
 
-> 本文档是自然语言 → plan → JSON 的**唯一规格说明**。按下列步骤逐条生成，不得增删改序，即可得到与示例 plan 及 `build-composite-workflow.mjs` 输出一致的节点 JSON。
+> 本文档是自然语言 → **Agent 推理写出 plan** → `build-composite-workflow.mjs` 构建 JSON 的**唯一规格说明**。无预置 plan 文件；按下列步骤逐条理解并生成 plan，不得擅自增删改序。
 
 ---
 
@@ -270,14 +269,15 @@ preSteps（2 步）
 
 ## 生成命令
 
+Agent 按本文档 + 用户 prompt 推理写出 `/tmp/composite-plan.json` 后：
+
 ```bash
 SKILL_ROOT="${HOME}/.cursor/skills/codex-rpa-workflow-generate"
-PLAN="$SKILL_ROOT/reference/examples/shangou-discount-plan.json"
+PLAN=/tmp/composite-plan.json
 
 node "$SKILL_ROOT/scripts/preview-plan.mjs" "$PLAN"
-node "$SKILL_ROOT/scripts/build-composite-workflow.mjs" "$PLAN"
-node "$SKILL_ROOT/scripts/wrap-clipboard.mjs" \
-  "${PLAN%.json}.nodes.json" /tmp/shangou.clipboard.txt
+node "$SKILL_ROOT/scripts/build-composite-workflow.mjs" "$PLAN" /tmp/shangou.nodes.json
+node "$SKILL_ROOT/scripts/wrap-clipboard.mjs" /tmp/shangou.nodes.json /tmp/shangou.clipboard.txt
 bash "$SKILL_ROOT/scripts/repaste-workflow.sh" /tmp/shangou.clipboard.txt
 ```
 

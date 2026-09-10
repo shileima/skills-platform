@@ -91,4 +91,4 @@ plan 侧只写 `params.probeForIf: true`，**禁止**在 plan 里写 `params.out
 - 构建：`scripts/build-composite-workflow.mjs` → `bindProbeOutputToSelf()`
 - 复合 plan：[composite-workflow.md](composite-workflow.md)
 - formData：[form-data-rules.md](form-data-rules.md) §outKey
-- 示例 plan：[examples/shangou-discount-plan.json](examples/shangou-discount-plan.json)
+- 场景规格（Agent 推理写 plan）：[scenarios/shangou-discount.md](scenarios/shangou-discount.md)

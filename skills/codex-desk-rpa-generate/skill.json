@@ -1,0 +1,37 @@
+{
+  "name": "codex-desk-rpa-generate",
+  "version": "0.1.0",
+  "description": "在 Automan Desktop 客户端通过自动化助手新建 RPA 编排工作流并进入编排区",
+  "author": "mashilei",
+  "license": "MIT",
+  "keywords": [
+    "automan",
+    "rpa",
+    "desktop",
+    "workflow",
+    "replay",
+    "cua"
+  ],
+  "targets": [
+    "cursor",
+    "automan"
+  ],
+  "dependencies": [
+    {
+      "name": "cua-router-basic",
+      "install": "curl -fsSL https://s3plus.sankuai.com/aiagent-bucket/cua-resources/install-intranet.sh | bash -s -- --force"
+    }
+  ],
+  "pack": {
+    "include": [
+      "SKILL.md",
+      "skill.json",
+      "scripts",
+      "references"
+    ]
+  },
+  "automan": {
+    "source": "user",
+    "metaName": "codex-desk-rpa-generate"
+  }
+}

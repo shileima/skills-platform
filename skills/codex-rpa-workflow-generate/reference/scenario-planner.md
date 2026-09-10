@@ -61,7 +61,7 @@ OpenUrl / NavigateToUrl
 | 比价 / 天猫 / 京东 | `scenarios/price-compare.md` · `examples/jd-tmall-iphone17-plan.json` |
 | sogou / 搜狗 | `scenarios/sogou-search.md` |
 | GitHub / codex / issues 汇总 | `scenarios/github-codex-issues.md` · `examples/github-codex-issues-composite-plan.json` |
-| 闪购 / 折扣活动 / shangou | `scenarios/shangou-discount.md` · `examples/shangou-discount-plan.json` |
+| 闪购 / 折扣活动 / shangou | `scenarios/shangou-discount.md`（Agent 按规格推理写出 plan，无预置 plan 文件） |
 
 ## 一期支持的 unionId
 
@@ -78,8 +78,10 @@ OpenUrl / NavigateToUrl
 > **滚动自愈**：元素不存在时步骤加 `selfHealScroll: true`；构建为「滚一档 → 探测 → 可见则停」，禁止 Else 内连续多档滚动。详见 [self-heal-scroll.md](self-heal-scroll.md)。
 
 ```bash
-node scripts/build-composite-workflow.mjs reference/examples/shangou-discount-plan.json
-node scripts/wrap-clipboard.mjs reference/examples/shangou-discount-plan.nodes.json /tmp/clipboard.txt
+# Agent 按 scenarios/*.md + 用户 prompt 推理写出 plan 后：
+node scripts/preview-plan.mjs /tmp/composite-plan.json
+node scripts/build-composite-workflow.mjs /tmp/composite-plan.json /tmp/workflow.nodes.json
+node scripts/wrap-clipboard.mjs /tmp/workflow.nodes.json /tmp/clipboard.txt
 bash scripts/paste-workflow.sh /tmp/clipboard.txt   # 或 repaste-workflow.sh
 ```
 
